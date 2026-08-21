@@ -1,0 +1,11 @@
+.vs/
+build/
+out/
+*.log
+*.user
+HQMarket/data/
+HQMarket/runtime/
+HQMarket/contract/*.zip
+HQMarket/contract/hqmarket-contract-*/
+__pycache__/
+*.pyc

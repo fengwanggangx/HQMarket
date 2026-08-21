@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64"><Configuration>Debug</Configuration><Platform>x64</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64"><Configuration>Release</Configuration><Platform>x64</Platform></ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{A4C70330-8D43-4D2A-84C3-F6F24E361E11}</ProjectGuid>
+    <Keyword>Linux</Keyword>
+    <RootNamespace>HQMarket</RootNamespace>
+    <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+    <ApplicationType>Linux</ApplicationType>
+    <ApplicationTypeRevision>1.0</ApplicationTypeRevision>
+    <TargetLinuxPlatform>Generic</TargetLinuxPlatform>
+    <LinuxProjectType>{D51BCBC9-82E9-4017-911E-C93873C4EA2B}</LinuxProjectType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration"><UseDebugLibraries>true</UseDebugLibraries></PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration"><UseDebugLibraries>false</UseDebugLibraries></PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <PropertyGroup Label="UserMacros" />
+  <ItemGroup>
+    <ClCompile Include="common\defines.cpp" />
+    <ClCompile Include="common\utility.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="market\CMarketCache.cpp" />
+    <ClCompile Include="market\CSubscriptionManager.cpp" />
+    <ClCompile Include="market\MarketTypes.cpp" />
+    <ClCompile Include="market\v1\market.pb.cc" />
+    <ClCompile Include="network\CFrameCodec.cpp" />
+    <ClCompile Include="network\CHttpServer.cpp" />
+    <ClCompile Include="network\CMarketTcpServer.cpp" />
+    <ClCompile Include="network\CNet.cpp" />
+    <ClCompile Include="network\netcommon.cpp" />
+    <ClCompile Include="python\CMooTdxProvider.cpp" />
+    <ClCompile Include="python\CAkShareProvider.cpp" />
+    <ClCompile Include="python\CPythonRuntime.cpp" />
+    <ClCompile Include="service\CMarketService.cpp" />
+    <ClCompile Include="storage\CMarketStorage.cpp" />
+    <ClCompile Include="thread\CThreadPool.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="common\defines.h" />
+    <ClInclude Include="common\utility.h" />
+    <ClInclude Include="market\CMarketCache.h" />
+    <ClInclude Include="market\CSubscriptionManager.h" />
+    <ClInclude Include="market\IMarketProvider.h" />
+    <ClInclude Include="market\MarketTypes.h" />
+    <ClInclude Include="market\v1\market.pb.h" />
+    <ClInclude Include="network\CFrameCodec.h" />
+    <ClInclude Include="network\CHttpServer.h" />
+    <ClInclude Include="network\CMarketTcpServer.h" />
+    <ClInclude Include="network\CNet.h" />
+    <ClInclude Include="network\netcommon.h" />
+    <ClInclude Include="python\CMooTdxProvider.h" />
+    <ClInclude Include="python\CAkShareProvider.h" />
+    <ClInclude Include="python\CPythonRuntime.h" />
+    <ClInclude Include="service\CMarketService.h" />
+    <ClInclude Include="storage\CMarketStorage.h" />
+    <ClInclude Include="thread\CThreadPool.h" />
+  </ItemGroup>
+  <ItemGroup><None Include="config\hqmarket.json" /><None Include="market\v1\market.proto" /><None Include="python\requirements.lock" /></ItemGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile><AdditionalIncludeDirectories>./include/debug/libevent;./include/debug/protobuf;./runtime/python/include/python3.12;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories><CppLanguageStandard>c++20</CppLanguageStandard><PreprocessorDefinitions>PROTOBUF_USE_DLLS;%(PreprocessorDefinitions)</PreprocessorDefinitions></ClCompile>
+    <Link><AdditionalLibraryDirectories>./libs/debug;./runtime/python/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories><LibraryDependencies>event;event_pthreads;protobufd;python3.12;sqlite3;pthread;dl;%(LibraryDependencies)</LibraryDependencies><SharedLibrarySearchPath>./libs/debug;./runtime/python/lib;%(SharedLibrarySearchPath)</SharedLibrarySearchPath></Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile><AdditionalIncludeDirectories>./include/release/libevent;./include/release/protobuf;./runtime/python/include/python3.12;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories><CppLanguageStandard>c++20</CppLanguageStandard></ClCompile>
+    <Link><AdditionalLibraryDirectories>./libs/release;./runtime/python/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories><LibraryDependencies>event;event_pthreads;protobuf;python3.12;sqlite3;pthread;dl;%(LibraryDependencies)</LibraryDependencies><SharedLibrarySearchPath>./libs/release;./runtime/python/lib;%(SharedLibrarySearchPath)</SharedLibrarySearchPath></Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>

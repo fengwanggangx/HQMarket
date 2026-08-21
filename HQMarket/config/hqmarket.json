@@ -1,0 +1,11 @@
+{
+  "tcp_port": 9901,
+  "http_port": 9902,
+  "shared_token_env": "HQMARKET_TOKEN",
+  "python_home": "runtime/python",
+  "python_scripts": "python",
+  "database": "data/hqmarket.db",
+  "max_frame_bytes": 8388608,
+  "heartbeat_seconds": 5,
+  "client_timeout_seconds": 20
+}
