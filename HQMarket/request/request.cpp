@@ -29,7 +29,16 @@ CRequest::~CRequest() = default;
 
 bool CRequest::Serialize(std::string* output) const
 {
-	if ((m_data == nullptr) || (output == nullptr))
+	if (output == nullptr)
+	{
+		return false;
+	}
+	if (m_strPayload.empty() == false)
+	{
+		*output = m_strPayload;
+		return true;
+	}
+	if ((m_data == nullptr) || (GetCmd() == "connet_build"))
 	{
 		return false;
 	}
@@ -38,11 +47,23 @@ bool CRequest::Serialize(std::string* output) const
 
 bool CRequest::Deserialize(const std::string& data)
 {
-	if (m_data == nullptr)
-	{
-		return false;
-	}
-	return m_data->ParseFromString(data);
+	m_strPayload = data;
+	return true;
+}
+
+void CRequest::SetConnectionId(evutil_socket_t connectionId)
+{
+	m_connectionId = connectionId;
+}
+
+evutil_socket_t CRequest::GetConnectionId() const
+{
+	return m_connectionId;
+}
+
+const std::string& CRequest::GetPayload() const
+{
+	return m_strPayload;
 }
 
 void CRequest::SetType(CRequest::Type type)

@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_map>
 #include <memory>
+#include <event2/util.h>
 
 namespace request
 {
@@ -53,10 +54,15 @@ class CRequest
 	public:
 		bool Serialize(std::string* output) const;
 		bool Deserialize(const std::string& data);
+		void SetConnectionId(evutil_socket_t connectionId);
+		evutil_socket_t GetConnectionId() const;
+		const std::string& GetPayload() const;
 
 	private:
 		std::unique_ptr<google::protobuf::Arena> m_arena;
 		request::RequestData* m_data{nullptr};
+		evutil_socket_t m_connectionId{-1};
+		std::string m_strPayload;
 };
 
 #endif

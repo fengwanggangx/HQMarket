@@ -1,4 +1,7 @@
 #include "CMarketService.h"
+#include "../network/CNetPool.h"
+#include "../network/CNetTools.h"
+#include "../request/request.h"
 #include <chrono>
 #include <sstream>
 #include <utility>
@@ -81,18 +84,18 @@ namespace service
 		}
 
 		m_strToken = strToken;
-		m_pTcpServer->RegisterConnectedHandler(
-			[this](net::CTcpServer::ConnectionId connectionId)
+		net::CNetPool::InstancePtr()->RegisterConnectedHandler(
+			[this](ConnectionId connectionId)
 			{
 				OnClientConnected(connectionId);
 			});
-		m_pTcpServer->RegisterDataHandler(
-			[this](net::CTcpServer::ConnectionId connectionId, std::vector<std::uint8_t>&& data)
+		m_pTcpServer->RegisterHandler(
+			[this](const std::unique_ptr<CRequest>& request)
 			{
-				OnClientData(connectionId, std::move(data));
+				return OnClientRequest(request);
 			});
-		m_pTcpServer->RegisterDisconnectedHandler(
-			[this](net::CTcpServer::ConnectionId connectionId)
+		net::CNetPool::InstancePtr()->RegisterDisconnectedHandler(
+			[this](ConnectionId connectionId)
 			{
 				OnClientDisconnected(connectionId);
 			});
@@ -128,45 +131,36 @@ namespace service
 		m_storage.Close();
 	}
 
-	void CMarketService::OnClientConnected(net::CTcpServer::ConnectionId connectionId)
+	void CMarketService::OnClientConnected(ConnectionId connectionId)
 	{
 		std::lock_guard<std::mutex> lock(m_mtxSessions);
 		m_sessions.try_emplace(connectionId);
 	}
 
-	void CMarketService::OnClientData(net::CTcpServer::ConnectionId connectionId, std::vector<std::uint8_t>&& data)
+	int CMarketService::OnClientRequest(const std::unique_ptr<CRequest>& request)
 	{
-		std::vector<std::string> frames;
-		bool valid = false;
+		if ((request == nullptr) || (request->GetConnectionId() < 0))
+		{
+			return 0;
+		}
+		ConnectionId connectionId = request->GetConnectionId();
 		{
 			std::lock_guard<std::mutex> lock(m_mtxSessions);
-			std::unordered_map<net::CTcpServer::ConnectionId, CClientSession>::iterator session =
-				m_sessions.find(connectionId);
-			if (session == m_sessions.end())
-			{
-				return;
-			}
-			valid = session->second.m_codec.Append(data.data(), data.size(), frames);
+			m_sessions.try_emplace(connectionId);
 		}
-		if (valid == false)
+		wire::MarketEnvelope envelope;
+		if (envelope.ParseFromString(request->GetPayload()) == false)
 		{
-			m_pTcpServer->Close(connectionId);
-			return;
+			net::CNetPool::InstancePtr()->CloseAConnection(connectionId);
+			return 0;
 		}
-		for (const std::string& frame : frames)
-		{
-			wire::MarketEnvelope envelope;
-			if (envelope.ParseFromString(frame) == false)
-			{
-				m_pTcpServer->Close(connectionId);
-				return;
-			}
-			HandleEnvelope(connectionId, envelope);
-		}
+		HandleEnvelope(connectionId, envelope);
+		return 1;
 	}
 
-	void CMarketService::OnClientDisconnected(net::CTcpServer::ConnectionId connectionId)
+	void CMarketService::OnClientDisconnected(ConnectionId connectionId)
 	{
+		net::utility::ReleaseConnectionBuffer(connectionId);
 		{
 			std::lock_guard<std::mutex> lock(m_mtxSessions);
 			m_sessions.erase(connectionId);
@@ -178,7 +172,7 @@ namespace service
 		}
 	}
 
-	void CMarketService::HandleEnvelope(net::CTcpServer::ConnectionId connectionId, const wire::MarketEnvelope& envelope)
+	void CMarketService::HandleEnvelope(ConnectionId connectionId, const wire::MarketEnvelope& envelope)
 	{
 		wire::MarketEnvelope response;
 		response.set_protocol_major(1);
@@ -197,7 +191,7 @@ namespace service
 			bool authenticated = (m_strToken.empty() == false) && (envelope.auth_request().token() == m_strToken);
 			{
 				std::lock_guard<std::mutex> lock(m_mtxSessions);
-				std::unordered_map<net::CTcpServer::ConnectionId, CClientSession>::iterator session =
+				std::unordered_map<ConnectionId, CClientSession>::iterator session =
 					m_sessions.find(connectionId);
 				if (session != m_sessions.end())
 				{
@@ -273,7 +267,7 @@ namespace service
 		SendEnvelope(connectionId, response);
 	}
 
-	void CMarketService::SendEnvelope(net::CTcpServer::ConnectionId connectionId, wire::MarketEnvelope& envelope)
+	void CMarketService::SendEnvelope(ConnectionId connectionId, wire::MarketEnvelope& envelope)
 	{
 		envelope.set_server_time_ms(NowMilliseconds());
 		std::string payload;
@@ -282,7 +276,7 @@ namespace service
 			return;
 		}
 		std::string frame = net::CFrameCodec::Encode(payload);
-		m_pTcpServer->Send(connectionId, frame.data(), frame.size());
+		net::CNetPool::InstancePtr()->SendData2Client(connectionId, frame.data(), frame.size());
 	}
 
 	void CMarketService::PublishQuote(const market::CQuote& quote, std::uint64_t nSequence)
@@ -308,7 +302,7 @@ namespace service
 		pValue->set_source(quote.m_strSource);
 		pValue->set_stale(quote.m_bStale);
 		market::CSubscription subscription{quote.m_instrument, market::Channel::quote};
-		for (net::CTcpServer::ConnectionId connectionId : AuthenticatedClients())
+		for (ConnectionId connectionId : AuthenticatedClients())
 		{
 			if (m_subscriptions.IsSubscribed(connectionId, subscription) == true)
 			{
@@ -346,7 +340,7 @@ namespace service
 			pLevel->set_price_scale(level.m_nPriceScale);
 		}
 		market::CSubscription subscription{depth.m_instrument, market::Channel::depth};
-		for (net::CTcpServer::ConnectionId connectionId : AuthenticatedClients())
+		for (ConnectionId connectionId : AuthenticatedClients())
 		{
 			if (m_subscriptions.IsSubscribed(connectionId, subscription) == true)
 			{
@@ -355,20 +349,20 @@ namespace service
 		}
 	}
 
-	bool CMarketService::IsAuthenticated(net::CTcpServer::ConnectionId connectionId) const
+	bool CMarketService::IsAuthenticated(ConnectionId connectionId) const
 	{
 		std::lock_guard<std::mutex> lock(m_mtxSessions);
-		std::unordered_map<net::CTcpServer::ConnectionId, CClientSession>::const_iterator session =
+		std::unordered_map<ConnectionId, CClientSession>::const_iterator session =
 			m_sessions.find(connectionId);
 		return (session != m_sessions.end()) && (session->second.m_bAuthenticated == true);
 	}
 
-	std::vector<net::CTcpServer::ConnectionId> CMarketService::AuthenticatedClients() const
+	std::vector<CMarketService::ConnectionId> CMarketService::AuthenticatedClients() const
 	{
 		std::lock_guard<std::mutex> lock(m_mtxSessions);
-		std::vector<net::CTcpServer::ConnectionId> clients;
+		std::vector<ConnectionId> clients;
 		clients.reserve(m_sessions.size());
-		for (const std::pair<const net::CTcpServer::ConnectionId, CClientSession>& session : m_sessions)
+		for (const std::pair<const ConnectionId, CClientSession>& session : m_sessions)
 		{
 			if (session.second.m_bAuthenticated == true)
 			{
@@ -394,7 +388,7 @@ namespace service
 	std::string CMarketService::MetricsText() const
 	{
 		std::ostringstream out;
-		out << "hqmarket_clients " << (m_pTcpServer != nullptr ? m_pTcpServer->ClientCount() : 0)
+		out << "hqmarket_clients " << net::CNetPool::InstancePtr()->Count()
 			<< "\nhqmarket_quotes_cached " << m_cache.QuoteCount() << "\n";
 		return out.str();
 	}

@@ -13,7 +13,7 @@
 #include <utility>
 #include "../common/defines.h"
 #include "../common/utility.h"
-#include "../common/mapped_value.h"
+#include "../common/container.h"
 
 namespace
 {
@@ -21,20 +21,13 @@ namespace
 	{
 		switch (method)
 		{
-		case net::HttpMethod::GET:
-			return "GET";
-		case net::HttpMethod::POST:
-			return "POST";
-		case net::HttpMethod::PUT:
-			return "PUT";
-		case net::HttpMethod::DELETE:
-			return "DELETE";
-		case net::HttpMethod::OPTIONS:
-			return "OPTIONS";
-		case net::HttpMethod::PATCH:
-			return "PATCH";
-		default:
-			return "UNKNOWN";
+		case net::HttpMethod::GET: return "GET";
+		case net::HttpMethod::POST: return "POST";
+		case net::HttpMethod::PUT: return "PUT";
+		case net::HttpMethod::DELETE: return "DELETE";
+		case net::HttpMethod::OPTIONS: return "OPTIONS";
+		case net::HttpMethod::PATCH: return "PATCH";
+		default: return "UNKNOWN";
 		}
 	}
 
@@ -42,20 +35,13 @@ namespace
 	{
 		switch (method)
 		{
-		case EVHTTP_REQ_GET:
-			return net::HttpMethod::GET;
-		case EVHTTP_REQ_POST:
-			return net::HttpMethod::POST;
-		case EVHTTP_REQ_PUT:
-			return net::HttpMethod::PUT;
-		case EVHTTP_REQ_DELETE:
-			return net::HttpMethod::DELETE;
-		case EVHTTP_REQ_OPTIONS:
-			return net::HttpMethod::OPTIONS;
-		case EVHTTP_REQ_PATCH:
-			return net::HttpMethod::PATCH;
-		default:
-			return net::HttpMethod::UNKNOWN;
+		case EVHTTP_REQ_GET: return net::HttpMethod::GET;
+		case EVHTTP_REQ_POST: return net::HttpMethod::POST;
+		case EVHTTP_REQ_PUT: return net::HttpMethod::PUT;
+		case EVHTTP_REQ_DELETE: return net::HttpMethod::DELETE;
+		case EVHTTP_REQ_OPTIONS: return net::HttpMethod::OPTIONS;
+		case EVHTTP_REQ_PATCH: return net::HttpMethod::PATCH;
+		default: return net::HttpMethod::UNKNOWN;
 		}
 	}
 
@@ -92,7 +78,7 @@ namespace
 			std::size_t nEqual = strItem.find('=');
 			std::string strKey = DecodeURI(strItem.substr(0, nEqual));
 			std::string strVal = (std::string::npos == nEqual) ? std::string() : DecodeURI(strItem.substr(nEqual + 1));
-			if (strKey.empty() == false)
+			if (!strKey.empty())
 			{
 				queries[strKey] = strVal;
 			}
@@ -107,7 +93,7 @@ namespace
 	std::string EncodeSSE(const std::string& strEvent, const std::string& strData)
 	{
 		std::string strRet;
-		if (strEvent.empty() == false)
+		if (!strEvent.empty())
 		{
 			strRet += "event: " + strEvent + "\n";
 		}
@@ -133,8 +119,8 @@ namespace
 
 	struct AsyncResponseContext
 	{
-			evhttp_request* m_pRequest{nullptr};
-			std::unique_ptr<net::CHttpResponseData> m_response;
+		evhttp_request* m_pRequest{ nullptr };
+		std::unique_ptr<net::CHttpResponseData> m_response;
 	};
 
 	void AsyncResponse_Callback(evutil_socket_t, short, void* pArg)
@@ -169,8 +155,8 @@ namespace
 
 	bool PostAsyncResponse(event_base* pBase, evhttp_request* pRequest, std::unique_ptr<net::CHttpResponseData>&& response)
 	{
-		auto* pContext = new AsyncResponseContext{pRequest, std::move(response)};
-		timeval timeout{0, 0};
+		auto* pContext = new AsyncResponseContext{ pRequest, std::move(response) };
+		timeval timeout{ 0, 0 };
 		if (0 != event_base_once(pBase, -1, EV_TIMEOUT, AsyncResponse_Callback, pContext, &timeout))
 		{
 			delete pContext;
@@ -178,223 +164,217 @@ namespace
 		}
 		return true;
 	}
-} // namespace
+}
 
 namespace net
 {
 	struct CHttpStream::State
 	{
-			struct CloseContext
-			{
-					std::shared_ptr<State> state;
-			};
-			struct DrainContext
-			{
-					std::shared_ptr<State> state;
-			};
+		struct CloseContext { std::shared_ptr<State> state; };
+		struct DrainContext { std::shared_ptr<State> state; };
 
-			event_base* base{nullptr};
-			evhttp_request* request{nullptr};
-			evhttp_connection* connection{nullptr};
-			std::mutex mutex;
-			std::deque<std::string> messages;
-			std::function<void()> closeHandler;
-			CloseContext* closeContext{nullptr};
-			std::weak_ptr<State> self;
-			bool scheduled{false};
-			bool closeRequested{false};
-			bool closed{false};
+		event_base* base{ nullptr };
+		evhttp_request* request{ nullptr };
+		evhttp_connection* connection{ nullptr };
+		std::mutex mutex;
+		std::deque<std::string> messages;
+		std::function<void()> closeHandler;
+		CloseContext* closeContext{ nullptr };
+		std::weak_ptr<State> self;
+		bool scheduled{ false };
+		bool closeRequested{ false };
+		bool closed{ false };
 
-			static void ConnectionClose_Callback(evhttp_connection*, void* pArg)
+		static void ConnectionClose_Callback(evhttp_connection*, void* pArg)
+		{
+			std::unique_ptr<CloseContext> context(static_cast<CloseContext*>(pArg));
+			if (context && context->state)
 			{
-				std::unique_ptr<CloseContext> context(static_cast<CloseContext*>(pArg));
-				if ((context != nullptr) && (context->state != nullptr))
-				{
-					context->state->OnConnectionClosed(context.get());
-				}
+				context->state->OnConnectionClosed(context.get());
 			}
+		}
 
-			static void Drain_Callback(evutil_socket_t, short, void* pArg)
+		static void Drain_Callback(evutil_socket_t, short, void* pArg)
+		{
+			std::unique_ptr<DrainContext> context(static_cast<DrainContext*>(pArg));
+			if (context && context->state)
 			{
-				std::unique_ptr<DrainContext> context(static_cast<DrainContext*>(pArg));
-				if ((context != nullptr) && (context->state != nullptr))
-				{
-					context->state->Drain();
-				}
+				context->state->Drain();
 			}
+		}
 
-			bool Schedule()
+		bool Schedule()
+		{
+			auto state = self.lock();
+			if (!state)
 			{
-				std::shared_ptr<State> state = self.lock();
-				if (state == nullptr)
+				return false;
+			}
+			DrainContext* pContext = new DrainContext{ std::move(state) };
+			timeval timeout{ 0, 0 };
+			if (0 != event_base_once(base, -1, EV_TIMEOUT, Drain_Callback, pContext, &timeout))
+			{
+				delete pContext;
+				std::lock_guard<std::mutex> lock(mutex);
+				scheduled = false;
+				return false;
+			}
+			return true;
+		}
+
+		bool Queue(std::string&& strMessage)
+		{
+			bool bSchedule = false;
+			{
+				std::lock_guard<std::mutex> lock(mutex);
+				if (closed || closeRequested)
 				{
 					return false;
 				}
-				DrainContext* pContext = new DrainContext{std::move(state)};
-				timeval timeout{0, 0};
-				if (0 != event_base_once(base, -1, EV_TIMEOUT, Drain_Callback, pContext, &timeout))
+				messages.emplace_back(std::move(strMessage));
+				if (!scheduled)
 				{
-					delete pContext;
-					std::lock_guard<std::mutex> lock(mutex);
+					scheduled = true;
+					bSchedule = true;
+				}
+			}
+			return !bSchedule || Schedule();
+		}
+
+		void RequestClose()
+		{
+			bool bSchedule = false;
+			{
+				std::lock_guard<std::mutex> lock(mutex);
+				if (closed || closeRequested)
+				{
+					return;
+				}
+				closeRequested = true;
+				if (!scheduled)
+				{
+					scheduled = true;
+					bSchedule = true;
+				}
+			}
+			if (bSchedule)
+			{
+				Schedule();
+			}
+		}
+
+		void Drain()
+		{
+			std::deque<std::string> pending;
+			bool bClose = false;
+			{
+				std::lock_guard<std::mutex> lock(mutex);
+				if (closed)
+				{
 					scheduled = false;
-					return false;
+					return;
 				}
-				return true;
+				pending.swap(messages);
+				bClose = closeRequested;
+				scheduled = false;
 			}
-
-			bool Queue(std::string&& strMessage)
+			for (const auto& strMessage : pending)
 			{
-				bool bSchedule = false;
+				evbuffer* pBuffer = evbuffer_new();
+				if (nullptr != pBuffer)
 				{
-					std::lock_guard<std::mutex> lock(mutex);
-					if ((closed == true) || (closeRequested == true))
-					{
-						return false;
-					}
-					messages.emplace_back(std::move(strMessage));
-					if (scheduled == false)
-					{
-						scheduled = true;
-						bSchedule = true;
-					}
-				}
-				return !bSchedule || Schedule();
-			}
-
-			void RequestClose()
-			{
-				bool bSchedule = false;
-				{
-					std::lock_guard<std::mutex> lock(mutex);
-					if ((closed == true) || (closeRequested == true))
-					{
-						return;
-					}
-					closeRequested = true;
-					if (scheduled == false)
-					{
-						scheduled = true;
-						bSchedule = true;
-					}
-				}
-				if (bSchedule == true)
-				{
-					Schedule();
+					evbuffer_add(pBuffer, strMessage.data(), strMessage.size());
+					evhttp_send_reply_chunk(request, pBuffer);
+					evbuffer_free(pBuffer);
 				}
 			}
-
-			void Drain()
+			if (bClose)
 			{
-				std::deque<std::string> pending;
-				bool bClose = false;
-				{
-					std::lock_guard<std::mutex> lock(mutex);
-					if (closed == true)
-					{
-						scheduled = false;
-						return;
-					}
-					pending.swap(messages);
-					bClose = closeRequested;
-					scheduled = false;
-				}
-				for (const auto& strMessage : pending)
-				{
-					evbuffer* pBuffer = evbuffer_new();
-					if (nullptr != pBuffer)
-					{
-						evbuffer_add(pBuffer, strMessage.data(), strMessage.size());
-						evhttp_send_reply_chunk(request, pBuffer);
-						evbuffer_free(pBuffer);
-					}
-				}
-				if (bClose == true)
-				{
-					CloseOnEventThread();
-				}
+				CloseOnEventThread();
 			}
+		}
 
-			void CloseOnEventThread()
+		void CloseOnEventThread()
+		{
+			CloseContext* pCloseContext = nullptr;
+			std::function<void()> func;
+			evhttp_request* pRequest = nullptr;
 			{
-				CloseContext* pCloseContext = nullptr;
-				std::function<void()> func;
-				evhttp_request* pRequest = nullptr;
+				std::lock_guard<std::mutex> lock(mutex);
+				if (closed)
 				{
-					std::lock_guard<std::mutex> lock(mutex);
-					if (closed == true)
-					{
-						return;
-					}
-					closed = true;
-					pCloseContext = closeContext;
+					return;
+				}
+				closed = true;
+				pCloseContext = closeContext;
+				closeContext = nullptr;
+				pRequest = request;
+				request = nullptr;
+				func = std::move(closeHandler);
+			}
+			if (nullptr != connection)
+			{
+				evhttp_connection_set_closecb(connection, nullptr, nullptr);
+			}
+			delete pCloseContext;
+			if (nullptr != pRequest)
+			{
+				evhttp_send_reply_end(pRequest);
+				// evhttp_send_reply_end() 完成发送后由 libevent 释放 request。
+			}
+			if (func)
+			{
+				func();
+			}
+		}
+
+		void OnConnectionClosed(CloseContext* pContext)
+		{
+			std::function<void()> func;
+			evhttp_request* pRequest = nullptr;
+			{
+				std::lock_guard<std::mutex> lock(mutex);
+				if (closeContext == pContext)
+				{
 					closeContext = nullptr;
-					pRequest = request;
-					request = nullptr;
-					func = std::move(closeHandler);
 				}
-				if (nullptr != connection)
+				if (closed)
 				{
-					evhttp_connection_set_closecb(connection, nullptr, nullptr);
+					return;
 				}
-				delete pCloseContext;
-				if (nullptr != pRequest)
-				{
-					evhttp_send_reply_end(pRequest);
-					// evhttp_send_reply_end() 完成发送后由 libevent 释放 request。
-				}
-				if (func != nullptr)
-				{
-					func();
-				}
+				closed = true;
+				messages.clear();
+				pRequest = request;
+				request = nullptr;
+				func = std::move(closeHandler);
 			}
-
-			void OnConnectionClosed(CloseContext* pContext)
+			if (nullptr != pRequest)
 			{
-				std::function<void()> func;
-				evhttp_request* pRequest = nullptr;
-				{
-					std::lock_guard<std::mutex> lock(mutex);
-					if (closeContext == pContext)
-					{
-						closeContext = nullptr;
-					}
-					if (closed == true)
-					{
-						return;
-					}
-					closed = true;
-					messages.clear();
-					pRequest = request;
-					request = nullptr;
-					func = std::move(closeHandler);
-				}
-				if (nullptr != pRequest)
-				{
-					evhttp_request_free(pRequest);
-				}
-				if (func != nullptr)
-				{
-					func();
-				}
+				evhttp_request_free(pRequest);
 			}
+			if (func)
+			{
+				func();
+			}
+		}
 	};
 
 	struct CHttpResponse::State
 	{
-			event_base* base{nullptr};
-			evhttp_request* request{nullptr};
-			CHttpServer* server{nullptr};
-			int status{HTTP_OK};
-			std::unordered_map<std::string, std::string> headers;
-			std::atomic_int mode{0};
+		event_base* base{ nullptr };
+		evhttp_request* request{ nullptr };
+		CHttpServer* server{ nullptr };
+		int status{ HTTP_OK };
+		std::unordered_map<std::string, std::string> headers;
+		std::atomic_int mode{ 0 };
 	};
 
-	HttpMethod CHttpRequest::GetMethod() const
-	{
+	HttpMethod CHttpRequest::GetMethod() const 
+	{ 
 		return m_method;
 	}
-	const std::string& CHttpRequest::GetPath() const
-	{
+	const std::string& CHttpRequest::GetPath() const 
+	{ 
 		return m_strPath;
 	}
 	const std::string& CHttpRequest::GetUri() const
@@ -406,24 +386,19 @@ namespace net
 		return m_strBody;
 	}
 
-	const std::string& CHttpRequest::GetHeader(const std::string& strName) const
+	std::string CHttpRequest::GetHeader(const std::string& strName) const
 	{
-		return container::FindMappedValue(m_headers, utility::lower(strName));
+		return container::vfind(m_headers, utility::lower(strName));
 	}
 
-	const std::string& CHttpRequest::GetQuery(const std::string& strName) const
+	std::string CHttpRequest::GetQuery(const std::string& strName) const
 	{
-		return container::FindMappedValue(m_queries, strName);
+		return container::vfind(m_queries, strName);
 	}
 
-	CHttpStream::CHttpStream(std::shared_ptr<State> state) : m_state(std::move(state))
-	{
-	}
+	CHttpStream::CHttpStream(std::shared_ptr<State> state) : m_state(std::move(state)) {}
 
-	bool CHttpStream::Send(const std::string& strData)
-	{
-		return Send(std::string(), strData);
-	}
+	bool CHttpStream::Send(const std::string& strData) { return Send(std::string(), strData); }
 
 	bool CHttpStream::Send(const std::string& strEvent, const std::string& strData)
 	{
@@ -443,16 +418,14 @@ namespace net
 		if (nullptr != m_state)
 		{
 			std::lock_guard<std::mutex> lock(m_state->mutex);
-			if (m_state->closed == false)
+			if (!m_state->closed)
 			{
 				m_state->closeHandler = std::move(func);
 			}
 		}
 	}
 
-	CHttpResponse::CHttpResponse(std::shared_ptr<State> state) : m_state(std::move(state))
-	{
-	}
+	CHttpResponse::CHttpResponse(std::shared_ptr<State> state) : m_state(std::move(state)) {}
 
 	void CHttpResponse::SetStatus(int nStatus)
 	{
@@ -528,16 +501,15 @@ namespace net
 		evhttp_request_own(m_state->request);
 		evhttp_send_reply_start(m_state->request, m_state->status, nullptr);
 
-		std::shared_ptr<CHttpStream::State> state = std::make_shared<CHttpStream::State>();
+		auto state = std::make_shared<CHttpStream::State>();
 		state->self = state;
 		state->base = m_state->base;
 		state->request = m_state->request;
 		state->connection = evhttp_request_get_connection(m_state->request);
-		state->closeContext = new CHttpStream::State::CloseContext{state};
+		state->closeContext = new CHttpStream::State::CloseContext{ state };
 		if (nullptr != state->connection)
 		{
-			evhttp_connection_set_closecb(state->connection, CHttpStream::State::ConnectionClose_Callback,
-										  state->closeContext);
+			evhttp_connection_set_closecb(state->connection, CHttpStream::State::ConnectionClose_Callback, state->closeContext);
 		}
 		if (nullptr != m_state->server)
 		{
@@ -551,11 +523,9 @@ namespace net
 		return (nullptr != m_state) && (0 != m_state->mode.load());
 	}
 
-	CHttpServer::CHttpServer(int nPort) : m_nPort(nPort)
-	{
-	}
+	CHttpServer::CHttpServer(int nPort) : m_nPort(nPort) {}
 	CHttpServer::~CHttpServer()
-	{
+	{ 
 		Release();
 	}
 
@@ -607,7 +577,7 @@ namespace net
 		}
 		request.m_method = Cmd2Method(evhttp_request_get_command(pRequest));
 
-		// 统一资源标识符 Uniform Resource Identifier
+		//统一资源标识符 Uniform Resource Identifier
 		const char* pURI = evhttp_request_get_uri(pRequest);
 		if (nullptr == pURI)
 		{
@@ -615,7 +585,7 @@ namespace net
 		}
 		request.m_strURI = pURI;
 
-		// 结构化Uri
+		//结构化Uri
 		evhttp_uri* pFmtURI = evhttp_uri_parse(request.m_strURI.c_str());
 		if (nullptr != pFmtURI)
 		{
@@ -649,7 +619,7 @@ namespace net
 		request.m_strBody.resize(nLength);
 		if (nLength > 0)
 		{
-			ev_ssize_t nCopied = evbuffer_copyout(pInput, request.m_strBody.data(), nLength);
+			const ev_ssize_t nCopied = evbuffer_copyout(pInput, request.m_strBody.data(), nLength);
 			if ((nCopied < 0) || (static_cast<std::size_t>(nCopied) != nLength))
 			{
 				request.m_strBody.clear();
@@ -662,15 +632,15 @@ namespace net
 	void CHttpServer::OnRequest(struct evhttp_request* pRequest)
 	{
 		CHttpRequest request;
-		int nRet = ParseRequest(pRequest, request);
+		const int nRet = ParseRequest(pRequest, request);
 		if (0 != nRet)
 		{
 			evhttp_send_reply(pRequest, nRet, nullptr, nullptr);
 			return;
 		}
 
-		std::string strRouteKey = FmtRouteKey(request.m_method, request.m_strPath);
-		std::unordered_map<std::string, _TyHandler>::const_iterator mIter = m_handlers.find(strRouteKey);
+		const std::string strRouteKey = FmtRouteKey(request.m_method, request.m_strPath);
+		const auto mIter = m_handlers.find(strRouteKey);
 		if (m_handlers.end() != mIter)
 		{
 			auto* pThreadPool = ThreadPoolPtr;
@@ -680,45 +650,43 @@ namespace net
 				return;
 			}
 
-			// 确定要异步处理后才取得所有权。
+			//确定要异步处理后才取得所有权。
 			evhttp_request_own(pRequest);
 			event_base* pBase = GetNet();
 			_TyHandler handler = mIter->second;
-			pThreadPool->PushTask(task_priority::em_normal, 0,
-								  [pBase, pRequest, handler = std::move(handler), request = std::move(request)]() mutable
-								  {
-									  std::unique_ptr<CHttpResponseData> response;
-									  try
-									  {
-										  response = handler(request);
-										  if (nullptr == response)
-										  {
-											  response = std::make_unique<CHttpResponseData>();
-											  response->m_nStatus = HTTP_INTERNAL;
-											  response->m_strBody = "Internal Server Error";
-										  }
-									  }
-									  catch (...)
-									  {
-										  response = std::make_unique<CHttpResponseData>();
-										  response->m_nStatus = HTTP_INTERNAL;
-										  response->m_strBody = "Internal Server Error";
-									  }
+			pThreadPool->PushTask(task_priority::em_normal, 0, [pBase, pRequest, handler = std::move(handler), request = std::move(request)]() mutable
+				{
+					std::unique_ptr<CHttpResponseData> response;
+					try
+					{
+						response = handler(request);
+						if (nullptr == response)
+						{
+							response = std::make_unique<CHttpResponseData>();
+							response->m_nStatus = HTTP_INTERNAL;
+							response->m_strBody = "Internal Server Error";
+						}
+					}
+					catch (...)
+					{
+						response = std::make_unique<CHttpResponseData>();
+						response->m_nStatus = HTTP_INTERNAL;
+						response->m_strBody = "Internal Server Error";
+					}
 
-									  if (!PostAsyncResponse(pBase, pRequest, std::move(response)))
-									  {
-										  evhttp_request_free(pRequest);
-									  }
-								  });
+					if (!PostAsyncResponse(pBase, pRequest, std::move(response)))
+					{
+						evhttp_request_free(pRequest);
+					}
+				});
 			return;
 		}
 
 		bool bPathExists = false;
-		std::string strSuffix = " " + request.m_strPath;
+		const std::string strSuffix = " " + request.m_strPath;
 		for (const auto& item : m_handlers)
 		{
-			if ((item.first.size() >= strSuffix.size()) &&
-				(0 == item.first.compare(item.first.size() - strSuffix.size(), strSuffix.size(), strSuffix)))
+			if ((item.first.size() >= strSuffix.size()) && (0 == item.first.compare(item.first.size() - strSuffix.size(), strSuffix.size(), strSuffix)))
 			{
 				bPathExists = true;
 				break;
@@ -730,12 +698,9 @@ namespace net
 	void CHttpServer::RegisterStream(const std::shared_ptr<CHttpStream::State>& state)
 	{
 		std::lock_guard<std::mutex> lock(m_mtx_streams);
-		m_streams.erase(std::remove_if(m_streams.begin(), m_streams.end(),
-									   [](const auto& item)
-									   {
-										   return item.expired();
-									   }),
-						m_streams.end());
+		m_streams.erase(std::remove_if(m_streams.begin(), m_streams.end(), [](const auto& item) {
+			return item.expired();
+		}), m_streams.end());
 		m_streams.emplace_back(state);
 	}
 
@@ -746,7 +711,7 @@ namespace net
 			std::lock_guard<std::mutex> lock(m_mtx_streams);
 			for (const auto& item : m_streams)
 			{
-				if (std::shared_ptr<CHttpStream::State> state = item.lock(); state != nullptr)
+				if (auto state = item.lock())
 				{
 					streams.emplace_back(std::move(state));
 				}
@@ -764,4 +729,5 @@ namespace net
 			m_pHttp = nullptr;
 		}
 	}
-} // namespace net
+}
+

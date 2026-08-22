@@ -17,14 +17,17 @@
 #include <unordered_map>
 #include <vector>
 
+class CRequest;
+
 namespace service
 {
 	class CMarketService final
 	{
 		private:
+			using ConnectionId = evutil_socket_t;
+
 			struct CClientSession
 			{
-				net::CFrameCodec m_codec;
 				bool m_bAuthenticated{false};
 			};
 
@@ -40,17 +43,17 @@ namespace service
 							 std::int64_t nEndTime);
 
 		private:
-			void OnClientConnected(net::CTcpServer::ConnectionId connectionId);
-			void OnClientData(net::CTcpServer::ConnectionId connectionId, std::vector<std::uint8_t>&& data);
-			void OnClientDisconnected(net::CTcpServer::ConnectionId connectionId);
-			void HandleEnvelope(net::CTcpServer::ConnectionId connectionId,
+			void OnClientConnected(ConnectionId connectionId);
+			int OnClientRequest(const std::unique_ptr<CRequest>& request);
+			void OnClientDisconnected(ConnectionId connectionId);
+			void HandleEnvelope(ConnectionId connectionId,
 							const hqmarket::market::v1::MarketEnvelope& envelope);
-			void SendEnvelope(net::CTcpServer::ConnectionId connectionId,
+			void SendEnvelope(ConnectionId connectionId,
 						  hqmarket::market::v1::MarketEnvelope& envelope);
 			void PublishQuote(const market::CQuote& quote, std::uint64_t nSequence);
 			void PublishDepth(const market::CDepth& depth, std::uint64_t nSequence);
-			bool IsAuthenticated(net::CTcpServer::ConnectionId connectionId) const;
-			std::vector<net::CTcpServer::ConnectionId> AuthenticatedClients() const;
+			bool IsAuthenticated(ConnectionId connectionId) const;
+			std::vector<ConnectionId> AuthenticatedClients() const;
 
 		private:
 			provider::CPythonRuntime m_python;
@@ -61,7 +64,7 @@ namespace service
 			net::CTcpServer* m_pTcpServer{nullptr};
 			std::string m_strToken;
 			mutable std::mutex m_mtxSessions;
-			std::unordered_map<net::CTcpServer::ConnectionId, CClientSession> m_sessions;
+			std::unordered_map<ConnectionId, CClientSession> m_sessions;
 			market::CSubscriptionManager m_subscriptions;
 			std::atomic_uint64_t m_nDepthSequence{0};
 	};

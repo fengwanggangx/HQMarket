@@ -30,6 +30,8 @@
     <CopyAdditionalIncludes>true</CopyAdditionalIncludes>
   </PropertyGroup>
   <ItemGroup>
+    <ClCompile Include="request\request.cpp" />
+    <ClCompile Include="request\request.pb.cc" />
     <ClCompile Include="common\defines.cpp" />
     <ClCompile Include="common\utility.cpp" />
     <ClCompile Include="main.cpp" />
@@ -41,6 +43,8 @@
     <ClCompile Include="network\CHttpServer.cpp" />
     <ClCompile Include="network\CTcpServer.cpp" />
     <ClCompile Include="network\CNet.cpp" />
+    <ClCompile Include="network\CNetPool.cpp" />
+    <ClCompile Include="network\CNetTools.cpp" />
     <ClCompile Include="network\netcommon.cpp" />
     <ClCompile Include="python\CMooTdxProvider.cpp" />
     <ClCompile Include="python\CAkShareProvider.cpp" />
@@ -50,8 +54,13 @@
     <ClCompile Include="thread\CThreadPool.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="basic\CDistributor.h" />
+    <ClInclude Include="common\container.h" />
+    <ClInclude Include="common\container_traits.h" />
     <ClInclude Include="common\defines.h" />
     <ClInclude Include="common\mapped_value.h" />
+    <ClInclude Include="common\ISingleton.h" />
+    <ClInclude Include="common\traits.h" />
     <ClInclude Include="common\utility.h" />
     <ClInclude Include="market\CMarketCache.h" />
     <ClInclude Include="market\CSubscriptionManager.h" />
@@ -62,6 +71,9 @@
     <ClInclude Include="network\CHttpServer.h" />
     <ClInclude Include="network\CTcpServer.h" />
     <ClInclude Include="network\CNet.h" />
+    <ClInclude Include="network\CNetPool.h" />
+    <ClInclude Include="network\CNetRouter.h" />
+    <ClInclude Include="network\CNetTools.h" />
     <ClInclude Include="network\netcommon.h" />
     <ClInclude Include="python\CMooTdxProvider.h" />
     <ClInclude Include="python\CAkShareProvider.h" />
@@ -69,6 +81,8 @@
     <ClInclude Include="service\CMarketService.h" />
     <ClInclude Include="storage\CMarketStorage.h" />
     <ClInclude Include="thread\CThreadPool.h" />
+    <ClInclude Include="request\request.h" />
+    <ClInclude Include="request\request.pb.h" />
   </ItemGroup>
   <ItemGroup><None Include="config\hqmarket.json" /><None Include="market\v1\market.proto" /><None Include="python\requirements.lock" /></ItemGroup>
   <ItemGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

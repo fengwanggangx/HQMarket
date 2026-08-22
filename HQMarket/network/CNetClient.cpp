@@ -34,8 +34,7 @@ namespace net
 		if (getsockname(bufferevent_getfd(pEvent), (struct sockaddr*)&addr, &addrlen) == 0)
 		{
 			char host[NI_MAXHOST], port[NI_MAXSERV];
-			if (getnameinfo((struct sockaddr*)&addr, addrlen, host, NI_MAXHOST, port, NI_MAXSERV,
-							NI_NUMERICHOST | NI_NUMERICSERV) == 0)
+			if (getnameinfo((struct sockaddr*)&addr, addrlen, host, NI_MAXHOST, port, NI_MAXSERV, NI_NUMERICHOST | NI_NUMERICSERV) == 0)
 			{
 				printf("本地地址: %s:%s\n", host, port);
 			}
@@ -47,13 +46,13 @@ namespace net
 		if (getpeername(fd, (struct sockaddr*)&addr, &addrlen) == 0)
 		{
 			char host[NI_MAXHOST], port[NI_MAXSERV];
-			if (getnameinfo((struct sockaddr*)&addr, addrlen, host, NI_MAXHOST, port, NI_MAXSERV,
-							NI_NUMERICHOST | NI_NUMERICSERV) == 0)
+			if (getnameinfo((struct sockaddr*)&addr, addrlen, host, NI_MAXHOST, port, NI_MAXSERV, NI_NUMERICHOST | NI_NUMERICSERV) == 0)
 			{
 				printf("服务器地址: %s:%s\n", host, port);
 			}
 		}
 
+		
 		bufferevent* pBuffer = CNetPool::InstancePtr()->RegisterAConnection(fd, pEvent, &addr);
 	}
 
@@ -107,7 +106,7 @@ namespace net
 		// 连接服务器
 		struct sockaddr_in svr;
 		bool bRet = net::FmtAddress(svr, m_nPort, m_strAddr);
-		if (bRet == false)
+		if (!bRet)
 		{
 			bufferevent_free(pEvent);
 			return -1;
