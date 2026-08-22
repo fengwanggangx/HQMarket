@@ -40,9 +40,9 @@ class CRequest
 		void SetReturnData(const std::string& strKey, const std::string& strVal);
 
 		CRequest::Type GetType() const;
-		std::string GetCmd() const;
-		std::string GetExtraData(const std::string& strKey) const;
-		std::string GetReturnData(const std::string& strKey) const;
+		const std::string& GetCmd() const;
+		const std::string& GetExtraData(const std::string& strKey) const;
+		const std::string& GetReturnData(const std::string& strKey) const;
 		std::unordered_map<std::string, std::string> GetExtraData() const;
 		std::unordered_map<std::string, std::string> GetReturnData() const;
 

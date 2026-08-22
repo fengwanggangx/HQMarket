@@ -10,6 +10,7 @@
 
 #include "traits.h"
 #include "container_traits.h"
+#include "mapped_value.h"
 
 namespace container
 {
@@ -81,15 +82,7 @@ namespace container
 			  typename std::enable_if_t<traits::is_associative_container<_TyContainer>::value, int> = 0>
 	const auto& vfind(const _TyContainer& container, const _TyKey& key)
 	{
-		const auto& mIter = container.find(key);
-		if (mIter != container.end())
-		{
-			return mIter->second;
-		}
-
-		using _TyRet = _TyContainer::mapped_type;
-		thread_local _TyRet s;
-		return s;
+		return FindMappedValue(container, key);
 	}
 
 	template <class _TyContainer, class _TyVal = typename _TyContainer::value_type,

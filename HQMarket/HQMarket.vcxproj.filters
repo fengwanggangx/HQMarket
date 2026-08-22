@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common\defines.h"><Filter>common</Filter></ClInclude>
+    <ClInclude Include="common\mapped_value.h"><Filter>common</Filter></ClInclude>
     <ClInclude Include="common\utility.h"><Filter>common</Filter></ClInclude>
     <ClInclude Include="market\CMarketCache.h"><Filter>market</Filter></ClInclude>
     <ClInclude Include="market\CSubscriptionManager.h"><Filter>market</Filter></ClInclude>

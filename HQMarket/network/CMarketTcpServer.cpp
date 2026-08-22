@@ -36,7 +36,7 @@ namespace net
 		return static_cast<wire::Exchange>(static_cast<int>(value));
 	}
 
-	CMarketTcpServer::CMarketTcpServer(int nPort, std::string strToken) : m_nPort(nPort), m_strToken(std::move(strToken))
+	CMarketTcpServer::CMarketTcpServer(int nPort, const std::string& strToken) : m_nPort(nPort), m_strToken(strToken)
 	{
 	}
 	CMarketTcpServer::~CMarketTcpServer()

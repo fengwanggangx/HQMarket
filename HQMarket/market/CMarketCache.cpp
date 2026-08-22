@@ -2,7 +2,14 @@
 #include <mutex>
 namespace market
 {
-	std::uint64_t CMarketCache::Update(CQuote quote)
+	std::uint64_t CMarketCache::Update(const CQuote& quote)
+	{
+		std::unique_lock lock(m_mtxQuotes);
+		m_quotes.insert_or_assign(quote.m_instrument, quote);
+		return ++m_nQuoteSequence;
+	}
+
+	std::uint64_t CMarketCache::Update(CQuote&& quote)
 	{
 		std::unique_lock lock(m_mtxQuotes);
 		m_quotes.insert_or_assign(quote.m_instrument, std::move(quote));

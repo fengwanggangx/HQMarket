@@ -38,7 +38,7 @@ namespace db
 
 	db::DataTypes GetDataType(db::database ty, int nType);
 	std::string GetDBName(db::database ty);
-	db::database GetDBType(const std::string strName);
+	db::database GetDBType(const std::string& strName);
 } // namespace db
 
 #endif

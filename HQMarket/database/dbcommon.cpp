@@ -42,7 +42,7 @@ namespace db
 		return (s_db.end() == mIter) ? "" : mIter->second;
 	}
 
-	db::database GetDBType(const std::string strName)
+	db::database GetDBType(const std::string& strName)
 	{
 		for (const auto& item : s_db)
 		{

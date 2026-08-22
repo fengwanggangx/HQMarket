@@ -18,7 +18,7 @@ namespace net
 	{
 		public:
 			using _TySubscriptionHandler = std::function<void(const std::vector<market::CSubscription>&, bool)>;
-			CMarketTcpServer(int nPort, std::string strToken);
+			CMarketTcpServer(int nPort, const std::string& strToken);
 			~CMarketTcpServer() override;
 			int Initialize();
 			void SetSubscriptionHandler(_TySubscriptionHandler handler);

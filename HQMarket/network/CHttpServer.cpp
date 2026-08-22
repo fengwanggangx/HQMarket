@@ -406,14 +406,14 @@ namespace net
 		return m_strBody;
 	}
 
-	std::string CHttpRequest::GetHeader(const std::string& strName) const
+	const std::string& CHttpRequest::GetHeader(const std::string& strName) const
 	{
-		return container::vfind(m_headers, utility::lower(strName));
+		return container::FindMappedValue(m_headers, utility::lower(strName));
 	}
 
-	std::string CHttpRequest::GetQuery(const std::string& strName) const
+	const std::string& CHttpRequest::GetQuery(const std::string& strName) const
 	{
-		return container::vfind(m_queries, strName);
+		return container::FindMappedValue(m_queries, strName);
 	}
 
 	CHttpStream::CHttpStream(std::shared_ptr<State> state) : m_state(std::move(state))

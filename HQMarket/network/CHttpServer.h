@@ -114,8 +114,8 @@ namespace net
 			const std::string& GetPath() const;
 			const std::string& GetUri() const;
 			const std::string& GetBody() const;
-			std::string GetHeader(const std::string& strName) const;
-			std::string GetQuery(const std::string& strName) const;
+			const std::string& GetHeader(const std::string& strName) const;
+			const std::string& GetQuery(const std::string& strName) const;
 
 		private:
 			friend class CHttpServer;

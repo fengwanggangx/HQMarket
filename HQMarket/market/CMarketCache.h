@@ -9,7 +9,8 @@ namespace market
 	class CMarketCache final
 	{
 		public:
-			std::uint64_t Update(CQuote quote);
+			std::uint64_t Update(const CQuote& quote);
+			std::uint64_t Update(CQuote&& quote);
 			std::optional<CQuote> GetQuote(const CInstrument& instrument) const;
 			std::size_t QuoteCount() const;
 

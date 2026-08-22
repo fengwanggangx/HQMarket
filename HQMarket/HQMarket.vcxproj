@@ -43,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common\defines.h" />
+    <ClInclude Include="common\mapped_value.h" />
     <ClInclude Include="common\utility.h" />
     <ClInclude Include="market\CMarketCache.h" />
     <ClInclude Include="market\CSubscriptionManager.h" />

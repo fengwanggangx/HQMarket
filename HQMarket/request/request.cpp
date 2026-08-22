@@ -1,5 +1,6 @@
 #include "request.pb.h"
 #include "request.h"
+#include "../common/mapped_value.h"
 
 static request::RequestType ToProtoType(CRequest::Type type)
 {
@@ -89,11 +90,12 @@ CRequest::Type CRequest::GetType() const
 	return static_cast<CRequest::Type>(m_data->type());
 }
 
-std::string CRequest::GetCmd() const
+const std::string& CRequest::GetCmd() const
 {
 	if (nullptr == m_data)
 	{
-		return "";
+		static std::string emptyValue;
+		return emptyValue;
 	}
 	return m_data->cmd();
 }
@@ -107,18 +109,24 @@ std::unordered_map<std::string, std::string> CRequest::GetExtraData() const
 	return {m_data->extra().begin(), m_data->extra().end()};
 }
 
-std::string CRequest::GetExtraData(const std::string& strKey) const
+const std::string& CRequest::GetExtraData(const std::string& strKey) const
 {
-	const auto& data = GetExtraData();
-	const auto& mIter = data.find(strKey);
-	return data.end() == mIter ? "" : mIter->second;
+	if (nullptr == m_data)
+	{
+		static std::string emptyValue;
+		return emptyValue;
+	}
+	return container::FindMappedValue(m_data->extra(), strKey);
 }
 
-std::string CRequest::GetReturnData(const std::string& strKey) const
+const std::string& CRequest::GetReturnData(const std::string& strKey) const
 {
-	const auto& data = GetReturnData();
-	const auto& mIter = data.find(strKey);
-	return data.end() == mIter ? "" : mIter->second;
+	if (nullptr == m_data)
+	{
+		static std::string emptyValue;
+		return emptyValue;
+	}
+	return container::FindMappedValue(m_data->ret(), strKey);
 }
 
 std::unordered_map<std::string, std::string> CRequest::GetReturnData() const
