@@ -10,8 +10,9 @@ namespace net
 	namespace utility
 	{
 		std::size_t BufferEventReader(struct bufferevent* pEvent, std::vector<char>& buffer);
-		std::size_t RequestFromBuffer(std::vector<std::unique_ptr<CRequest>>& reqs, struct bufferevent* pEvent, std::vector<char>& buffer);
+		std::size_t RequestFromBuffer(std::vector<std::unique_ptr<CRequest>>& reqs, struct bufferevent* pEvent,
+									  std::vector<char>& buffer);
 		bool SendRequest(CRequest* pRequest, struct bufferevent* pEvent, std::vector<char>& buffer);
-	}
-}
+	} // namespace utility
+} // namespace net
 #endif

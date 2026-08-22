@@ -7,14 +7,15 @@ namespace db
 {
 	struct CConnectParam
 	{
-		CConnectParam(const std::string& strHost, unsigned int nPort, const std::string& strAccount, const std::string& strPasswd, const std::string& strDB, const std::string& strCharset);
-		CConnectParam(const std::string& strParam, char delimiter);
-		std::string m_strHost;
-		unsigned int m_nPort{ 0 };
-		std::string m_strAccount;
-		std::string m_strPasswd;
-		std::string m_strDataBase;
-		std::string m_strCharset;
+			CConnectParam(const std::string& strHost, unsigned int nPort, const std::string& strAccount,
+						  const std::string& strPasswd, const std::string& strDB, const std::string& strCharset);
+			CConnectParam(const std::string& strParam, char delimiter);
+			std::string m_strHost;
+			unsigned int m_nPort{0};
+			std::string m_strAccount;
+			std::string m_strPasswd;
+			std::string m_strDataBase;
+			std::string m_strCharset;
 	};
 
 	enum class DataTypes
@@ -38,7 +39,6 @@ namespace db
 	db::DataTypes GetDataType(db::database ty, int nType);
 	std::string GetDBName(db::database ty);
 	db::database GetDBType(const std::string strName);
-}
-
+} // namespace db
 
 #endif

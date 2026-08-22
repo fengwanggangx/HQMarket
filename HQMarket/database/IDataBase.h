@@ -9,10 +9,10 @@ namespace db
 {
 	struct CColumnInfo
 	{
-		unsigned int m_uId{ 0 };
-		std::string m_strName;
-		db::DataTypes m_type{ db::DataTypes::em_string };
-		int m_nDecimal{ -1 };
+			unsigned int m_uId{0};
+			std::string m_strName;
+			db::DataTypes m_type{db::DataTypes::em_string};
+			int m_nDecimal{-1};
 	};
 
 	enum class status
@@ -31,23 +31,24 @@ namespace db
 
 	class IDataBase
 	{
-	public:
-		virtual ~IDataBase() = default;
-	public:
-		virtual int Connect(const CConnectParam& param) = 0;
-		virtual int Close() = 0;
+		public:
+			virtual ~IDataBase() = default;
 
-		//virtual int ReConnect(const std::string& strFile) = 0;
+		public:
+			virtual int Connect(const CConnectParam& param) = 0;
+			virtual int Close() = 0;
 
-		virtual int ExecUpdate(const std::string& strSQL) = 0;
-		virtual const _TyTableInfo& ExecQuery(const std::string& strSQL) = 0;
+			// virtual int ReConnect(const std::string& strFile) = 0;
 
-		virtual bool BeginTransaction() = 0;
-		virtual bool EndTransaction() = 0;
-		virtual bool RollBackTransaction() = 0;
+			virtual int ExecUpdate(const std::string& strSQL) = 0;
+			virtual const _TyTableInfo& ExecQuery(const std::string& strSQL) = 0;
 
-	public:
-		db::status m_status{ db::status::free };
+			virtual bool BeginTransaction() = 0;
+			virtual bool EndTransaction() = 0;
+			virtual bool RollBackTransaction() = 0;
+
+		public:
+			db::status m_status{db::status::free};
 	};
-}
+} // namespace db
 #endif

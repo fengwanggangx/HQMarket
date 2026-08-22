@@ -8,30 +8,30 @@ namespace net
 {
 	struct CNetInfo
 	{
-		evutil_socket_t m_fd{ -1 };
-		struct sockaddr_storage	m_addr { 0 };
-		struct bufferevent* m_pEvent{ nullptr };
-		std::string m_strAddress;
-		int m_nPort{ -1 };
+			evutil_socket_t m_fd{-1};
+			struct sockaddr_storage m_addr{0};
+			struct bufferevent* m_pEvent{nullptr};
+			std::string m_strAddress;
+			int m_nPort{-1};
 
-		void Empty()
-		{
-			m_fd = -1;
-			m_pEvent = nullptr;
-			memset(&m_addr, 0, sizeof(m_addr));
-			m_strAddress.clear();
-			m_nPort = -1;
-			if (nullptr != m_pEvent)
+			void Empty()
 			{
-				bufferevent_free(m_pEvent);
+				m_fd = -1;
 				m_pEvent = nullptr;
+				memset(&m_addr, 0, sizeof(m_addr));
+				m_strAddress.clear();
+				m_nPort = -1;
+				if (nullptr != m_pEvent)
+				{
+					bufferevent_free(m_pEvent);
+					m_pEvent = nullptr;
+				}
 			}
-		}
 
-		~CNetInfo()
-		{
-			Empty();
-		}
+			~CNetInfo()
+			{
+				Empty();
+			}
 	};
 
 	CNetPool::CNetPool()
@@ -40,7 +40,6 @@ namespace net
 
 	CNetPool::~CNetPool()
 	{
-
 	}
 
 	bool CNetPool::RegisterAConnection(evutil_socket_t fd, struct bufferevent* pEvent, struct sockaddr* pAddr)
@@ -52,7 +51,7 @@ namespace net
 
 		auto [mIter, bInserted] = m_pool.try_emplace(fd, nullptr);
 		CNetInfo* pInfo = mIter->second;
-		if (bInserted)
+		if (bInserted == true)
 		{
 			pInfo = new CNetInfo;
 			mIter->second = pInfo;
@@ -65,7 +64,8 @@ namespace net
 		return true;
 	}
 
-	struct bufferevent* CNetPool::RegisterAConnection(evutil_socket_t fd, struct bufferevent* pEvent, struct sockaddr_storage* pAddr)
+	struct bufferevent* CNetPool::RegisterAConnection(evutil_socket_t fd, struct bufferevent* pEvent,
+													  struct sockaddr_storage* pAddr)
 	{
 		if ((nullptr == pAddr) || (nullptr == pEvent))
 		{
@@ -74,7 +74,7 @@ namespace net
 
 		auto [mIter, bInserted] = m_pool.try_emplace(fd, nullptr);
 		CNetInfo* pInfo = mIter->second;
-		if (bInserted)
+		if (bInserted == true)
 		{
 			pInfo = new CNetInfo;
 			mIter->second = pInfo;
@@ -82,13 +82,15 @@ namespace net
 		pInfo->Empty();
 		pInfo->m_fd = fd;
 		pInfo->m_pEvent = pEvent;
-		memset(&pInfo->m_addr, 0, sizeof(pInfo->m_addr));  // 初始化目标结构体（可选但安全）
+		memset(&pInfo->m_addr, 0, sizeof(pInfo->m_addr)); // 初始化目标结构体（可选但安全）
 		memcpy(&pInfo->m_addr, pAddr, sizeof(*pAddr));
 		ParseSockAddr(pInfo->m_strAddress, pInfo->m_nPort, *pAddr);
 		return pEvent;
 	}
 
-	struct bufferevent* CNetPool::RegisterConnect(evutil_socket_t fd, struct event_base* pNet, struct sockaddr* pAddr, int nLength, bufferevent_data_cb readcb, bufferevent_data_cb writecb, bufferevent_event_cb eventcb, void* cbarg)
+	struct bufferevent* CNetPool::RegisterConnect(evutil_socket_t fd, struct event_base* pNet, struct sockaddr* pAddr,
+												  int nLength, bufferevent_data_cb readcb, bufferevent_data_cb writecb,
+												  bufferevent_event_cb eventcb, void* cbarg)
 	{
 		if (!CheckSockAddress(pAddr, nLength))
 		{
@@ -136,7 +138,7 @@ namespace net
 
 	bool CNetPool::CloseAConnection(evutil_socket_t fd)
 	{
-		auto mIter = m_pool.find(fd);
+		std::unordered_map<evutil_socket_t, CNetInfo*>::iterator mIter = m_pool.find(fd);
 		if (mIter == m_pool.end())
 		{
 			return false;
@@ -151,7 +153,6 @@ namespace net
 		return true;
 	}
 
-
 	bool CNetPool::SendData2Client(evutil_socket_t fd, const char* data, size_t nLength)
 	{
 		if ((nullptr == data) || (0 == nLength))
@@ -159,7 +160,7 @@ namespace net
 			return false;
 		}
 
-		auto mIter = m_pool.find(fd);
+		std::unordered_map<evutil_socket_t, CNetInfo*>::iterator mIter = m_pool.find(fd);
 		if (mIter == m_pool.end())
 		{
 			return false;
@@ -177,4 +178,4 @@ namespace net
 
 		return evbuffer_add(pBuffer, data, nLength);
 	}
-}
+} // namespace net

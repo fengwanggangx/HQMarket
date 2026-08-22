@@ -5,7 +5,6 @@ namespace db
 {
 	COracle::COracle()
 	{
-
 	}
 
 	COracle::~COracle()
@@ -48,4 +47,4 @@ namespace db
 	{
 		return false;
 	}
-}
+} // namespace db

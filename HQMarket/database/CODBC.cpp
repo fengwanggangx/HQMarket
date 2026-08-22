@@ -4,8 +4,6 @@
 #include "CMySQL.h"
 #include "COracle.h"
 
-
-
 namespace db
 {
 	IDataBase* CreateDB(db::database ty)
@@ -27,19 +25,17 @@ namespace db
 	CODBC::CODBC()
 	{
 		m_Releasor = [this](IDataBase* pDB)
+		{
+			if (nullptr != pDB)
 			{
-				if (nullptr != pDB)
-				{
-					std::lock_guard<std::mutex> lck(m_mtx);
-					pDB->m_status = status::free;
-				}
-
-			};
+				std::lock_guard<std::mutex> lck(m_mtx);
+				pDB->m_status = status::free;
+			}
+		};
 	}
 
 	CODBC::~CODBC()
 	{
-
 	}
 
 	int CODBC::Connect(db::database ty, const CConnectParam& param, int nCount)
@@ -120,4 +116,4 @@ namespace db
 		return nullptr;
 	}
 
-}
+} // namespace db

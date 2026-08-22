@@ -26,7 +26,8 @@ namespace net
 			return n;
 		}
 
-		std::size_t RequestFromBuffer(std::vector<std::unique_ptr<CRequest>>& reqs, struct bufferevent* pEvent, std::vector<char>& buffer)
+		std::size_t RequestFromBuffer(std::vector<std::unique_ptr<CRequest>>& reqs, struct bufferevent* pEvent,
+									  std::vector<char>& buffer)
 		{
 			std::size_t nReqCount = 0;
 			std::size_t nBufferLength = net::utility::BufferEventReader(pEvent, buffer);
@@ -83,7 +84,7 @@ namespace net
 			{
 				return false;
 			}
-			
+
 			if (nullptr == pRequest)
 			{
 				return false;
@@ -106,5 +107,5 @@ namespace net
 			}
 			return false;
 		}
-	}
-}
+	} // namespace utility
+} // namespace net

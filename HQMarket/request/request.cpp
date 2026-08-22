@@ -1,25 +1,21 @@
 #include "request.pb.h"
 #include "request.h"
 
-
-static request::RequestType ToProtoType(CRequest::Type type) 
+static request::RequestType ToProtoType(CRequest::Type type)
 {
-	static std::unordered_map<CRequest::Type, request::RequestType> s_map
-	{
+	static std::unordered_map<CRequest::Type, request::RequestType> s_map{
 		{CRequest::Type::UNKNOWN, request::RequestType::UNKNOWN},
 		{CRequest::Type::QUERY_AUTH, request::RequestType::QUERY_AUTH},
 		{CRequest::Type::QUERY_USERINFO, request::RequestType::QUERY_USERINFO},
 		{CRequest::Type::UPDATE_AUTH, request::RequestType::UPDATE_AUTH},
-		{CRequest::Type::UPDAT_PRODUCT, request::RequestType::UPDAT_PRODUCT}
-	};
+		{CRequest::Type::UPDAT_PRODUCT, request::RequestType::UPDAT_PRODUCT}};
 	const auto& mIter = s_map.find(type);
 	return s_map.end() == mIter ? request::RequestType::UNKNOWN : mIter->second;
 }
 
-
 google::protobuf::Arena* CRequest::m_arena = new google::protobuf::Arena();
 
-CRequest::CRequest() 
+CRequest::CRequest()
 {
 	google::protobuf::Arena* px = new google::protobuf::Arena();
 	m_data = google::protobuf::Arena::CreateMessage<request::RequestData>(px);
@@ -108,7 +104,7 @@ std::unordered_map<std::string, std::string> CRequest::GetExtraData() const
 	{
 		return {};
 	}
-	return { m_data->extra().begin(), m_data->extra().end() };
+	return {m_data->extra().begin(), m_data->extra().end()};
 }
 
 std::string CRequest::GetExtraData(const std::string& strKey) const
@@ -131,5 +127,5 @@ std::unordered_map<std::string, std::string> CRequest::GetReturnData() const
 	{
 		return {};
 	}
-	return { m_data->ret().begin(), m_data->ret().end() };
+	return {m_data->ret().begin(), m_data->ret().end()};
 }

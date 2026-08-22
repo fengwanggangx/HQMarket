@@ -24,9 +24,9 @@ std::size_t GetSystemCPUCount()
 
 std::size_t CalcBestPerformanceThreads(pool_type mode)
 {
-	//CPU密集型:CPU数 + 1
-	//IO密集型:CPU数 * 2
-	//CPU数 * (1 + 线程等待时间/线程运行时间)
+	// CPU密集型:CPU数 + 1
+	// IO密集型:CPU数 * 2
+	// CPU数 * (1 + 线程等待时间/线程运行时间)
 	std::size_t nCpus = GetSystemCPUCount();
 
 	if (mode == pool_type::em_more_calc)
@@ -43,7 +43,6 @@ std::size_t CalcBestPerformanceThreads(pool_type mode)
 	}
 	return nCpus;
 }
-
 
 CThreadPool::CThreadPool(std::size_t cores)
 {
@@ -81,7 +80,7 @@ void CThreadPool::ShutDown()
 {
 	{
 		std::unique_lock<std::mutex> lck(m_task_mtx);
-		if (m_stop)
+		if (m_stop == true)
 		{
 			return;
 		}
@@ -100,7 +99,6 @@ void CThreadPool::ShutDown()
 			}
 		}
 		m_workers.clear();
-
 	}
 	m_nWorkers.store(0);
 	m_nTasks.store(0);
@@ -112,14 +110,18 @@ void CThreadPool::ThreadProc()
 	thread_local size_t tid = m_thread_id.fetch_add(1, std::memory_order_relaxed);
 	while (true)
 	{
-		std::function<void()> task{ nullptr };
+		std::function<void()> task{nullptr};
 		{
 			std::unique_lock<std::mutex> lck(m_task_mtx);
-			m_cond.wait(lck, [this] {
-				return m_stop || !m_task_queue.empty() || ((tid < m_thread_task_queues.size()) && !m_thread_task_queues.at(tid).empty());
-				});
+			m_cond.wait(lck,
+						[this]
+						{
+							return m_stop || !m_task_queue.empty() ||
+								   ((tid < m_thread_task_queues.size()) && !m_thread_task_queues.at(tid).empty());
+						});
 
-			if (m_stop && (m_task_queue.empty() && ((tid >= m_thread_task_queues.size()) || m_thread_task_queues.at(tid).empty())))
+			if (m_stop && (m_task_queue.empty() &&
+						   ((tid >= m_thread_task_queues.size()) || m_thread_task_queues.at(tid).empty())))
 			{
 				return;
 			}
@@ -144,11 +146,9 @@ void CThreadPool::ThreadProc()
 			try
 			{
 				task();
-
 			}
 			catch (const std::exception&)
 			{
-
 			}
 			--m_busy_workers;
 		}
@@ -161,7 +161,7 @@ bool CThreadPool::IsNeedAssistant()
 	{
 		return false;
 	}
-	if (m_busy_workers < m_nCores)//忙碌线程未到最大
+	if (m_busy_workers < m_nCores) // 忙碌线程未到最大
 	{
 		return false;
 	}
@@ -171,7 +171,7 @@ bool CThreadPool::IsNeedAssistant()
 	}
 	std::size_t nTasks = m_nTasks.load();
 	std::size_t nWorkers = m_nWorkers.load();
-	return  (nTasks > (nWorkers * 2.5)) && (nTasks >= 20);
+	return (nTasks > (nWorkers * 2.5)) && (nTasks >= 20);
 }
 
 void CThreadPool::BuildNewThread(std::size_t threads)

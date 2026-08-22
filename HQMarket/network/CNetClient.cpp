@@ -5,7 +5,7 @@
 #include "netcommon.h"
 #include <iostream>
 #include "../request/request.h"
-//#include "../log/Defines.h"
+// #include "../log/Defines.h"
 #include "CNetPool.h"
 #include "../basic/CDistributor.h"
 #include <string.h>
@@ -34,7 +34,8 @@ namespace net
 		if (getsockname(bufferevent_getfd(pEvent), (struct sockaddr*)&addr, &addrlen) == 0)
 		{
 			char host[NI_MAXHOST], port[NI_MAXSERV];
-			if (getnameinfo((struct sockaddr*)&addr, addrlen, host, NI_MAXHOST, port, NI_MAXSERV, NI_NUMERICHOST | NI_NUMERICSERV) == 0)
+			if (getnameinfo((struct sockaddr*)&addr, addrlen, host, NI_MAXHOST, port, NI_MAXSERV,
+							NI_NUMERICHOST | NI_NUMERICSERV) == 0)
 			{
 				printf("本地地址: %s:%s\n", host, port);
 			}
@@ -46,13 +47,13 @@ namespace net
 		if (getpeername(fd, (struct sockaddr*)&addr, &addrlen) == 0)
 		{
 			char host[NI_MAXHOST], port[NI_MAXSERV];
-			if (getnameinfo((struct sockaddr*)&addr, addrlen, host, NI_MAXHOST, port, NI_MAXSERV, NI_NUMERICHOST | NI_NUMERICSERV) == 0)
+			if (getnameinfo((struct sockaddr*)&addr, addrlen, host, NI_MAXHOST, port, NI_MAXSERV,
+							NI_NUMERICHOST | NI_NUMERICSERV) == 0)
 			{
 				printf("服务器地址: %s:%s\n", host, port);
 			}
 		}
 
-		
 		bufferevent* pBuffer = CNetPool::InstancePtr()->RegisterAConnection(fd, pEvent, &addr);
 	}
 
@@ -60,20 +61,20 @@ namespace net
 	{
 
 		// 处理连接关闭事件
-		if (events & BEV_EVENT_EOF)
+		if ((events & BEV_EVENT_EOF) != 0)
 		{
 			printf("服务器关闭了连接\n");
 		}
 
 		// 处理错误事件
-		if (events & BEV_EVENT_ERROR)
+		if ((events & BEV_EVENT_ERROR) != 0)
 		{
 			int err = EVUTIL_SOCKET_ERROR();
 			printf("连接错误: %s\n", evutil_socket_error_to_string(err));
 		}
 
 		// 处理超时事件
-		if (events & BEV_EVENT_TIMEOUT)
+		if ((events & BEV_EVENT_TIMEOUT) != 0)
 		{
 			printf("连接超时\n");
 		}
@@ -84,7 +85,7 @@ namespace net
 		}
 
 		// 释放bufferevent资源
-		if (pEvent)
+		if (pEvent != nullptr)
 		{
 			evutil_socket_t fd = bufferevent_getfd(pEvent);
 			CNetPool::InstancePtr()->CloseAConnection(fd);
@@ -101,12 +102,12 @@ namespace net
 		}
 
 		int nOptions = net::IsThreadEnable() ? (BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE) : BEV_OPT_CLOSE_ON_FREE;
-		struct bufferevent* pEvent  = bufferevent_socket_new(GetNet(), -1, nOptions);
+		struct bufferevent* pEvent = bufferevent_socket_new(GetNet(), -1, nOptions);
 
 		// 连接服务器
 		struct sockaddr_in svr;
 		bool bRet = net::FmtAddress(svr, m_nPort, m_strAddr);
-		if (!bRet)
+		if (bRet == false)
 		{
 			bufferevent_free(pEvent);
 			return -1;
@@ -130,10 +131,8 @@ namespace net
 
 	void CNetClient::Send(const char* pData)
 	{
-
 	}
 	void CNetClient::Recv(const char* pData)
 	{
-
 	}
-}
+} // namespace net

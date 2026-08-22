@@ -10,7 +10,6 @@
 #include "dbcommon.h"
 #include "../common/defines.h"
 
-
 namespace db
 {
 	class IDataBase;
@@ -23,18 +22,19 @@ namespace db
 
 	class CODBC final
 	{
-		DECLARE_ONLY_CUSTOM_CONSTRUCT(CODBC)
-	public:
-		int Connect(db::database ty, const CConnectParam& param, int nCount);
-		int Close();
-		int Close(db::database ty);
+			DECLARE_ONLY_CUSTOM_CONSTRUCT(CODBC)
+		public:
+			int Connect(db::database ty, const CConnectParam& param, int nCount);
+			int Close();
+			int Close(db::database ty);
 
-		_TyDBPtr GetADataBase(db::database ty);
-	private:
-		std::mutex m_mtx;
-		std::unordered_map<db::database, _TyPool> m_database;
-		_TyDBReleasor m_Releasor{ nullptr };
+			_TyDBPtr GetADataBase(db::database ty);
+
+		private:
+			std::mutex m_mtx;
+			std::unordered_map<db::database, _TyPool> m_database;
+			_TyDBReleasor m_Releasor{nullptr};
 	};
 
-}
+} // namespace db
 #endif

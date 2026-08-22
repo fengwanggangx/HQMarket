@@ -5,7 +5,6 @@ namespace db
 {
 	CSQLite3::CSQLite3()
 	{
-
 	}
 
 	CSQLite3::~CSQLite3()
@@ -49,4 +48,4 @@ namespace db
 		return false;
 	}
 
-}
+} // namespace db

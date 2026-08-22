@@ -28,8 +28,9 @@ namespace db
 		}
 
 		mysql_options(m_pDB, MYSQL_SET_CHARSET_NAME, param.m_strCharset.c_str());
-		mysql_options(m_pDB, MYSQL_OPT_RECONNECT, (const char*)1);  // 自动重连
-		if (!mysql_real_connect(m_pDB, param.m_strHost.c_str(), param.m_strAccount.c_str(), param.m_strPasswd.c_str(), param.m_strDataBase.c_str(), param.m_nPort, nullptr, 0))
+		mysql_options(m_pDB, MYSQL_OPT_RECONNECT, (const char*)1); // 自动重连
+		if (!mysql_real_connect(m_pDB, param.m_strHost.c_str(), param.m_strAccount.c_str(), param.m_strPasswd.c_str(),
+								param.m_strDataBase.c_str(), param.m_nPort, nullptr, 0))
 		{
 			const char* pError = mysql_error(m_pDB);
 			mysql_close(m_pDB);
@@ -81,17 +82,14 @@ namespace db
 			return s_table;
 		}
 
-		std::unique_ptr<MYSQL_RES, void(*)(MYSQL_RES*)> result
-		(
-			mysql_store_result(m_pDB), 
-			[](MYSQL_RES* p) 
-			{
-				if (nullptr != p)
-				{
-					mysql_free_result(p);
-				}
-			}
-		);
+		std::unique_ptr<MYSQL_RES, void (*)(MYSQL_RES*)> result(mysql_store_result(m_pDB),
+																[](MYSQL_RES* p)
+																{
+																	if (nullptr != p)
+																	{
+																		mysql_free_result(p);
+																	}
+																});
 		if (nullptr == result.get())
 		{
 			//(0 == mysql_field_count(m_pDB))
@@ -118,7 +116,7 @@ namespace db
 			std::vector<std::string> rowData(nFields);
 			unsigned long* lengths = mysql_fetch_lengths(result.get());
 
-			for (int i = 0; i < nFields; ++i) 
+			for (int i = 0; i < nFields; ++i)
 			{
 				if (row[i])
 				{
@@ -184,4 +182,4 @@ namespace db
 		return bRet;
 	}
 
-}
+} // namespace db

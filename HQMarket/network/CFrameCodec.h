@@ -8,12 +8,17 @@ namespace net
 {
 	class CFrameCodec final
 	{
-	public:
-		explicit CFrameCodec(std::size_t nMaxFrameSize = 8 * 1024 * 1024);
-		bool Append(const void* pData, std::size_t nLength, std::vector<std::string>& frames);
-		void Reset(); bool HasError() const; static std::string Encode(const std::string& payload);
-	private:
-		std::size_t m_nMaxFrameSize; std::vector<std::uint8_t> m_buffer; bool m_bError{ false };
+		public:
+			explicit CFrameCodec(std::size_t nMaxFrameSize = 8 * 1024 * 1024);
+			bool Append(const void* pData, std::size_t nLength, std::vector<std::string>& frames);
+			void Reset();
+			bool HasError() const;
+			static std::string Encode(const std::string& payload);
+
+		private:
+			std::size_t m_nMaxFrameSize;
+			std::vector<std::uint8_t> m_buffer;
+			bool m_bError{false};
 	};
-}
+} // namespace net
 #endif

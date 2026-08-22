@@ -1,6 +1,6 @@
 #include "defines.h"
 CThreadPool* GetThreadPool()
 {
-	static CThreadPool s_pool;
-	return &s_pool;
+	static CThreadPool* pInstance = new CThreadPool(pool_type::em_more_calc);
+	return pInstance;
 }

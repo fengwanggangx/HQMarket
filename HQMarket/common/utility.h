@@ -19,13 +19,13 @@ concept IsContainer = requires(_Ty v) {
 template <typename _Ty, typename = void>
 struct Typer
 {
-	using type = _Ty;
+		using type = _Ty;
 };
 
 template <typename _Ty>
 struct Typer<_Ty, std::enable_if_t<IsContainer<_Ty>>>
 {
-	using type = typename _Ty::value_type;
+		using type = typename _Ty::value_type;
 };
 
 namespace utility
@@ -50,6 +50,6 @@ namespace utility
 		return false;
 	}
 
-}
+} // namespace utility
 
 #endif

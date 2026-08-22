@@ -4,7 +4,6 @@
 
 class CRequest;
 
-
 int Query(const std::unique_ptr<CRequest>& req);
 int Update(const std::unique_ptr<CRequest>& req);
 int Auth(const std::unique_ptr<CRequest>& req);
