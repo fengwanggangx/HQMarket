@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <mutex>
+#include <shared_mutex>
 #include <functional>
 #include "../common/ISingleton.h"
 #include "event2/bufferevent.h"
@@ -32,7 +33,7 @@ namespace net
 			bool RegisterAConnection(evutil_socket_t fd, struct bufferevent* pEvent, struct sockaddr* pAddr);
 
 		private:
-			mutable std::mutex m_mtxPool;
+			mutable std::shared_mutex m_mtxPool;
 			std::unordered_map<evutil_socket_t, CNetInfo*> m_pool;
 			ConnectionHandler m_connectedHandler;
 			ConnectionHandler m_disconnectedHandler;

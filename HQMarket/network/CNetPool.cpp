@@ -50,7 +50,7 @@ namespace net
 			return false;
 		}
 
-		std::lock_guard<std::mutex> lock(m_mtxPool);
+		std::unique_lock<std::shared_mutex> lock(m_mtxPool);
 		auto [mIter, bInserted] = m_pool.try_emplace(fd, nullptr);
 		CNetInfo* pInfo = mIter->second;
 		if (bInserted)
@@ -73,7 +73,7 @@ namespace net
 			return nullptr;
 		}
 
-		std::lock_guard<std::mutex> lock(m_mtxPool);
+		std::unique_lock<std::shared_mutex> lock(m_mtxPool);
 		auto [mIter, bInserted] = m_pool.try_emplace(fd, nullptr);
 		CNetInfo* pInfo = mIter->second;
 		if (bInserted)
@@ -121,7 +121,7 @@ namespace net
 		}
 		ConnectionHandler connectedHandler;
 		{
-			std::lock_guard<std::mutex> lock(m_mtxPool);
+			std::shared_lock<std::shared_mutex> lock(m_mtxPool);
 			connectedHandler = m_connectedHandler;
 		}
 		if (connectedHandler != nullptr)
@@ -155,7 +155,7 @@ namespace net
 		CNetInfo* pInfo = nullptr;
 		ConnectionHandler disconnectedHandler;
 		{
-			std::lock_guard<std::mutex> lock(m_mtxPool);
+			std::unique_lock<std::shared_mutex> lock(m_mtxPool);
 			std::unordered_map<evutil_socket_t, CNetInfo*>::iterator mIter = m_pool.find(fd);
 			if (mIter == m_pool.end())
 			{
@@ -182,7 +182,7 @@ namespace net
 			return false;
 		}
 
-		std::lock_guard<std::mutex> lock(m_mtxPool);
+		std::shared_lock<std::shared_mutex> lock(m_mtxPool);
 		std::unordered_map<evutil_socket_t, CNetInfo*>::iterator mIter = m_pool.find(fd);
 		if (mIter == m_pool.end())
 		{
@@ -204,19 +204,19 @@ namespace net
 
 	std::size_t CNetPool::Count() const
 	{
-		std::lock_guard<std::mutex> lock(m_mtxPool);
+		std::shared_lock<std::shared_mutex> lock(m_mtxPool);
 		return m_pool.size();
 	}
 
 	void CNetPool::RegisterConnectedHandler(ConnectionHandler handler)
 	{
-		std::lock_guard<std::mutex> lock(m_mtxPool);
+		std::unique_lock<std::shared_mutex> lock(m_mtxPool);
 		m_connectedHandler = std::move(handler);
 	}
 
 	void CNetPool::RegisterDisconnectedHandler(ConnectionHandler handler)
 	{
-		std::lock_guard<std::mutex> lock(m_mtxPool);
+		std::unique_lock<std::shared_mutex> lock(m_mtxPool);
 		m_disconnectedHandler = std::move(handler);
 	}
 } // namespace net
