@@ -27,7 +27,7 @@ namespace datetime
 	std::string GetSysDateTime(datetime::precision pr)
 	{
 		std::string_view strFmt = GetDateTimeFmt(pr);
-		if (strFmt.empty())
+		if (strFmt.empty() == true)
 		{
 			return "";
 		}

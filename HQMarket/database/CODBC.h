@@ -18,7 +18,8 @@ namespace db
 	using _TyDBReleasor = std::function<void(IDataBase*)>;
 	using _TyDBPtr = std::unique_ptr<IDataBase, _TyDBReleasor>;
 
-	using _TyPool = std::vector<IDataBase*>;
+	using _TyOwnedDB = std::unique_ptr<IDataBase>;
+	using _TyPool = std::vector<_TyOwnedDB>;
 
 	class CODBC final
 	{

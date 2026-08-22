@@ -155,7 +155,7 @@ namespace provider
 					instruments.push_back(instrument);
 				}
 			}
-			if (instruments.empty())
+			if (instruments.empty() == true)
 			{
 				std::this_thread::sleep_for(std::chrono::milliseconds(200));
 				continue;
@@ -256,7 +256,7 @@ namespace provider
 		{
 			return;
 		}
-		if (m_thread.joinable())
+		if (m_thread.joinable() == true)
 		{
 			m_thread.join();
 		}

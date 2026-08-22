@@ -4,6 +4,7 @@
 #include "../common/ISingleton.h"
 #include <memory>
 #include <functional>
+#include <string>
 
 namespace db
 {
@@ -21,6 +22,6 @@ class CDBEngine final : public ISingleton<CDBEngine>
 		db::_TyDBPtr GetDBPtr(const std::string& strType);
 
 	private:
-		db::CODBC* m_pODBC{nullptr};
+		std::unique_ptr<db::CODBC> m_pODBC;
 };
 #endif

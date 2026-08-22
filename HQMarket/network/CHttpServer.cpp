@@ -13,7 +13,7 @@
 #include <utility>
 #include "../common/defines.h"
 #include "../common/utility.h"
-#include "../common/container.h"
+#include "../common/mapped_value.h"
 
 namespace
 {
@@ -92,7 +92,7 @@ namespace
 			std::size_t nEqual = strItem.find('=');
 			std::string strKey = DecodeURI(strItem.substr(0, nEqual));
 			std::string strVal = (std::string::npos == nEqual) ? std::string() : DecodeURI(strItem.substr(nEqual + 1));
-			if (!strKey.empty())
+			if (strKey.empty() == false)
 			{
 				queries[strKey] = strVal;
 			}
@@ -107,7 +107,7 @@ namespace
 	std::string EncodeSSE(const std::string& strEvent, const std::string& strData)
 	{
 		std::string strRet;
-		if (!strEvent.empty())
+		if (strEvent.empty() == false)
 		{
 			strRet += "event: " + strEvent + "\n";
 		}

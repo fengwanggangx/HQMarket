@@ -39,7 +39,7 @@
     <ClCompile Include="market\v1\market.pb.cc"><Filter>market\v1</Filter></ClCompile>
     <ClCompile Include="network\CFrameCodec.cpp"><Filter>network</Filter></ClCompile>
     <ClCompile Include="network\CHttpServer.cpp"><Filter>network</Filter></ClCompile>
-    <ClCompile Include="network\CMarketTcpServer.cpp"><Filter>network</Filter></ClCompile>
+    <ClCompile Include="network\CTcpServer.cpp"><Filter>network</Filter></ClCompile>
     <ClCompile Include="network\CNet.cpp"><Filter>network</Filter></ClCompile>
     <ClCompile Include="network\netcommon.cpp"><Filter>network</Filter></ClCompile>
     <ClCompile Include="python\CMooTdxProvider.cpp"><Filter>python</Filter></ClCompile>
@@ -60,7 +60,7 @@
     <ClInclude Include="market\v1\market.pb.h"><Filter>market\v1</Filter></ClInclude>
     <ClInclude Include="network\CFrameCodec.h"><Filter>network</Filter></ClInclude>
     <ClInclude Include="network\CHttpServer.h"><Filter>network</Filter></ClInclude>
-    <ClInclude Include="network\CMarketTcpServer.h"><Filter>network</Filter></ClInclude>
+    <ClInclude Include="network\CTcpServer.h"><Filter>network</Filter></ClInclude>
     <ClInclude Include="network\CNet.h"><Filter>network</Filter></ClInclude>
     <ClInclude Include="network\netcommon.h"><Filter>network</Filter></ClInclude>
     <ClInclude Include="python\CMooTdxProvider.h"><Filter>python</Filter></ClInclude>

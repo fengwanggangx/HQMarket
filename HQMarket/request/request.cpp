@@ -4,32 +4,32 @@
 
 static request::RequestType ToProtoType(CRequest::Type type)
 {
-	static std::unordered_map<CRequest::Type, request::RequestType> s_map{
-		{CRequest::Type::UNKNOWN, request::RequestType::UNKNOWN},
-		{CRequest::Type::QUERY_AUTH, request::RequestType::QUERY_AUTH},
-		{CRequest::Type::QUERY_USERINFO, request::RequestType::QUERY_USERINFO},
-		{CRequest::Type::UPDATE_AUTH, request::RequestType::UPDATE_AUTH},
-		{CRequest::Type::UPDAT_PRODUCT, request::RequestType::UPDAT_PRODUCT}};
-	const auto& mIter = s_map.find(type);
-	return s_map.end() == mIter ? request::RequestType::UNKNOWN : mIter->second;
+	switch (type)
+	{
+	case CRequest::Type::QUERY_AUTH:
+		return request::RequestType::QUERY_AUTH;
+	case CRequest::Type::QUERY_USERINFO:
+		return request::RequestType::QUERY_USERINFO;
+	case CRequest::Type::UPDATE_AUTH:
+		return request::RequestType::UPDATE_AUTH;
+	case CRequest::Type::UPDAT_PRODUCT:
+		return request::RequestType::UPDAT_PRODUCT;
+	case CRequest::Type::UNKNOWN:
+	default:
+		return request::RequestType::UNKNOWN;
+	}
 }
 
-google::protobuf::Arena* CRequest::m_arena = new google::protobuf::Arena();
-
-CRequest::CRequest()
+CRequest::CRequest() : m_arena(std::make_unique<google::protobuf::Arena>())
 {
-	google::protobuf::Arena* px = new google::protobuf::Arena();
-	m_data = google::protobuf::Arena::CreateMessage<request::RequestData>(px);
+	m_data = google::protobuf::Arena::CreateMessage<request::RequestData>(m_arena.get());
 }
 
-CRequest::~CRequest()
-{
-	m_data = nullptr;
-}
+CRequest::~CRequest() = default;
 
 bool CRequest::Serialize(std::string* output) const
 {
-	if (nullptr == m_data)
+	if ((m_data == nullptr) || (output == nullptr))
 	{
 		return false;
 	}
@@ -38,7 +38,7 @@ bool CRequest::Serialize(std::string* output) const
 
 bool CRequest::Deserialize(const std::string& data)
 {
-	if (nullptr == m_data)
+	if (m_data == nullptr)
 	{
 		return false;
 	}
@@ -47,7 +47,7 @@ bool CRequest::Deserialize(const std::string& data)
 
 void CRequest::SetType(CRequest::Type type)
 {
-	if (nullptr == m_data)
+	if (m_data == nullptr)
 	{
 		return;
 	}
@@ -56,7 +56,7 @@ void CRequest::SetType(CRequest::Type type)
 
 void CRequest::SetCmd(const std::string& strCmd)
 {
-	if (nullptr == m_data)
+	if (m_data == nullptr)
 	{
 		return;
 	}
@@ -65,7 +65,7 @@ void CRequest::SetCmd(const std::string& strCmd)
 
 void CRequest::SetExtraData(const std::string& strKey, const std::string& strVal)
 {
-	if (nullptr == m_data)
+	if (m_data == nullptr)
 	{
 		return;
 	}
@@ -74,7 +74,7 @@ void CRequest::SetExtraData(const std::string& strKey, const std::string& strVal
 
 void CRequest::SetReturnData(const std::string& strKey, const std::string& strVal)
 {
-	if (nullptr == m_data)
+	if (m_data == nullptr)
 	{
 		return;
 	}
@@ -83,7 +83,7 @@ void CRequest::SetReturnData(const std::string& strKey, const std::string& strVa
 
 CRequest::Type CRequest::GetType() const
 {
-	if (nullptr == m_data)
+	if (m_data == nullptr)
 	{
 		return CRequest::Type::UNKNOWN;
 	}
@@ -92,9 +92,9 @@ CRequest::Type CRequest::GetType() const
 
 const std::string& CRequest::GetCmd() const
 {
-	if (nullptr == m_data)
+	if (m_data == nullptr)
 	{
-		static std::string emptyValue;
+		static const std::string emptyValue;
 		return emptyValue;
 	}
 	return m_data->cmd();
@@ -102,7 +102,7 @@ const std::string& CRequest::GetCmd() const
 
 std::unordered_map<std::string, std::string> CRequest::GetExtraData() const
 {
-	if (nullptr == m_data)
+	if (m_data == nullptr)
 	{
 		return {};
 	}
@@ -111,9 +111,9 @@ std::unordered_map<std::string, std::string> CRequest::GetExtraData() const
 
 const std::string& CRequest::GetExtraData(const std::string& strKey) const
 {
-	if (nullptr == m_data)
+	if (m_data == nullptr)
 	{
-		static std::string emptyValue;
+		static const std::string emptyValue;
 		return emptyValue;
 	}
 	return container::FindMappedValue(m_data->extra(), strKey);
@@ -121,9 +121,9 @@ const std::string& CRequest::GetExtraData(const std::string& strKey) const
 
 const std::string& CRequest::GetReturnData(const std::string& strKey) const
 {
-	if (nullptr == m_data)
+	if (m_data == nullptr)
 	{
-		static std::string emptyValue;
+		static const std::string emptyValue;
 		return emptyValue;
 	}
 	return container::FindMappedValue(m_data->ret(), strKey);
@@ -131,7 +131,7 @@ const std::string& CRequest::GetReturnData(const std::string& strKey) const
 
 std::unordered_map<std::string, std::string> CRequest::GetReturnData() const
 {
-	if (nullptr == m_data)
+	if (m_data == nullptr)
 	{
 		return {};
 	}

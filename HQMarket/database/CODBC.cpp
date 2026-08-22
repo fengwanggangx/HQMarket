@@ -6,16 +6,16 @@
 
 namespace db
 {
-	IDataBase* CreateDB(db::database ty)
+	std::unique_ptr<IDataBase> CreateDB(db::database ty)
 	{
 		switch (ty)
 		{
 		case db::database::sqlite:
-			return new CSQLite3();
+			return std::make_unique<CSQLite3>();
 		case db::database::mysql:
-			return new CMySQL();
+			return std::make_unique<CMySQL>();
 		case db::database::oracle:
-			return new COracle();
+			return std::make_unique<COracle>();
 		default:
 			break;
 		}
@@ -26,7 +26,7 @@ namespace db
 	{
 		m_Releasor = [this](IDataBase* pDB)
 		{
-			if (nullptr != pDB)
+			if (pDB != nullptr)
 			{
 				std::lock_guard<std::mutex> lck(m_mtx);
 				pDB->m_status = status::free;
@@ -36,17 +36,22 @@ namespace db
 
 	CODBC::~CODBC()
 	{
+		Close();
 	}
 
 	int CODBC::Connect(db::database ty, const CConnectParam& param, int nCount)
 	{
 		std::lock_guard<std::mutex> lck(m_mtx);
-		auto& pool = m_database[ty];
+		_TyPool& pool = m_database[ty];
 		for (int i = 0; i < nCount; ++i)
 		{
-			IDataBase* pDB = CreateDB(ty);
+			std::unique_ptr<IDataBase> pDB = CreateDB(ty);
+			if (pDB == nullptr)
+			{
+				return -1;
+			}
 			pDB->Connect(param);
-			pool.emplace_back(pDB);
+			pool.emplace_back(std::move(pDB));
 		}
 		return 0;
 	}
@@ -56,12 +61,11 @@ namespace db
 		std::lock_guard<std::mutex> lck(m_mtx);
 		for (const auto& data : m_database)
 		{
-			for (const auto& item : data.second)
+			for (const _TyOwnedDB& item : data.second)
 			{
-				if (nullptr != item)
+				if (item != nullptr)
 				{
 					item->Close();
-					delete item;
 				}
 			}
 		}
@@ -72,17 +76,16 @@ namespace db
 	int CODBC::Close(db::database ty)
 	{
 		std::lock_guard<std::mutex> lck(m_mtx);
-		const auto& mIter = m_database.find(ty);
+		std::unordered_map<db::database, _TyPool>::iterator mIter = m_database.find(ty);
 		if (m_database.end() == mIter)
 		{
 			return 0;
 		}
-		for (const auto& item : mIter->second)
+		for (const _TyOwnedDB& item : mIter->second)
 		{
-			if (nullptr != item)
+			if (item != nullptr)
 			{
 				item->Close();
-				delete item;
 			}
 		}
 		m_database.erase(ty);
@@ -92,16 +95,16 @@ namespace db
 	_TyDBPtr CODBC::GetADataBase(db::database ty)
 	{
 		std::lock_guard<std::mutex> lck(m_mtx);
-		const auto& mIter = m_database.find(ty);
+		std::unordered_map<db::database, _TyPool>::iterator mIter = m_database.find(ty);
 		if (m_database.end() == mIter)
 		{
 			return nullptr;
 		}
 
 		_TyPool& pool = mIter->second;
-		for (const auto& item : pool)
+		for (const _TyOwnedDB& item : pool)
 		{
-			if (nullptr == item)
+			if (item == nullptr)
 			{
 				continue;
 			}
@@ -111,7 +114,7 @@ namespace db
 			}
 
 			item->m_status = db::status::busy;
-			return _TyDBPtr(item, m_Releasor);
+			return _TyDBPtr(item.get(), m_Releasor);
 		}
 		return nullptr;
 	}

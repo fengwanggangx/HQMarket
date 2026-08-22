@@ -93,7 +93,7 @@ void CThreadPool::ShutDown()
 		std::unique_lock<std::mutex> lck(m_worker_mtx);
 		for (auto& w : m_workers)
 		{
-			if (w.joinable())
+			if (w.joinable() == true)
 			{
 				w.join();
 			}
@@ -133,7 +133,7 @@ void CThreadPool::ThreadProc()
 				queue.pop();
 				--m_nTasks;
 			}
-			else if (!m_task_queue.empty())
+			else if (m_task_queue.empty() == false)
 			{
 				task = std::move(m_task_queue.top().m_task);
 				m_task_queue.pop();

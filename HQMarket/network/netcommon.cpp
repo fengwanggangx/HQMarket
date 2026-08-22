@@ -62,7 +62,7 @@ namespace net
 		memset(&addr, 0, sizeof(addr));
 		addr.sin_family = AF_INET;
 		addr.sin_port = htons(static_cast<uint16_t>(nPort));
-		if (!strAddr.empty())
+		if (strAddr.empty() == false)
 		{
 			int nRet = evutil_inet_pton(AF_INET, strAddr.c_str(), &addr.sin_addr.s_addr);
 			return nRet == 1;

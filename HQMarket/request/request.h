@@ -23,6 +23,10 @@ class CRequest
 	public:
 		CRequest();
 		~CRequest();
+		CRequest(const CRequest&) = delete;
+		CRequest& operator=(const CRequest&) = delete;
+		CRequest(CRequest&&) = delete;
+		CRequest& operator=(CRequest&&) = delete;
 
 		enum class Type
 		{
@@ -51,8 +55,8 @@ class CRequest
 		bool Deserialize(const std::string& data);
 
 	private:
+		std::unique_ptr<google::protobuf::Arena> m_arena;
 		request::RequestData* m_data{nullptr};
-		static google::protobuf::Arena* m_arena;
 };
 
 #endif

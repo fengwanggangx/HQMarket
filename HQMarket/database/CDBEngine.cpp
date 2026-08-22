@@ -4,7 +4,7 @@
 std::unordered_multimap<db::database, std::pair<db::CConnectParam, int>> s_params{
 	{db::database::mysql, {{"", ','}, 10}}, {db::database::mysql, {{"", ','}, 10}}};
 
-CDBEngine::CDBEngine() : m_pODBC(new db::CODBC())
+CDBEngine::CDBEngine() : m_pODBC(std::make_unique<db::CODBC>())
 {
 }
 
