@@ -57,18 +57,15 @@ namespace net
 
 	void CTcpServer::OnEvent(struct bufferevent* pEvent, short events)
 	{
-		if (nullptr == pEvent)
+		if (pEvent == nullptr)
 		{
 			return;
 		}
-		evutil_socket_t fd = bufferevent_getfd(pEvent);
-		if (fd < 0)
+		if (0 == (events & (BEV_EVENT_EOF | BEV_EVENT_ERROR | BEV_EVENT_TIMEOUT)))
 		{
-			bufferevent_free(pEvent);
-			pEvent = nullptr;
+			return;
 		}
-		//BEV_EVENT_EOF:onnection closed   BEV_EVENT_ERROR:some other error  BEV_EVENT_TIMEOUT:
-		CNetPool::InstancePtr()->CloseAConnection(fd);
+		CNetPool::InstancePtr()->CloseAConnection(pEvent);
 	}
 
 	int CTcpServer::Initialize()

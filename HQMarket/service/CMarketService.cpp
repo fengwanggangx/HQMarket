@@ -85,11 +85,6 @@ namespace service
 		}
 
 		m_strToken = strToken;
-		net::CNetPool::InstancePtr()->RegisterConnectedHandler(
-			[this](ConnectionId connectionId)
-			{
-				OnClientConnected(connectionId);
-			});
 		m_pTcpServer->RegisterHandler(
 			[this](const std::unique_ptr<CRequest>& request)
 			{
@@ -126,19 +121,12 @@ namespace service
 
 	void CMarketService::Stop()
 	{
-		net::CNetPool::InstancePtr()->RegisterConnectedHandler({});
 		net::CNetPool::InstancePtr()->RegisterDisconnectedHandler({});
 		m_mootdx.Stop();
 		m_akshare.Stop();
 		ThreadPoolPtr->ShutDown();
 		m_python.Finalize();
 		m_storage.Close();
-	}
-
-	void CMarketService::OnClientConnected(ConnectionId connectionId)
-	{
-		std::lock_guard<std::mutex> lock(m_mtx_sessions);
-		m_sessions.try_emplace(connectionId);
 	}
 
 	int CMarketService::OnClientRequest(const std::unique_ptr<CRequest>& request)
@@ -148,10 +136,6 @@ namespace service
 			return 0;
 		}
 		ConnectionId connectionId = request->GetConnectionId();
-		{
-			std::lock_guard<std::mutex> lock(m_mtx_sessions);
-			m_sessions.try_emplace(connectionId);
-		}
 		wire::MarketEnvelope envelope;
 		if (!envelope.ParseFromString(request->GetPayload()))
 		{
@@ -193,14 +177,10 @@ namespace service
 		if (envelope.type() == wire::AUTH_REQUEST)
 		{
 			bool authenticated = !m_strToken.empty() && (envelope.auth_request().token() == m_strToken);
+			if (authenticated)
 			{
 				std::lock_guard<std::mutex> lock(m_mtx_sessions);
-				std::unordered_map<ConnectionId, CClientSession>::iterator session =
-					m_sessions.find(connectionId);
-				if (session != m_sessions.end())
-				{
-					session->second.m_bAuthenticated = authenticated;
-				}
+				m_sessions.try_emplace(connectionId, CClientSession{true});
 			}
 			response.set_type(wire::AUTH_RESPONSE);
 			response.mutable_auth_response()->set_accepted(authenticated);

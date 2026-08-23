@@ -40,8 +40,7 @@ namespace net
 	};
 
 	template <typename _Ty>
-	void CNetRouter<_Ty>::ConnAccept_Callback(struct evconnlistener* pListener, evutil_socket_t fd, struct sockaddr* pAddr,
-											  int nLength, void* pArg)
+	void CNetRouter<_Ty>::ConnAccept_Callback(struct evconnlistener* pListener, evutil_socket_t fd, struct sockaddr* pAddr, int nLength, void* pArg)
 	{
 		_Ty* pInstance = static_cast<_Ty*>(pArg);
 		if (nullptr != pInstance)

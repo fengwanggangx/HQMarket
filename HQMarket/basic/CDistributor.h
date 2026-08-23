@@ -36,8 +36,7 @@ class CDistributor
 					std::unique_lock<std::shared_mutex> lock(m_smtx_data);
 					m_cache.emplace_back(std::move(data));
 				}
-				ThreadPoolPtr->PushTask(task_priority::em_normal, 0,
-										[this]()
+				ThreadPoolPtr->PushTask(task_priority::em_normal, 0, [this]()
 										{
 											AsyncExecute();
 										});

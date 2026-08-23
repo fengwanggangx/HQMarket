@@ -42,7 +42,6 @@ namespace service
 			std::string BarsJson(const std::string& strInstrument, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime);
 
 		private:
-			void OnClientConnected(ConnectionId connectionId);
 			int OnClientRequest(const std::unique_ptr<CRequest>& request);
 			void OnClientDisconnected(ConnectionId connectionId);
 			void HandleEnvelope(ConnectionId connectionId, const hqmarket::market::v1::MarketEnvelope& envelope);
