@@ -36,63 +36,169 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="request\request.cpp"><Filter>request</Filter></ClCompile>
-    <ClCompile Include="request\request.pb.cc"><Filter>request</Filter></ClCompile>
-    <ClCompile Include="common\defines.cpp"><Filter>common</Filter></ClCompile>
-    <ClCompile Include="common\utility.cpp"><Filter>common</Filter></ClCompile>
+    <ClCompile Include="request\request.cpp">
+      <Filter>request</Filter>
+    </ClCompile>
+    <ClCompile Include="request\request.pb.cc">
+      <Filter>request</Filter>
+    </ClCompile>
+    <ClCompile Include="common\defines.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\utility.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="market\CMarketCache.cpp"><Filter>market</Filter></ClCompile>
-    <ClCompile Include="market\CSubscriptionManager.cpp"><Filter>market</Filter></ClCompile>
-    <ClCompile Include="market\MarketTypes.cpp"><Filter>market</Filter></ClCompile>
-    <ClCompile Include="market\v1\market.pb.cc"><Filter>market\v1</Filter></ClCompile>
-    <ClCompile Include="network\CFrameCodec.cpp"><Filter>network</Filter></ClCompile>
-    <ClCompile Include="network\CHttpServer.cpp"><Filter>network</Filter></ClCompile>
-    <ClCompile Include="network\CTcpServer.cpp"><Filter>network</Filter></ClCompile>
-    <ClCompile Include="network\CNet.cpp"><Filter>network</Filter></ClCompile>
-    <ClCompile Include="network\CNetPool.cpp"><Filter>network</Filter></ClCompile>
-    <ClCompile Include="network\CNetTools.cpp"><Filter>network</Filter></ClCompile>
-    <ClCompile Include="network\netcommon.cpp"><Filter>network</Filter></ClCompile>
-    <ClCompile Include="python\CMooTdxProvider.cpp"><Filter>python</Filter></ClCompile>
-    <ClCompile Include="python\CAkShareProvider.cpp"><Filter>python</Filter></ClCompile>
-    <ClCompile Include="python\CPythonRuntime.cpp"><Filter>python</Filter></ClCompile>
-    <ClCompile Include="service\CMarketService.cpp"><Filter>service</Filter></ClCompile>
-    <ClCompile Include="storage\CMarketStorage.cpp"><Filter>storage</Filter></ClCompile>
-    <ClCompile Include="thread\CThreadPool.cpp"><Filter>thread</Filter></ClCompile>
+    <ClCompile Include="market\CMarketCache.cpp">
+      <Filter>market</Filter>
+    </ClCompile>
+    <ClCompile Include="market\CSubscriptionManager.cpp">
+      <Filter>market</Filter>
+    </ClCompile>
+    <ClCompile Include="market\MarketTypes.cpp">
+      <Filter>market</Filter>
+    </ClCompile>
+    <ClCompile Include="market\v1\market.pb.cc">
+      <Filter>market\v1</Filter>
+    </ClCompile>
+    <ClCompile Include="network\CFrameCodec.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
+    <ClCompile Include="network\CHttpServer.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
+    <ClCompile Include="network\CTcpServer.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
+    <ClCompile Include="network\CNet.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
+    <ClCompile Include="network\CNetPool.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
+    <ClCompile Include="network\CNetTools.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
+    <ClCompile Include="network\common_net.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
+    <ClCompile Include="python\CMooTdxProvider.cpp">
+      <Filter>python</Filter>
+    </ClCompile>
+    <ClCompile Include="python\CAkShareProvider.cpp">
+      <Filter>python</Filter>
+    </ClCompile>
+    <ClCompile Include="python\CPythonRuntime.cpp">
+      <Filter>python</Filter>
+    </ClCompile>
+    <ClCompile Include="service\CMarketService.cpp">
+      <Filter>service</Filter>
+    </ClCompile>
+    <ClCompile Include="storage\CMarketStorage.cpp">
+      <Filter>storage</Filter>
+    </ClCompile>
+    <ClCompile Include="thread\CThreadPool.cpp">
+      <Filter>thread</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="basic\CDistributor.h"><Filter>basic</Filter></ClInclude>
-    <ClInclude Include="common\container.h"><Filter>common</Filter></ClInclude>
-    <ClInclude Include="common\container_traits.h"><Filter>common</Filter></ClInclude>
-    <ClInclude Include="common\defines.h"><Filter>common</Filter></ClInclude>
-    <ClInclude Include="common\mapped_value.h"><Filter>common</Filter></ClInclude>
-    <ClInclude Include="common\ISingleton.h"><Filter>common</Filter></ClInclude>
-    <ClInclude Include="common\traits.h"><Filter>common</Filter></ClInclude>
-    <ClInclude Include="common\utility.h"><Filter>common</Filter></ClInclude>
-    <ClInclude Include="market\CMarketCache.h"><Filter>market</Filter></ClInclude>
-    <ClInclude Include="market\CSubscriptionManager.h"><Filter>market</Filter></ClInclude>
-    <ClInclude Include="market\IMarketProvider.h"><Filter>market</Filter></ClInclude>
-    <ClInclude Include="market\MarketTypes.h"><Filter>market</Filter></ClInclude>
-    <ClInclude Include="market\v1\market.pb.h"><Filter>market\v1</Filter></ClInclude>
-    <ClInclude Include="network\CFrameCodec.h"><Filter>network</Filter></ClInclude>
-    <ClInclude Include="network\CHttpServer.h"><Filter>network</Filter></ClInclude>
-    <ClInclude Include="network\CTcpServer.h"><Filter>network</Filter></ClInclude>
-    <ClInclude Include="network\CNet.h"><Filter>network</Filter></ClInclude>
-    <ClInclude Include="network\CNetPool.h"><Filter>network</Filter></ClInclude>
-    <ClInclude Include="network\CNetRouter.h"><Filter>network</Filter></ClInclude>
-    <ClInclude Include="network\CNetTools.h"><Filter>network</Filter></ClInclude>
-    <ClInclude Include="network\netcommon.h"><Filter>network</Filter></ClInclude>
-    <ClInclude Include="python\CMooTdxProvider.h"><Filter>python</Filter></ClInclude>
-    <ClInclude Include="python\CAkShareProvider.h"><Filter>python</Filter></ClInclude>
-    <ClInclude Include="python\CPythonRuntime.h"><Filter>python</Filter></ClInclude>
-    <ClInclude Include="service\CMarketService.h"><Filter>service</Filter></ClInclude>
-    <ClInclude Include="storage\CMarketStorage.h"><Filter>storage</Filter></ClInclude>
-    <ClInclude Include="thread\CThreadPool.h"><Filter>thread</Filter></ClInclude>
-    <ClInclude Include="request\request.h"><Filter>request</Filter></ClInclude>
-    <ClInclude Include="request\request.pb.h"><Filter>request</Filter></ClInclude>
+    <ClInclude Include="basic\CDistributor.h">
+      <Filter>basic</Filter>
+    </ClInclude>
+    <ClInclude Include="common\container.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\container_traits.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\defines.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\mapped_value.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\ISingleton.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\traits.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\utility.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="market\CMarketCache.h">
+      <Filter>market</Filter>
+    </ClInclude>
+    <ClInclude Include="market\CSubscriptionManager.h">
+      <Filter>market</Filter>
+    </ClInclude>
+    <ClInclude Include="market\IMarketProvider.h">
+      <Filter>market</Filter>
+    </ClInclude>
+    <ClInclude Include="market\MarketTypes.h">
+      <Filter>market</Filter>
+    </ClInclude>
+    <ClInclude Include="market\v1\market.pb.h">
+      <Filter>market\v1</Filter>
+    </ClInclude>
+    <ClInclude Include="network\CFrameCodec.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="network\CHttpServer.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="network\CTcpServer.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="network\CNet.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="network\CNetPool.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="network\CNetRouter.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="network\CNetTools.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="network\common_net.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="python\CMooTdxProvider.h">
+      <Filter>python</Filter>
+    </ClInclude>
+    <ClInclude Include="python\CAkShareProvider.h">
+      <Filter>python</Filter>
+    </ClInclude>
+    <ClInclude Include="python\CPythonRuntime.h">
+      <Filter>python</Filter>
+    </ClInclude>
+    <ClInclude Include="service\CMarketService.h">
+      <Filter>service</Filter>
+    </ClInclude>
+    <ClInclude Include="storage\CMarketStorage.h">
+      <Filter>storage</Filter>
+    </ClInclude>
+    <ClInclude Include="thread\CThreadPool.h">
+      <Filter>thread</Filter>
+    </ClInclude>
+    <ClInclude Include="request\request.h">
+      <Filter>request</Filter>
+    </ClInclude>
+    <ClInclude Include="request\request.pb.h">
+      <Filter>request</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="config\hqmarket.json"><Filter>config</Filter></None>
-    <None Include="market\v1\market.proto"><Filter>market\v1</Filter></None>
-    <None Include="python\requirements.lock"><Filter>python</Filter></None>
+    <None Include="config\hqmarket.json">
+      <Filter>config</Filter>
+    </None>
+    <None Include="market\v1\market.proto">
+      <Filter>market\v1</Filter>
+    </None>
+    <None Include="python\requirements.lock">
+      <Filter>python</Filter>
+    </None>
   </ItemGroup>
 </Project>

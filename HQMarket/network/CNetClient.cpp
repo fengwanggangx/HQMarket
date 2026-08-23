@@ -40,7 +40,7 @@ namespace net
 			}
 		}
 
-		evutil_socket_t fd = bufferevent_getfd(pEvent);
+		_TyConnectionID fd = bufferevent_getfd(pEvent);
 		memset(&addr, 0, addrlen);
 		// 获取对端地址
 		if (getpeername(fd, (struct sockaddr*)&addr, &addrlen) == 0)
@@ -86,7 +86,7 @@ namespace net
 		// 释放bufferevent资源
 		if (pEvent != nullptr)
 		{
-			evutil_socket_t fd = bufferevent_getfd(pEvent);
+			_TyConnectionID fd = bufferevent_getfd(pEvent);
 			CNetPool::InstancePtr()->CloseAConnection(fd);
 			bufferevent_free(pEvent);
 			pEvent = nullptr;

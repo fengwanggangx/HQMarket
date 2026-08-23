@@ -9,7 +9,7 @@ namespace net
 {
 	struct CNetInfo
 	{
-			evutil_socket_t m_fd{-1};
+			_TyConnectionId m_fd{-1};
 			struct sockaddr_storage m_addr{0};
 			struct bufferevent* m_pEvent{nullptr};
 			std::string m_strAddress;
@@ -42,7 +42,7 @@ namespace net
 	{
 	}
 
-	bool CNetPool::RegisterAConnection(evutil_socket_t fd, struct bufferevent* pEvent, struct sockaddr* pAddr)
+	bool CNetPool::RegisterAConnection(_TyConnectionId fd, struct bufferevent* pEvent, struct sockaddr* pAddr)
 	{
 		if ((nullptr == pAddr) || (nullptr == pEvent))
 		{
@@ -65,7 +65,7 @@ namespace net
 		return true;
 	}
 
-	struct bufferevent* CNetPool::RegisterAConnection(evutil_socket_t fd, struct bufferevent* pEvent, struct sockaddr_storage* pAddr)
+	struct bufferevent* CNetPool::RegisterAConnection(_TyConnectionId fd, struct bufferevent* pEvent, struct sockaddr_storage* pAddr)
 	{
 		if ((nullptr == pAddr) || (nullptr == pEvent))
 		{
@@ -89,7 +89,7 @@ namespace net
 		return pEvent;
 	}
 
-	struct bufferevent* CNetPool::RegisterConnect(evutil_socket_t fd, struct event_base* pNet, struct sockaddr* pAddr, int nLength, bufferevent_data_cb readcb, bufferevent_data_cb writecb, bufferevent_event_cb eventcb, void* cbarg)
+	struct bufferevent* CNetPool::RegisterConnect(_TyConnectionId fd, struct event_base* pNet, struct sockaddr* pAddr, int nLength, bufferevent_data_cb readcb, bufferevent_data_cb writecb, bufferevent_event_cb eventcb, void* cbarg)
 	{
 		if (!CheckSockAddress(pAddr, nLength))
 		{
@@ -140,16 +140,16 @@ namespace net
 		return true;
 	}
 
-	bool CNetPool::CloseAConnection(evutil_socket_t fd)
+	net::_TyConnectionId CNetPool::CloseAConnection(_TyConnectionId fd)
 	{
 		std::unique_ptr<CNetInfo> pInfo;
 		ConnectionHandler disconnectedHandler;
 		{
 			std::unique_lock<std::shared_mutex> lock(m_shared_mtx_pool);
-			std::unordered_map<evutil_socket_t, std::unique_ptr<CNetInfo>>::iterator mIter = m_pool.find(fd);
+			std::unordered_map<_TyConnectionId, std::unique_ptr<CNetInfo>>::iterator mIter = m_pool.find(fd);
 			if (mIter == m_pool.end())
 			{
-				return false;
+				return -1;
 			}
 			pInfo = std::move(mIter->second);
 			m_pool.erase(mIter);
@@ -161,22 +161,22 @@ namespace net
 		{
 			disconnectedHandler(fd);
 		}
-		return true;
+		return fd;
 	}
 
-	bool CNetPool::CloseAConnection(struct bufferevent* pEvent)
+	net::_TyConnectionId CNetPool::CloseAConnection(struct bufferevent* pEvent)
 	{
 		if (pEvent == nullptr)
 		{
-			return false;
+			return -1;
 		}
 
 		std::unique_ptr<CNetInfo> pInfo;
 		ConnectionHandler disconnectedHandler;
-		evutil_socket_t fd = -1;
+		_TyConnectionId fd = -1;
 		{
 			std::unique_lock<std::shared_mutex> lock(m_shared_mtx_pool);
-			std::unordered_map<evutil_socket_t, std::unique_ptr<CNetInfo>>::iterator mIter = m_pool.begin();
+			std::unordered_map<_TyConnectionId, std::unique_ptr<CNetInfo>>::iterator mIter = m_pool.begin();
 			for (; mIter != m_pool.end(); ++mIter)
 			{
 				if (mIter->second->m_pEvent == pEvent)
@@ -186,7 +186,7 @@ namespace net
 			}
 			if (mIter == m_pool.end())
 			{
-				return false;
+				return -1;
 			}
 			fd = mIter->first;
 			pInfo = std::move(mIter->second);
@@ -199,10 +199,10 @@ namespace net
 		{
 			disconnectedHandler(fd);
 		}
-		return true;
+		return fd;
 	}
 
-	bool CNetPool::SendData2Client(evutil_socket_t fd, const char* data, size_t nLength)
+	bool CNetPool::SendData2Client(_TyConnectionId fd, const char* data, size_t nLength)
 	{
 		if ((nullptr == data) || (0 == nLength))
 		{
@@ -210,7 +210,7 @@ namespace net
 		}
 
 		std::shared_lock<std::shared_mutex> lock(m_shared_mtx_pool);
-		std::unordered_map<evutil_socket_t, std::unique_ptr<CNetInfo>>::iterator mIter = m_pool.find(fd);
+		std::unordered_map<_TyConnectionId, std::unique_ptr<CNetInfo>>::iterator mIter = m_pool.find(fd);
 		if (mIter == m_pool.end())
 		{
 			return false;

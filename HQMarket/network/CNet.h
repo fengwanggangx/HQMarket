@@ -1,6 +1,7 @@
 #ifndef __CNET_H__
 #define __CNET_H__
 #include <atomic>
+#include <event2/util.h>
 
 struct event_base;
 namespace net

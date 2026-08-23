@@ -5,7 +5,7 @@ namespace market
 	{
 		return s.m_instrument.Key() + ":" + std::to_string(static_cast<int>(s.m_channel));
 	}
-	std::vector<CSubscription> CSubscriptionManager::Subscribe(std::uint64_t nClientId,
+	std::vector<CSubscription> CSubscriptionManager::Subscribe(net::_TyConnectionId nClientId,
 															   const std::vector<CSubscription>& subscriptions)
 	{
 		std::lock_guard<std::mutex> lock(m_mtx_subscriptions);
@@ -25,12 +25,12 @@ namespace market
 		}
 		return added;
 	}
-	std::vector<CSubscription> CSubscriptionManager::Unsubscribe(std::uint64_t nClientId,
+	std::vector<CSubscription> CSubscriptionManager::Unsubscribe(net::_TyConnectionId nClientId,
 																 const std::vector<CSubscription>& subscriptions)
 	{
 		std::lock_guard<std::mutex> lock(m_mtx_subscriptions);
 		std::vector<CSubscription> removed;
-		std::unordered_map<std::uint64_t, std::unordered_map<std::string, CSubscription>>::iterator client =
+		std::unordered_map<net::_TyConnectionId, std::unordered_map<std::string, CSubscription>>::iterator client =
 			m_clients.find(nClientId);
 		if (client == m_clients.end())
 		{
@@ -56,11 +56,11 @@ namespace market
 		}
 		return removed;
 	}
-	std::vector<CSubscription> CSubscriptionManager::RemoveClient(std::uint64_t nClientId)
+	std::vector<CSubscription> CSubscriptionManager::RemoveClient(net::_TyConnectionId nClientId)
 	{
 		std::lock_guard<std::mutex> lock(m_mtx_subscriptions);
 		std::vector<CSubscription> removed;
-		std::unordered_map<std::uint64_t, std::unordered_map<std::string, CSubscription>>::iterator client =
+		std::unordered_map<net::_TyConnectionId, std::unordered_map<std::string, CSubscription>>::iterator client =
 			m_clients.find(nClientId);
 		if (client == m_clients.end())
 		{
@@ -83,10 +83,10 @@ namespace market
 		std::lock_guard<std::mutex> lock(m_mtx_subscriptions);
 		return m_refCounts.size();
 	}
-	bool CSubscriptionManager::IsSubscribed(std::uint64_t nClientId, const CSubscription& subscription) const
+	bool CSubscriptionManager::IsSubscribed(net::_TyConnectionId nClientId, const CSubscription& subscription) const
 	{
 		std::lock_guard<std::mutex> lock(m_mtx_subscriptions);
-		std::unordered_map<std::uint64_t, std::unordered_map<std::string, CSubscription>>::const_iterator client =
+		std::unordered_map<net::_TyConnectionId, std::unordered_map<std::string, CSubscription>>::const_iterator client =
 			m_clients.find(nClientId);
 		return (client != m_clients.end()) && client->second.contains(MakeKey(subscription));
 	}

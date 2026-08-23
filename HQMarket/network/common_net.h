@@ -1,9 +1,21 @@
-#ifndef __NET_COMMON_H__
-#define __NET_COMMON_H__
+#ifndef __COMMON_NET_H__
+#define __COMMON_NET_H__
 #include <netinet/in.h>
 #include <string>
 namespace net
 {
+	using _TyConnectionId = evutil_socket_t;
+	enum class event
+	{
+		unknown = 0,
+		connected,
+		request,
+		disconnected,
+		error,
+		timeout
+	};
+
+
 	bool IsThreadEnable();
 	void EnvInitialize();
 	bool FmtAddress(struct ::sockaddr_in& addr, int nPort, const std::string& strAddr = "");

@@ -24,8 +24,6 @@ namespace service
 	class CMarketService final
 	{
 		private:
-			using ConnectionId = evutil_socket_t;
-
 			struct CClientSession
 			{
 				bool m_bAuthenticated{false};
@@ -43,13 +41,13 @@ namespace service
 
 		private:
 			int OnClientRequest(const std::unique_ptr<CRequest>& request);
-			void OnClientDisconnected(ConnectionId connectionId);
-			void HandleEnvelope(ConnectionId connectionId, const hqmarket::market::v1::MarketEnvelope& envelope);
-			void SendEnvelope(ConnectionId connectionId, hqmarket::market::v1::MarketEnvelope& envelope);
+			void OnClientDisconnected(net::_TyConnectionId id);
+			void HandleEnvelope(net::_TyConnectionId id, const hqmarket::market::v1::MarketEnvelope& envelope);
+			void SendEnvelope(net::_TyConnectionId id, hqmarket::market::v1::MarketEnvelope& envelope);
 			void PublishQuote(const market::CQuote& quote, std::uint64_t nSequence);
 			void PublishDepth(const market::CDepth& depth, std::uint64_t nSequence);
-			bool IsAuthenticated(ConnectionId connectionId) const;
-			std::vector<ConnectionId> AuthenticatedClients() const;
+			bool IsAuthenticated(net::_TyConnectionId id) const;
+			std::vector<net::_TyConnectionId> AuthenticatedClients() const;
 
 		private:
 			provider::CPythonRuntime m_python;
@@ -60,7 +58,7 @@ namespace service
 			net::CTcpServer* m_pTcpServer{nullptr};
 			std::string m_strToken;
 			mutable std::mutex m_mtx_sessions;
-			std::unordered_map<ConnectionId, CClientSession> m_sessions;
+			std::unordered_map<net::_TyConnectionId, CClientSession> m_sessions;
 			market::CSubscriptionManager m_subscriptions;
 			std::atomic_uint64_t m_nDepthSequence{0};
 	};

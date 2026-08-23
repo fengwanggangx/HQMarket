@@ -30,7 +30,7 @@ namespace net
 		void RegisterHandler(_TyHandler&& func);
 
 	public:
-		void OnConnAccept(struct evconnlistener* pListener, evutil_socket_t fd, struct sockaddr* pAddr, int nLength) override;
+		void OnConnAccept(struct evconnlistener* pListener, _TyConnectionId fd, struct sockaddr* pAddr, int nLength) override;
 		std::size_t OnRead(struct bufferevent* pEvent) override;
 		void OnEvent(struct bufferevent* pEvent, short events) override;
 
@@ -42,4 +42,3 @@ namespace net
 	};
 }
 #endif
-

@@ -26,7 +26,7 @@ namespace net
 
 	}
 
-	void CTcpServer::OnConnAccept(struct evconnlistener* pListener, evutil_socket_t fd, struct sockaddr* pAddr, int nLength)
+	void CTcpServer::OnConnAccept(struct evconnlistener* pListener, _TyConnectionId fd, struct sockaddr* pAddr, int nLength)
 	{
 		if (nullptr == GetNet())
 		{
@@ -65,7 +65,12 @@ namespace net
 		{
 			return;
 		}
-		CNetPool::InstancePtr()->CloseAConnection(pEvent);
+
+		_TyConnectionId fd = CNetPool::InstancePtr()->CloseAConnection(pEvent);
+		if ((fd >= 0) && (nullptr != m_dispatcher))
+		{
+			m_dispatcher->Dispatch(fd);
+		}
 	}
 
 	int CTcpServer::Initialize()
@@ -98,6 +103,9 @@ namespace net
 
 	void CTcpServer::RegisterHandler(_TyHandler&& func)
 	{
-		m_dispatcher->RegisterHandler(std::move(func));
+		if (nullptr != m_dispatcher)
+		{
+			m_dispatcher->RegisterHandler(std::move(func));
+		}
 	}
 }

@@ -91,9 +91,9 @@ namespace service
 				return OnClientRequest(request);
 			});
 		net::CNetPool::InstancePtr()->RegisterDisconnectedHandler(
-			[this](ConnectionId connectionId)
+			[this](net::_TyConnectionId id)
 			{
-				OnClientDisconnected(connectionId);
+				OnClientDisconnected(id);
 			});
 		m_mootdx.SetQuoteHandler(
 			[this](market::CQuote&& quote)
@@ -135,32 +135,32 @@ namespace service
 		{
 			return 0;
 		}
-		ConnectionId connectionId = request->GetConnectionId();
+		net::_TyConnectionId id = request->GetConnectionId();
 		wire::MarketEnvelope envelope;
 		if (!envelope.ParseFromString(request->GetPayload()))
 		{
-			net::CNetPool::InstancePtr()->CloseAConnection(connectionId);
+			net::CNetPool::InstancePtr()->CloseAConnection(id);
 			return 0;
 		}
-		HandleEnvelope(connectionId, envelope);
+		HandleEnvelope(id, envelope);
 		return 1;
 	}
 
-	void CMarketService::OnClientDisconnected(ConnectionId connectionId)
+	void CMarketService::OnClientDisconnected(net::_TyConnectionId id)
 	{
-		net::utility::ReleaseConnectionBuffer(connectionId);
+		net::utility::ReleaseConnectionBuffer(id);
 		{
 			std::lock_guard<std::mutex> lock(m_mtx_sessions);
-			m_sessions.erase(connectionId);
+			m_sessions.erase(id);
 		}
-		std::vector<market::CSubscription> removed = m_subscriptions.RemoveClient(connectionId);
+		std::vector<market::CSubscription> removed = m_subscriptions.RemoveClient(id);
 		if (!removed.empty())
 		{
 			m_mootdx.Unsubscribe(removed);
 		}
 	}
 
-	void CMarketService::HandleEnvelope(ConnectionId connectionId, const wire::MarketEnvelope& envelope)
+	void CMarketService::HandleEnvelope(net::_TyConnectionId id, const wire::MarketEnvelope& envelope)
 	{
 		wire::MarketEnvelope response;
 		response.set_protocol_major(1);
@@ -171,7 +171,7 @@ namespace service
 			response.set_type(wire::ERROR);
 			response.mutable_error()->set_code(1001);
 			response.mutable_error()->set_message("unsupported protocol version");
-			SendEnvelope(connectionId, response);
+			SendEnvelope(id, response);
 			return;
 		}
 		if (envelope.type() == wire::AUTH_REQUEST)
@@ -180,27 +180,27 @@ namespace service
 			if (authenticated)
 			{
 				std::lock_guard<std::mutex> lock(m_mtx_sessions);
-				m_sessions.try_emplace(connectionId, CClientSession{true});
+				m_sessions.try_emplace(id, CClientSession{true});
 			}
 			response.set_type(wire::AUTH_RESPONSE);
 			response.mutable_auth_response()->set_accepted(authenticated);
 			response.mutable_auth_response()->set_reason(authenticated ? "ok" : "invalid token");
-			SendEnvelope(connectionId, response);
+			SendEnvelope(id, response);
 			return;
 		}
-		if (!IsAuthenticated(connectionId))
+		if (!IsAuthenticated(id))
 		{
 			response.set_type(wire::ERROR);
 			response.mutable_error()->set_code(1002);
 			response.mutable_error()->set_message("authentication required");
-			SendEnvelope(connectionId, response);
+			SendEnvelope(id, response);
 			return;
 		}
 		if (envelope.type() == wire::HEARTBEAT)
 		{
 			response.set_type(wire::HEARTBEAT);
 			response.mutable_heartbeat()->set_client_time_ms(envelope.heartbeat().client_time_ms());
-			SendEnvelope(connectionId, response);
+			SendEnvelope(id, response);
 			return;
 		}
 
@@ -225,8 +225,8 @@ namespace service
 			}
 		}
 		std::vector<market::CSubscription> changed =
-			subscribe ? m_subscriptions.Subscribe(connectionId, requested)
-							  : m_subscriptions.Unsubscribe(connectionId, requested);
+			subscribe ? m_subscriptions.Subscribe(id, requested)
+							  : m_subscriptions.Unsubscribe(id, requested);
 		if (!changed.empty())
 		{
 			if (subscribe)
@@ -248,10 +248,10 @@ namespace service
 			pResult->set_channel(static_cast<wire::Channel>(static_cast<int>(subscription.m_channel)));
 			pResult->set_accepted(true);
 		}
-		SendEnvelope(connectionId, response);
+		SendEnvelope(id, response);
 	}
 
-	void CMarketService::SendEnvelope(ConnectionId connectionId, wire::MarketEnvelope& envelope)
+	void CMarketService::SendEnvelope(net::_TyConnectionId id, wire::MarketEnvelope& envelope)
 	{
 		envelope.set_server_time_ms(NowMilliseconds());
 		std::string payload;
@@ -260,7 +260,7 @@ namespace service
 			return;
 		}
 		std::string frame = net::CFrameCodec::Encode(payload);
-		net::CNetPool::InstancePtr()->SendData2Client(connectionId, frame.data(), frame.size());
+		net::CNetPool::InstancePtr()->SendData2Client(id, frame.data(), frame.size());
 	}
 
 	void CMarketService::PublishQuote(const market::CQuote& quote, std::uint64_t nSequence)
@@ -286,11 +286,11 @@ namespace service
 		pValue->set_source(quote.m_strSource);
 		pValue->set_stale(quote.m_bStale);
 		market::CSubscription subscription{quote.m_instrument, market::Channel::quote};
-		for (ConnectionId connectionId : AuthenticatedClients())
+		for (net::_TyConnectionId id : AuthenticatedClients())
 		{
-			if (m_subscriptions.IsSubscribed(connectionId, subscription))
+			if (m_subscriptions.IsSubscribed(id, subscription))
 			{
-				SendEnvelope(connectionId, envelope);
+				SendEnvelope(id, envelope);
 			}
 		}
 	}
@@ -324,29 +324,29 @@ namespace service
 			pLevel->set_price_scale(level.m_nPriceScale);
 		}
 		market::CSubscription subscription{depth.m_instrument, market::Channel::depth};
-		for (ConnectionId connectionId : AuthenticatedClients())
+		for (net::_TyConnectionId id : AuthenticatedClients())
 		{
-			if (m_subscriptions.IsSubscribed(connectionId, subscription))
+			if (m_subscriptions.IsSubscribed(id, subscription))
 			{
-				SendEnvelope(connectionId, envelope);
+				SendEnvelope(id, envelope);
 			}
 		}
 	}
 
-	bool CMarketService::IsAuthenticated(ConnectionId connectionId) const
+	bool CMarketService::IsAuthenticated(net::_TyConnectionId id) const
 	{
 		std::lock_guard<std::mutex> lock(m_mtx_sessions);
-		std::unordered_map<ConnectionId, CClientSession>::const_iterator session =
-			m_sessions.find(connectionId);
+		std::unordered_map<net::_TyConnectionId, CClientSession>::const_iterator session =
+			m_sessions.find(id);
 		return (session != m_sessions.end()) && session->second.m_bAuthenticated;
 	}
 
-	std::vector<CMarketService::ConnectionId> CMarketService::AuthenticatedClients() const
+	std::vector<net::_TyConnectionId> CMarketService::AuthenticatedClients() const
 	{
 		std::lock_guard<std::mutex> lock(m_mtx_sessions);
-		std::vector<ConnectionId> clients;
+		std::vector<net::_TyConnectionId> clients;
 		clients.reserve(m_sessions.size());
-		for (const std::pair<const ConnectionId, CClientSession>& session : m_sessions)
+		for (const std::pair<const net::_TyConnectionId, CClientSession>& session : m_sessions)
 		{
 			if (session.second.m_bAuthenticated)
 			{

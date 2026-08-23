@@ -51,12 +51,12 @@ bool CRequest::Deserialize(const std::string& data)
 	return true;
 }
 
-void CRequest::SetConnectionId(evutil_socket_t connectionId)
+void CRequest::SetConnectionId(net::_TyConnectionId id)
 {
-	m_connectionId = connectionId;
+	m_connectionId = id;
 }
 
-evutil_socket_t CRequest::GetConnectionId() const
+net::_TyConnectionId CRequest::GetConnectionId() const
 {
 	return m_connectionId;
 }

@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|x64"><Configuration>Debug</Configuration><Platform>x64</Platform></ProjectConfiguration>
-    <ProjectConfiguration Include="Release|x64"><Configuration>Release</Configuration><Platform>x64</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A4C70330-8D43-4D2A-84C3-F6F24E361E11}</ProjectGuid>
@@ -15,8 +21,12 @@
     <LinuxProjectType>{D51BCBC9-82E9-4017-911E-C93873C4EA2B}</LinuxProjectType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration"><UseDebugLibraries>true</UseDebugLibraries></PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration"><UseDebugLibraries>false</UseDebugLibraries></PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Label="Shared" />
@@ -45,7 +55,7 @@
     <ClCompile Include="network\CNet.cpp" />
     <ClCompile Include="network\CNetPool.cpp" />
     <ClCompile Include="network\CNetTools.cpp" />
-    <ClCompile Include="network\netcommon.cpp" />
+    <ClCompile Include="network\common_net.cpp" />
     <ClCompile Include="python\CMooTdxProvider.cpp" />
     <ClCompile Include="python\CAkShareProvider.cpp" />
     <ClCompile Include="python\CPythonRuntime.cpp" />
@@ -74,7 +84,7 @@
     <ClInclude Include="network\CNetPool.h" />
     <ClInclude Include="network\CNetRouter.h" />
     <ClInclude Include="network\CNetTools.h" />
-    <ClInclude Include="network\netcommon.h" />
+    <ClInclude Include="network\common_net.h" />
     <ClInclude Include="python\CMooTdxProvider.h" />
     <ClInclude Include="python\CAkShareProvider.h" />
     <ClInclude Include="python\CPythonRuntime.h" />
@@ -84,7 +94,11 @@
     <ClInclude Include="request\request.h" />
     <ClInclude Include="request\request.pb.h" />
   </ItemGroup>
-  <ItemGroup><None Include="config\hqmarket.json" /><None Include="market\v1\market.proto" /><None Include="python\requirements.lock" /></ItemGroup>
+  <ItemGroup>
+    <None Include="config\hqmarket.json" />
+    <None Include="market\v1\market.proto" />
+    <None Include="python\requirements.lock" />
+  </ItemGroup>
   <ItemGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DataFilesToCopyRemotely Include="libs\debug\**\*" />
   </ItemGroup>
@@ -92,12 +106,27 @@
     <DataFilesToCopyRemotely Include="libs\release\**\*" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <ClCompile><AdditionalIncludeDirectories>./include/debug/libevent;./include/debug/protobuf;/usr/include/python3.12;./runtime/python/include/python3.12;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories><CppLanguageStandard>c++20</CppLanguageStandard><PreprocessorDefinitions>PROTOBUF_USE_DLLS;%(PreprocessorDefinitions)</PreprocessorDefinitions></ClCompile>
-    <Link><AdditionalLibraryDirectories>./libs/debug;./runtime/python/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories><LibraryDependencies>absl_bad_any_cast_impl;absl_bad_optional_access;absl_bad_variant_access;absl_base;absl_city;absl_civil_time;absl_cord;absl_cordz_functions;absl_cordz_handle;absl_cordz_info;absl_cordz_sample_token;absl_cord_internal;absl_crc32c;absl_crc_cord_state;absl_crc_cpu_detect;absl_crc_internal;absl_debugging_internal;absl_decode_rust_punycode;absl_demangle_internal;absl_demangle_rust;absl_die_if_null;absl_examine_stack;absl_exponential_biased;absl_failure_signal_handler;absl_flags_commandlineflag;absl_flags_commandlineflag_internal;absl_flags_config;absl_flags_internal;absl_flags_marshalling;absl_flags_parse;absl_flags_private_handle_accessor;absl_flags_program_name;absl_flags_reflection;absl_flags_usage;absl_flags_usage_internal;absl_graphcycles_internal;absl_hash;absl_hashtablez_sampler;absl_int128;absl_kernel_timeout_internal;absl_leak_check;absl_log_entry;absl_log_flags;absl_log_globals;absl_log_initialize;absl_log_internal_check_op;absl_log_internal_conditions;absl_log_internal_fnmatch;absl_log_internal_format;absl_log_internal_globals;absl_log_internal_log_sink_set;absl_log_internal_message;absl_log_internal_nullguard;absl_log_internal_proto;absl_log_internal_structured_proto;absl_log_severity;absl_log_sink;absl_low_level_hash;absl_malloc_internal;absl_periodic_sampler;absl_poison;absl_random_distributions;absl_random_internal_distribution_test_util;absl_random_internal_platform;absl_random_internal_pool_urbg;absl_random_internal_randen;absl_random_internal_randen_hwaes;absl_random_internal_randen_hwaes_impl;absl_random_internal_randen_slow;absl_random_internal_seed_material;absl_random_seed_gen_exception;absl_random_seed_sequences;absl_raw_hash_set;absl_raw_logging_internal;absl_scoped_set_env;absl_spinlock_wait;absl_stacktrace;absl_status;absl_statusor;absl_strerror;absl_strings;absl_strings_internal;absl_string_view;absl_str_format_internal;absl_symbolize;absl_synchronization;absl_throw_delegate;absl_time;absl_time_zone;absl_tracing_internal;absl_utf8_for_code_point;absl_vlog_config_internal;event;event_core;event_extra;event_openssl;event_pthreads;protobuf-lited;protobufd;protocd;upbd;utf8_range;utf8_validity;python3.12;sqlite3;pthread;dl;%(LibraryDependencies)</LibraryDependencies><SharedLibrarySearchPath>./libs/debug;./runtime/python/lib;%(SharedLibrarySearchPath)</SharedLibrarySearchPath></Link>
+    <ClCompile>
+      <AdditionalIncludeDirectories>./include/debug/libevent;./include/debug/protobuf;/usr/include/python3.12;./runtime/python/include/python3.12;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CppLanguageStandard>c++20</CppLanguageStandard>
+      <PreprocessorDefinitions>PROTOBUF_USE_DLLS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>./libs/debug;./runtime/python/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>absl_bad_any_cast_impl;absl_bad_optional_access;absl_bad_variant_access;absl_base;absl_city;absl_civil_time;absl_cord;absl_cordz_functions;absl_cordz_handle;absl_cordz_info;absl_cordz_sample_token;absl_cord_internal;absl_crc32c;absl_crc_cord_state;absl_crc_cpu_detect;absl_crc_internal;absl_debugging_internal;absl_decode_rust_punycode;absl_demangle_internal;absl_demangle_rust;absl_die_if_null;absl_examine_stack;absl_exponential_biased;absl_failure_signal_handler;absl_flags_commandlineflag;absl_flags_commandlineflag_internal;absl_flags_config;absl_flags_internal;absl_flags_marshalling;absl_flags_parse;absl_flags_private_handle_accessor;absl_flags_program_name;absl_flags_reflection;absl_flags_usage;absl_flags_usage_internal;absl_graphcycles_internal;absl_hash;absl_hashtablez_sampler;absl_int128;absl_kernel_timeout_internal;absl_leak_check;absl_log_entry;absl_log_flags;absl_log_globals;absl_log_initialize;absl_log_internal_check_op;absl_log_internal_conditions;absl_log_internal_fnmatch;absl_log_internal_format;absl_log_internal_globals;absl_log_internal_log_sink_set;absl_log_internal_message;absl_log_internal_nullguard;absl_log_internal_proto;absl_log_internal_structured_proto;absl_log_severity;absl_log_sink;absl_low_level_hash;absl_malloc_internal;absl_periodic_sampler;absl_poison;absl_random_distributions;absl_random_internal_distribution_test_util;absl_random_internal_platform;absl_random_internal_pool_urbg;absl_random_internal_randen;absl_random_internal_randen_hwaes;absl_random_internal_randen_hwaes_impl;absl_random_internal_randen_slow;absl_random_internal_seed_material;absl_random_seed_gen_exception;absl_random_seed_sequences;absl_raw_hash_set;absl_raw_logging_internal;absl_scoped_set_env;absl_spinlock_wait;absl_stacktrace;absl_status;absl_statusor;absl_strerror;absl_strings;absl_strings_internal;absl_string_view;absl_str_format_internal;absl_symbolize;absl_synchronization;absl_throw_delegate;absl_time;absl_time_zone;absl_tracing_internal;absl_utf8_for_code_point;absl_vlog_config_internal;event;event_core;event_extra;event_openssl;event_pthreads;protobuf-lited;protobufd;protocd;upbd;utf8_range;utf8_validity;python3.12;sqlite3;pthread;dl;%(LibraryDependencies)</LibraryDependencies>
+      <SharedLibrarySearchPath>./libs/debug;./runtime/python/lib;%(SharedLibrarySearchPath)</SharedLibrarySearchPath>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <ClCompile><AdditionalIncludeDirectories>./include/release/libevent;./include/release/protobuf;/usr/include/python3.12;./runtime/python/include/python3.12;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories><CppLanguageStandard>c++20</CppLanguageStandard></ClCompile>
-    <Link><AdditionalLibraryDirectories>./libs/release;./runtime/python/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories><LibraryDependencies>absl_bad_any_cast_impl;absl_bad_optional_access;absl_bad_variant_access;absl_base;absl_city;absl_civil_time;absl_cord;absl_cordz_functions;absl_cordz_handle;absl_cordz_info;absl_cordz_sample_token;absl_cord_internal;absl_crc32c;absl_crc_cord_state;absl_crc_cpu_detect;absl_crc_internal;absl_debugging_internal;absl_decode_rust_punycode;absl_demangle_internal;absl_demangle_rust;absl_die_if_null;absl_examine_stack;absl_exponential_biased;absl_failure_signal_handler;absl_flags_commandlineflag;absl_flags_commandlineflag_internal;absl_flags_config;absl_flags_internal;absl_flags_marshalling;absl_flags_parse;absl_flags_private_handle_accessor;absl_flags_program_name;absl_flags_reflection;absl_flags_usage;absl_flags_usage_internal;absl_graphcycles_internal;absl_hash;absl_hashtablez_sampler;absl_int128;absl_kernel_timeout_internal;absl_leak_check;absl_log_entry;absl_log_flags;absl_log_globals;absl_log_initialize;absl_log_internal_check_op;absl_log_internal_conditions;absl_log_internal_fnmatch;absl_log_internal_format;absl_log_internal_globals;absl_log_internal_log_sink_set;absl_log_internal_message;absl_log_internal_nullguard;absl_log_internal_proto;absl_log_internal_structured_proto;absl_log_severity;absl_log_sink;absl_low_level_hash;absl_malloc_internal;absl_periodic_sampler;absl_poison;absl_random_distributions;absl_random_internal_distribution_test_util;absl_random_internal_platform;absl_random_internal_pool_urbg;absl_random_internal_randen;absl_random_internal_randen_hwaes;absl_random_internal_randen_hwaes_impl;absl_random_internal_randen_slow;absl_random_internal_seed_material;absl_random_seed_gen_exception;absl_random_seed_sequences;absl_raw_hash_set;absl_raw_logging_internal;absl_scoped_set_env;absl_spinlock_wait;absl_stacktrace;absl_status;absl_statusor;absl_strerror;absl_strings;absl_strings_internal;absl_string_view;absl_str_format_internal;absl_symbolize;absl_synchronization;absl_throw_delegate;absl_time;absl_time_zone;absl_tracing_internal;absl_utf8_for_code_point;absl_vlog_config_internal;event;event_core;event_extra;event_openssl;event_pthreads;protobuf-lite;protobuf;protoc;upb;utf8_range;utf8_validity;python3.12;sqlite3;pthread;dl;%(LibraryDependencies)</LibraryDependencies><SharedLibrarySearchPath>./libs/release;./runtime/python/lib;%(SharedLibrarySearchPath)</SharedLibrarySearchPath></Link>
+    <ClCompile>
+      <AdditionalIncludeDirectories>./include/release/libevent;./include/release/protobuf;/usr/include/python3.12;./runtime/python/include/python3.12;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CppLanguageStandard>c++20</CppLanguageStandard>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>./libs/release;./runtime/python/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <LibraryDependencies>absl_bad_any_cast_impl;absl_bad_optional_access;absl_bad_variant_access;absl_base;absl_city;absl_civil_time;absl_cord;absl_cordz_functions;absl_cordz_handle;absl_cordz_info;absl_cordz_sample_token;absl_cord_internal;absl_crc32c;absl_crc_cord_state;absl_crc_cpu_detect;absl_crc_internal;absl_debugging_internal;absl_decode_rust_punycode;absl_demangle_internal;absl_demangle_rust;absl_die_if_null;absl_examine_stack;absl_exponential_biased;absl_failure_signal_handler;absl_flags_commandlineflag;absl_flags_commandlineflag_internal;absl_flags_config;absl_flags_internal;absl_flags_marshalling;absl_flags_parse;absl_flags_private_handle_accessor;absl_flags_program_name;absl_flags_reflection;absl_flags_usage;absl_flags_usage_internal;absl_graphcycles_internal;absl_hash;absl_hashtablez_sampler;absl_int128;absl_kernel_timeout_internal;absl_leak_check;absl_log_entry;absl_log_flags;absl_log_globals;absl_log_initialize;absl_log_internal_check_op;absl_log_internal_conditions;absl_log_internal_fnmatch;absl_log_internal_format;absl_log_internal_globals;absl_log_internal_log_sink_set;absl_log_internal_message;absl_log_internal_nullguard;absl_log_internal_proto;absl_log_internal_structured_proto;absl_log_severity;absl_log_sink;absl_low_level_hash;absl_malloc_internal;absl_periodic_sampler;absl_poison;absl_random_distributions;absl_random_internal_distribution_test_util;absl_random_internal_platform;absl_random_internal_pool_urbg;absl_random_internal_randen;absl_random_internal_randen_hwaes;absl_random_internal_randen_hwaes_impl;absl_random_internal_randen_slow;absl_random_internal_seed_material;absl_random_seed_gen_exception;absl_random_seed_sequences;absl_raw_hash_set;absl_raw_logging_internal;absl_scoped_set_env;absl_spinlock_wait;absl_stacktrace;absl_status;absl_statusor;absl_strerror;absl_strings;absl_strings_internal;absl_string_view;absl_str_format_internal;absl_symbolize;absl_synchronization;absl_throw_delegate;absl_time;absl_time_zone;absl_tracing_internal;absl_utf8_for_code_point;absl_vlog_config_internal;event;event_core;event_extra;event_openssl;event_pthreads;protobuf-lite;protobuf;protoc;upb;utf8_range;utf8_validity;python3.12;sqlite3;pthread;dl;%(LibraryDependencies)</LibraryDependencies>
+      <SharedLibrarySearchPath>./libs/release;./runtime/python/lib;%(SharedLibrarySearchPath)</SharedLibrarySearchPath>
+    </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

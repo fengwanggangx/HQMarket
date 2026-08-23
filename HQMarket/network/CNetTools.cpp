@@ -22,9 +22,9 @@ namespace net
 				return mtxBuffers;
 			}
 
-			std::unordered_map<evutil_socket_t, std::vector<char>>& ConnectionBuffers()
+			std::unordered_map<_TyConnectionId, std::vector<char>>& ConnectionBuffers()
 			{
-				static std::unordered_map<evutil_socket_t, std::vector<char>> connectionBuffers;
+				static std::unordered_map<_TyConnectionId, std::vector<char>> connectionBuffers;
 				return connectionBuffers;
 			}
 		}
@@ -49,9 +49,9 @@ namespace net
 			{
 				return 0;
 			}
-			evutil_socket_t fd = bufferevent_getfd(pEvent);
+			_TyConnectionId fd = bufferevent_getfd(pEvent);
 			std::lock_guard<std::mutex> lock(ConnectionBuffersMutex());
-			std::unordered_map<evutil_socket_t, std::vector<char>>& connectionBuffers = ConnectionBuffers();
+			std::unordered_map<_TyConnectionId, std::vector<char>>& connectionBuffers = ConnectionBuffers();
 			std::vector<char>& connectionBuffer = connectionBuffers[fd];
 			connectionBuffer.insert(connectionBuffer.end(), received.begin(), received.end());
 			buffer.clear();
@@ -106,7 +106,7 @@ namespace net
 			return nReqCount;
 		}
 
-		void ReleaseConnectionBuffer(evutil_socket_t fd)
+		void ReleaseConnectionBuffer(_TyConnectionId fd)
 		{
 			std::lock_guard<std::mutex> lock(ConnectionBuffersMutex());
 			ConnectionBuffers().erase(fd);
