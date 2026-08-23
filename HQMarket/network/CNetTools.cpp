@@ -99,7 +99,7 @@ namespace net
 					break;
 				}
 			}
-			if (connectionBuffer.empty() == true)
+			if (connectionBuffer.empty())
 			{
 				connectionBuffers.erase(fd);
 			}

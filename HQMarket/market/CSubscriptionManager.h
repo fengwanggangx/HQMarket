@@ -18,7 +18,7 @@ namespace market
 
 		private:
 			static std::string MakeKey(const CSubscription& subscription);
-			mutable std::mutex m_mtxSubscriptions;
+			mutable std::mutex m_mtx_subscriptions;
 			std::unordered_map<std::string, std::size_t> m_refCounts;
 			std::unordered_map<std::uint64_t, std::unordered_map<std::string, CSubscription>> m_clients;
 	};

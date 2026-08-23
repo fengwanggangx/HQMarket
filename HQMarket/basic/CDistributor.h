@@ -25,7 +25,7 @@ class CDistributor
 				if constexpr (IsContainer<_Ty>)
 				{
 					{
-						std::unique_lock<std::shared_mutex> lock(m_mtx_data);
+						std::unique_lock<std::shared_mutex> lock(m_smtx_data);
 						m_cache.reserve(m_cache.size() + data.size());
 						m_cache.insert(m_cache.end(), std::make_move_iterator(data.begin()),
 									   std::make_move_iterator(data.end()));
@@ -33,7 +33,7 @@ class CDistributor
 				}
 				else
 				{
-					std::unique_lock<std::shared_mutex> lock(m_mtx_data);
+					std::unique_lock<std::shared_mutex> lock(m_smtx_data);
 					m_cache.emplace_back(std::move(data));
 				}
 				ThreadPoolPtr->PushTask(task_priority::em_normal, 0,
@@ -50,7 +50,7 @@ class CDistributor
 
 		void RegisterHandler(_TyHandler&& fun)
 		{
-			std::unique_lock<std::shared_mutex> lock(m_mtx_handler);
+			std::unique_lock<std::shared_mutex> lock(m_smtx_handler);
 			m_handler.emplace_back(std::forward<_TyHandler>(fun));
 		}
 
@@ -59,7 +59,7 @@ class CDistributor
 		{
 			_TyDataContainer data;
 			{
-				std::unique_lock<std::shared_mutex> lock(m_mtx_data);
+				std::unique_lock<std::shared_mutex> lock(m_smtx_data);
 				data.swap(m_cache);
 			}
 
@@ -71,16 +71,13 @@ class CDistributor
 			int ret = 1;
 			if constexpr (IsContainer<_Ty>)
 			{
-				std::shared_lock<std::shared_mutex> lock(m_mtx_handler);
-				int nOK = ((1 << m_handler.size()) - 1);
-
+				std::shared_lock<std::shared_mutex> lock(m_smtx_handler);
 				std::size_t sz = data.size();
-				ret = ((1 << sz) - 1);
 				for (std::size_t i = 0; i < sz; ++i)
 				{
-					if (ExecuteA(data.at(i)) != nOK)
+					if (ExecuteA(data.at(i)) == 0)
 					{
-						ret &= ~(1 << i);
+						ret = 0;
 					}
 				}
 			}
@@ -94,23 +91,23 @@ class CDistributor
 		int ExecuteA(const _TyData& data)
 		{
 			std::size_t sz = m_handler.size();
-			int ret = ((1 << sz) - 1);
+			int ret = 1;
 			for (std::size_t i = 0; i < sz; ++i)
 			{
-				const auto& fun = m_handler.at(i);
+				const _TyHandler& fun = m_handler.at(i);
 				if ((nullptr == fun) || !fun(data))
 				{
-					ret &= ~(1 << i);
+					ret = 0;
 				}
 			}
 			return ret;
 		}
 
 	private:
-		std::shared_mutex m_mtx_data;
+		std::shared_mutex m_smtx_data;
 		_TyDataContainer m_cache;
 
-		std::shared_mutex m_mtx_handler;
+		std::shared_mutex m_smtx_handler;
 		std::vector<_TyHandler> m_handler;
 };
 

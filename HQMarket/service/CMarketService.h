@@ -39,17 +39,14 @@ namespace service
 			std::string MetricsText() const;
 			std::string QuoteJson(const std::string& strInstrument) const;
 			std::string InstrumentsJson() const;
-			std::string BarsJson(const std::string& strInstrument, market::Channel channel, std::int64_t nBeginTime,
-							 std::int64_t nEndTime);
+			std::string BarsJson(const std::string& strInstrument, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime);
 
 		private:
 			void OnClientConnected(ConnectionId connectionId);
 			int OnClientRequest(const std::unique_ptr<CRequest>& request);
 			void OnClientDisconnected(ConnectionId connectionId);
-			void HandleEnvelope(ConnectionId connectionId,
-							const hqmarket::market::v1::MarketEnvelope& envelope);
-			void SendEnvelope(ConnectionId connectionId,
-						  hqmarket::market::v1::MarketEnvelope& envelope);
+			void HandleEnvelope(ConnectionId connectionId, const hqmarket::market::v1::MarketEnvelope& envelope);
+			void SendEnvelope(ConnectionId connectionId, hqmarket::market::v1::MarketEnvelope& envelope);
 			void PublishQuote(const market::CQuote& quote, std::uint64_t nSequence);
 			void PublishDepth(const market::CDepth& depth, std::uint64_t nSequence);
 			bool IsAuthenticated(ConnectionId connectionId) const;
@@ -63,7 +60,7 @@ namespace service
 			storage::CMarketStorage m_storage;
 			net::CTcpServer* m_pTcpServer{nullptr};
 			std::string m_strToken;
-			mutable std::mutex m_mtxSessions;
+			mutable std::mutex m_mtx_sessions;
 			std::unordered_map<ConnectionId, CClientSession> m_sessions;
 			market::CSubscriptionManager m_subscriptions;
 			std::atomic_uint64_t m_nDepthSequence{0};

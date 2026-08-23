@@ -20,7 +20,7 @@ namespace storage
 
 		private:
 			bool Exec(const char* pszSql);
-			mutable std::mutex m_mtxDatabase;
+			mutable std::mutex m_mtx_database;
 			sqlite3* m_pDatabase{nullptr};
 	};
 } // namespace storage

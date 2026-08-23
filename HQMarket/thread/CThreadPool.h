@@ -109,8 +109,8 @@ class CThreadPool final
 		bool RegisterTask(task_priority level, size_t priority, _Task&& task)
 		{
 			{
-				std::unique_lock<std::mutex> lck(m_task_mtx);
-				if (m_stop == true)
+				std::unique_lock<std::mutex> lck(m_mtx_task);
+				if (m_stop)
 				{
 					return false;
 				}
@@ -134,8 +134,8 @@ class CThreadPool final
 				return RegisterTask(level, priority, std::forward<_Task>(task));
 			}
 			{
-				std::unique_lock<std::mutex> lck(m_task_mtx);
-				if (m_stop == true)
+				std::unique_lock<std::mutex> lck(m_mtx_task);
+				if (m_stop)
 				{
 					return false;
 				}
@@ -166,12 +166,12 @@ class CThreadPool final
 		// 指定线程任务队列,主要用于时序任务
 		std::vector<_TyTaskQueue> m_thread_task_queues;
 
-		std::mutex m_task_mtx;
+		std::mutex m_mtx_task;
 		std::condition_variable m_cond;
 
 		std::atomic_size_t m_thread_id{0};
 
-		std::mutex m_worker_mtx;
+		std::mutex m_mtx_worker;
 		std::vector<std::thread> m_workers;
 
 	private:

@@ -30,7 +30,7 @@ namespace provider
 		private:
 			std::atomic_bool m_bRunning{false};
 			std::thread m_thread;
-			mutable std::mutex m_mtxState;
+			mutable std::mutex m_mtx_state;
 			std::unordered_map<std::string, market::CSubscription> m_subscriptions;
 			_TyQuoteHandler m_quoteHandler;
 			_TyDepthHandler m_depthHandler;

@@ -8,7 +8,7 @@ namespace market
 	std::vector<CSubscription> CSubscriptionManager::Subscribe(std::uint64_t nClientId,
 															   const std::vector<CSubscription>& subscriptions)
 	{
-		std::lock_guard lock(m_mtxSubscriptions);
+		std::lock_guard<std::mutex> lock(m_mtx_subscriptions);
 		std::vector<CSubscription> added;
 		auto& client = m_clients[nClientId];
 		for (const auto& s : subscriptions)
@@ -28,7 +28,7 @@ namespace market
 	std::vector<CSubscription> CSubscriptionManager::Unsubscribe(std::uint64_t nClientId,
 																 const std::vector<CSubscription>& subscriptions)
 	{
-		std::lock_guard lock(m_mtxSubscriptions);
+		std::lock_guard<std::mutex> lock(m_mtx_subscriptions);
 		std::vector<CSubscription> removed;
 		std::unordered_map<std::uint64_t, std::unordered_map<std::string, CSubscription>>::iterator client =
 			m_clients.find(nClientId);
@@ -58,7 +58,7 @@ namespace market
 	}
 	std::vector<CSubscription> CSubscriptionManager::RemoveClient(std::uint64_t nClientId)
 	{
-		std::lock_guard lock(m_mtxSubscriptions);
+		std::lock_guard<std::mutex> lock(m_mtx_subscriptions);
 		std::vector<CSubscription> removed;
 		std::unordered_map<std::uint64_t, std::unordered_map<std::string, CSubscription>>::iterator client =
 			m_clients.find(nClientId);
@@ -80,12 +80,12 @@ namespace market
 	}
 	std::size_t CSubscriptionManager::SubscriptionCount() const
 	{
-		std::lock_guard lock(m_mtxSubscriptions);
+		std::lock_guard<std::mutex> lock(m_mtx_subscriptions);
 		return m_refCounts.size();
 	}
 	bool CSubscriptionManager::IsSubscribed(std::uint64_t nClientId, const CSubscription& subscription) const
 	{
-		std::lock_guard lock(m_mtxSubscriptions);
+		std::lock_guard<std::mutex> lock(m_mtx_subscriptions);
 		std::unordered_map<std::uint64_t, std::unordered_map<std::string, CSubscription>>::const_iterator client =
 			m_clients.find(nClientId);
 		return (client != m_clients.end()) && client->second.contains(MakeKey(subscription));

@@ -64,7 +64,7 @@ namespace provider
 		bool ok = instance != nullptr;
 		Py_XDECREF(type);
 		Py_XDECREF(module);
-		if (ok == true)
+		if (ok)
 		{
 			m_pProvider = instance;
 		}
@@ -112,7 +112,7 @@ namespace provider
 		}
 		Py_XDECREF(values);
 		PyGILState_Release(gil);
-		std::lock_guard lock(m_mtxState);
+		std::lock_guard<std::mutex> lock(m_mtx_state);
 		m_status = {ok, ok ? "ready" : "initialization failed"};
 		return ok;
 	}
@@ -128,7 +128,7 @@ namespace provider
 														  std::int64_t nBeginTime, std::int64_t nEndTime)
 	{
 		std::vector<market::CBar> bars;
-		std::unique_lock providerLock(m_mtxState);
+		std::unique_lock<std::mutex> providerLock(m_mtx_state);
 		if ((channel != market::Channel::bar_1d) || (m_pProvider == nullptr))
 		{
 			return bars;
@@ -139,7 +139,7 @@ namespace provider
 		PyObject* result = PyObject_CallMethod(static_cast<PyObject*>(m_pProvider), "daily_bars", "ssss",
 											   instrument.m_strSymbol.c_str(), begin.c_str(), end.c_str(), "");
 		bool ok = result && PyList_Check(result);
-		if (ok == true)
+		if (ok)
 		{
 			for (Py_ssize_t i = 0; i < PyList_Size(result); ++i)
 			{
@@ -163,7 +163,7 @@ namespace provider
 				bars.emplace_back(std::move(bar));
 			}
 		}
-		if (ok == false)
+		if (!ok)
 		{
 			PyErr_Clear();
 		}
@@ -174,7 +174,7 @@ namespace provider
 	}
 	market::CProviderStatus CAkShareProvider::GetStatus() const
 	{
-		std::lock_guard lock(m_mtxState);
+		std::lock_guard<std::mutex> lock(m_mtx_state);
 		return m_status;
 	}
 	void CAkShareProvider::SetQuoteHandler(_TyQuoteHandler)
@@ -185,12 +185,12 @@ namespace provider
 	}
 	std::vector<market::CInstrument> CAkShareProvider::QueryInstruments() const
 	{
-		std::lock_guard lock(m_mtxState);
+		std::lock_guard<std::mutex> lock(m_mtx_state);
 		return m_instruments;
 	}
 	void CAkShareProvider::Stop()
 	{
-		std::lock_guard lock(m_mtxState);
+		std::lock_guard<std::mutex> lock(m_mtx_state);
 		if ((m_pProvider == nullptr) || !Py_IsInitialized())
 		{
 			return;

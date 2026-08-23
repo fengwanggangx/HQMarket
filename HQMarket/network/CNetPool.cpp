@@ -17,22 +17,21 @@ namespace net
 
 		void Empty()
 		{
+			if (m_pEvent != nullptr)
+			{
+				bufferevent_free(m_pEvent);
+			}
 			m_fd = -1;
 			m_pEvent = nullptr;
 			memset(&m_addr, 0, sizeof(m_addr));
 			m_strAddress.clear();
 			m_nPort = -1;
-			if (nullptr != m_pEvent)
-			{
-				bufferevent_free(m_pEvent);
-				m_pEvent = nullptr;
-			}
 		}
 
-			~CNetInfo()
-			{
-				Empty();
-			}
+		~CNetInfo()
+		{
+			Empty();
+		}
 	};
 
 	CNetPool::CNetPool()
@@ -50,13 +49,13 @@ namespace net
 			return false;
 		}
 
-		std::unique_lock<std::shared_mutex> lock(m_mtxPool);
+		std::unique_lock<std::shared_mutex> lock(m_smtx_pool);
 		auto [mIter, bInserted] = m_pool.try_emplace(fd, nullptr);
-		CNetInfo* pInfo = mIter->second;
+		CNetInfo* pInfo = mIter->second.get();
 		if (bInserted)
 		{
-			pInfo = new CNetInfo;
-			mIter->second = pInfo;
+			mIter->second = std::make_unique<CNetInfo>();
+			pInfo = mIter->second.get();
 		}
 		pInfo->Empty();
 		pInfo->m_fd = fd;
@@ -73,13 +72,13 @@ namespace net
 			return nullptr;
 		}
 
-		std::unique_lock<std::shared_mutex> lock(m_mtxPool);
+		std::unique_lock<std::shared_mutex> lock(m_smtx_pool);
 		auto [mIter, bInserted] = m_pool.try_emplace(fd, nullptr);
-		CNetInfo* pInfo = mIter->second;
+		CNetInfo* pInfo = mIter->second.get();
 		if (bInserted)
 		{
-			pInfo = new CNetInfo;
-			mIter->second = pInfo;
+			mIter->second = std::make_unique<CNetInfo>();
+			pInfo = mIter->second.get();
 		}
 		pInfo->Empty();
 		pInfo->m_fd = fd;
@@ -114,14 +113,14 @@ namespace net
 
 		bufferevent_setcb(pBuffer, readcb, writecb, eventcb, cbarg);
 		bufferevent_enable(pBuffer, EV_READ | EV_WRITE);
-		if (RegisterAConnection(fd, pBuffer, pAddr) == false)
+		if (!RegisterAConnection(fd, pBuffer, pAddr))
 		{
 			bufferevent_free(pBuffer);
 			return nullptr;
 		}
 		ConnectionHandler connectedHandler;
 		{
-			std::shared_lock<std::shared_mutex> lock(m_mtxPool);
+			std::shared_lock<std::shared_mutex> lock(m_smtx_pool);
 			connectedHandler = m_connectedHandler;
 		}
 		if (connectedHandler != nullptr)
@@ -152,22 +151,21 @@ namespace net
 
 	bool CNetPool::CloseAConnection(evutil_socket_t fd)
 	{
-		CNetInfo* pInfo = nullptr;
+		std::unique_ptr<CNetInfo> pInfo;
 		ConnectionHandler disconnectedHandler;
 		{
-			std::unique_lock<std::shared_mutex> lock(m_mtxPool);
-			std::unordered_map<evutil_socket_t, CNetInfo*>::iterator mIter = m_pool.find(fd);
+			std::unique_lock<std::shared_mutex> lock(m_smtx_pool);
+			std::unordered_map<evutil_socket_t, std::unique_ptr<CNetInfo>>::iterator mIter = m_pool.find(fd);
 			if (mIter == m_pool.end())
 			{
 				return false;
 			}
-			pInfo = mIter->second;
+			pInfo = std::move(mIter->second);
 			m_pool.erase(mIter);
 			disconnectedHandler = m_disconnectedHandler;
 		}
 
 		CloseAConnection(*pInfo);
-		delete pInfo;
 		if (disconnectedHandler != nullptr)
 		{
 			disconnectedHandler(fd);
@@ -182,8 +180,8 @@ namespace net
 			return false;
 		}
 
-		std::shared_lock<std::shared_mutex> lock(m_mtxPool);
-		std::unordered_map<evutil_socket_t, CNetInfo*>::iterator mIter = m_pool.find(fd);
+		std::shared_lock<std::shared_mutex> lock(m_smtx_pool);
+		std::unordered_map<evutil_socket_t, std::unique_ptr<CNetInfo>>::iterator mIter = m_pool.find(fd);
 		if (mIter == m_pool.end())
 		{
 			return false;
@@ -204,19 +202,19 @@ namespace net
 
 	std::size_t CNetPool::Count() const
 	{
-		std::shared_lock<std::shared_mutex> lock(m_mtxPool);
+		std::shared_lock<std::shared_mutex> lock(m_smtx_pool);
 		return m_pool.size();
 	}
 
 	void CNetPool::RegisterConnectedHandler(ConnectionHandler handler)
 	{
-		std::unique_lock<std::shared_mutex> lock(m_mtxPool);
+		std::unique_lock<std::shared_mutex> lock(m_smtx_pool);
 		m_connectedHandler = std::move(handler);
 	}
 
 	void CNetPool::RegisterDisconnectedHandler(ConnectionHandler handler)
 	{
-		std::unique_lock<std::shared_mutex> lock(m_mtxPool);
+		std::unique_lock<std::shared_mutex> lock(m_smtx_pool);
 		m_disconnectedHandler = std::move(handler);
 	}
 } // namespace net

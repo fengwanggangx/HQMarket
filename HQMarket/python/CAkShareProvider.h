@@ -21,7 +21,7 @@ namespace provider
 			std::vector<market::CInstrument> QueryInstruments() const;
 
 		private:
-			mutable std::mutex m_mtxState;
+			mutable std::mutex m_mtx_state;
 			market::CProviderStatus m_status;
 			void* m_pProvider{nullptr};
 			std::vector<market::CInstrument> m_instruments;

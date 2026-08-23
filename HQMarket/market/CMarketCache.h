@@ -15,7 +15,7 @@ namespace market
 			std::size_t QuoteCount() const;
 
 		private:
-			mutable std::shared_mutex m_mtxQuotes;
+			mutable std::shared_mutex m_smtx_quotes;
 			std::unordered_map<CInstrument, CQuote, CInstrumentHash> m_quotes;
 			std::uint64_t m_nQuoteSequence{0};
 	};

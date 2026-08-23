@@ -68,7 +68,7 @@ namespace provider
 		Py_XDECREF(result);
 		Py_XDECREF(type);
 		Py_XDECREF(module);
-		if (ok == false)
+		if (!ok)
 		{
 			PyErr_Clear();
 		}
@@ -76,16 +76,16 @@ namespace provider
 		{
 			m_pProvider = instance;
 		}
-		if (ok == false)
+		if (!ok)
 		{
 			Py_XDECREF(instance);
 		}
 		PyGILState_Release(gil);
 		{
-			std::lock_guard lock(m_mtxState);
+			std::lock_guard<std::mutex> lock(m_mtx_state);
 			m_status = {ok, ok ? "connected" : "initialization failed"};
 		}
-		if (ok == true)
+		if (ok)
 		{
 			m_bRunning = true;
 			m_thread = std::thread(&CMooTdxProvider::Run, this);
@@ -94,7 +94,7 @@ namespace provider
 	}
 	bool CMooTdxProvider::Subscribe(const std::vector<market::CSubscription>& values)
 	{
-		std::lock_guard lock(m_mtxState);
+		std::lock_guard<std::mutex> lock(m_mtx_state);
 		for (const auto& value : values)
 		{
 			if ((value.m_channel == market::Channel::quote) || (value.m_channel == market::Channel::depth))
@@ -106,7 +106,7 @@ namespace provider
 	}
 	bool CMooTdxProvider::Unsubscribe(const std::vector<market::CSubscription>& values)
 	{
-		std::lock_guard lock(m_mtxState);
+		std::lock_guard<std::mutex> lock(m_mtx_state);
 		for (const auto& value : values)
 		{
 			m_subscriptions.erase(MakeKey(value));
@@ -120,28 +120,28 @@ namespace provider
 	}
 	market::CProviderStatus CMooTdxProvider::GetStatus() const
 	{
-		std::lock_guard lock(m_mtxState);
+		std::lock_guard<std::mutex> lock(m_mtx_state);
 		return m_status;
 	}
 	void CMooTdxProvider::SetQuoteHandler(_TyQuoteHandler handler)
 	{
-		std::lock_guard lock(m_mtxState);
+		std::lock_guard<std::mutex> lock(m_mtx_state);
 		m_quoteHandler = std::move(handler);
 	}
 	void CMooTdxProvider::SetDepthHandler(_TyDepthHandler handler)
 	{
-		std::lock_guard lock(m_mtxState);
+		std::lock_guard<std::mutex> lock(m_mtx_state);
 		m_depthHandler = std::move(handler);
 	}
 	void CMooTdxProvider::Run()
 	{
 		int nFailures = 0;
 		const int waits[] = {1, 2, 5, 10, 30};
-		while (m_bRunning == true)
+		while (m_bRunning)
 		{
 			std::vector<market::CInstrument> instruments;
 			{
-				std::lock_guard lock(m_mtxState);
+				std::lock_guard<std::mutex> lock(m_mtx_state);
 				std::unordered_map<std::string, market::CInstrument> unique;
 				for (const auto& [key, value] : m_subscriptions)
 				{
@@ -155,7 +155,7 @@ namespace provider
 					instruments.push_back(instrument);
 				}
 			}
-			if (instruments.empty() == true)
+			if (instruments.empty())
 			{
 				std::this_thread::sleep_for(std::chrono::milliseconds(200));
 				continue;
@@ -186,7 +186,7 @@ namespace provider
 		PyObject* result = PyObject_CallMethod(static_cast<PyObject*>(m_pProvider), "quotes", "O", list);
 		Py_DECREF(list);
 		bool ok = result && PyList_Check(result);
-		if (ok == true)
+		if (ok)
 		{
 			for (Py_ssize_t i = 0; i < PyList_Size(result); ++i)
 			{
@@ -224,7 +224,7 @@ namespace provider
 				_TyQuoteHandler quoteHandler;
 				_TyDepthHandler depthHandler;
 				{
-					std::lock_guard lock(m_mtxState);
+					std::lock_guard<std::mutex> lock(m_mtx_state);
 					quoteHandler = m_quoteHandler;
 					depthHandler = m_depthHandler;
 				}
@@ -238,14 +238,14 @@ namespace provider
 				}
 			}
 		}
-		if (ok == false)
+		if (!ok)
 		{
 			PyErr_Clear();
 		}
 		Py_XDECREF(result);
 		PyGILState_Release(gil);
 		{
-			std::lock_guard lock(m_mtxState);
+			std::lock_guard<std::mutex> lock(m_mtx_state);
 			m_status = {ok, ok ? "connected" : "quote request failed"};
 		}
 		return ok;
@@ -256,7 +256,7 @@ namespace provider
 		{
 			return;
 		}
-		if (m_thread.joinable() == true)
+		if (m_thread.joinable())
 		{
 			m_thread.join();
 		}

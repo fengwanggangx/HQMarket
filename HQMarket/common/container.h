@@ -201,7 +201,7 @@ namespace container
 		for (const auto& v : src)
 		{
 			std::pair<typename _TyContainer::iterator, bool> ret = dest.emplace(v);
-			if ((bReplace == true) && (ret.second == false))
+			if (bReplace && !ret.second)
 			{
 				ret.first->second = v.second;
 			}

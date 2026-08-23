@@ -1,3 +1,5 @@
+#include "request/request.h"
+#include "basic/CDistributor.h"
 #include "network/CHttpServer.h"
 #include "network/CTcpServer.h"
 #include "network/netcommon.h"
@@ -12,8 +14,7 @@
 #include <thread>
 #include <utility>
 
-static std::unique_ptr<net::CHttpResponseData> Response(int nStatus, std::string strBody,
-														const std::string& strContentType)
+static std::unique_ptr<net::CHttpResponseData> Response(int nStatus, std::string strBody, const std::string& strContentType)
 {
 	std::unique_ptr<net::CHttpResponseData> response = std::make_unique<net::CHttpResponseData>();
 	response->m_nStatus = nStatus;
@@ -26,16 +27,13 @@ int BootLoader()
 {
 	// 必须在网络服务器构造、event_base 创建之前调用。
 	net::EnvInitialize();
-	if (net::IsThreadEnable() == false)
+	if (!net::IsThreadEnable())
 	{
 		std::cerr << "Failed to enable libevent thread support" << std::endl;
 		return -1;
 	}
 	return 0;
 }
-
-net::CTcpServer* pTcpServer = nullptr;
-net::CHttpServer* pHttpServer = nullptr;
 
 int main()
 {
@@ -52,14 +50,12 @@ int main()
 	const char* pszHome = std::getenv("HQMARKET_HOME");
 	std::filesystem::path root = ((pszHome != nullptr) && (*pszHome != '\0')) ? pszHome : std::filesystem::current_path();
 
-	if (nullptr == pTcpServer)
-	{
-		pTcpServer = new net::CTcpServer(9901);
-	}
-	service::CMarketService service(pTcpServer);
-	if (service.Initialize(pszToken, root) == false)
+	std::unique_ptr<net::CTcpServer> pTcpServer = std::make_unique<net::CTcpServer>(9901);
+	service::CMarketService service(pTcpServer.get());
+	if (!service.Initialize(pszToken, root))
 	{
 		std::cerr << "HQMarket initialization failed\n";
+		service.Stop();
 		return 3;
 	}
 	if (pTcpServer->Initialize() != 0)
@@ -68,17 +64,12 @@ int main()
 		service.Stop();
 		return 4;
 	}
-	if (nullptr == pHttpServer)
-	{
-		pHttpServer = new net::CHttpServer(9902);
-	}
-	pHttpServer->RegisterHandler(net::HttpMethod::GET, "/health",
-		[&service](const net::CHttpRequest&)
+	std::unique_ptr<net::CHttpServer> pHttpServer = std::make_unique<net::CHttpServer>(9902);
+	pHttpServer->RegisterHandler(net::HttpMethod::GET, "/health", [&service](const net::CHttpRequest&)
 		{
 			return Response(200, service.HealthJson(), "application/json; charset=utf-8");
 		});
-	pHttpServer->RegisterHandler(net::HttpMethod::GET, "/metrics",
-		[&service](const net::CHttpRequest&)
+	pHttpServer->RegisterHandler(net::HttpMethod::GET, "/metrics", [&service](const net::CHttpRequest&)
 		{
 			return Response(200, service.MetricsText(), "text/plain; charset=utf-8");
 		});
@@ -87,19 +78,17 @@ int main()
 		{
 			return Response(200, service.InstrumentsJson(), "application/json; charset=utf-8");
 		});
-	pHttpServer->RegisterHandler(net::HttpMethod::GET, "/v1/quotes",
-		[&service](const net::CHttpRequest& request)
+	pHttpServer->RegisterHandler(net::HttpMethod::GET, "/v1/quotes", [&service](const net::CHttpRequest& request)
 		{
 			std::string instrument = request.GetQuery("instrument");
-			return Response(instrument.empty() == true ? 400 : 200,
-				instrument.empty() == true ? "{\"error\":\"instrument is required\"}" : service.QuoteJson(instrument),
+			return Response(instrument.empty() ? 400 : 200,
+				instrument.empty() ? "{\"error\":\"instrument is required\"}" : service.QuoteJson(instrument),
 				"application/json; charset=utf-8");
 		});
-	pHttpServer->RegisterHandler(net::HttpMethod::GET, "/v1/bars",
-		[&service](const net::CHttpRequest& request)
+	pHttpServer->RegisterHandler(net::HttpMethod::GET, "/v1/bars", [&service](const net::CHttpRequest& request)
 		{
 			std::string instrument = request.GetQuery("instrument");
-			if (instrument.empty() == true)
+			if (instrument.empty())
 			{
 				return Response(400, "{\"error\":\"instrument is required\"}",
 								"application/json; charset=utf-8");
@@ -114,8 +103,7 @@ int main()
 		return 5;
 	}
 
-	std::thread tcpThread(
-		[]()
+	std::thread tcpThread([&pTcpServer]()
 		{
 			if (pTcpServer != nullptr)
 			{
@@ -124,12 +112,10 @@ int main()
 		});
 	pHttpServer->Start(true);
 	pTcpServer->ShutDown();
-	if (tcpThread.joinable() == true)
+	if (tcpThread.joinable())
 	{
 		tcpThread.join();
 	}
 	service.Stop();
-	pHttpServer = nullptr;
-	pTcpServer = nullptr;
 	return 0;
 }

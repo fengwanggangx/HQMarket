@@ -2,6 +2,7 @@
 #include "../network/CNetPool.h"
 #include "../network/CNetTools.h"
 #include "../request/request.h"
+#include "../common/defines.h"
 #include <chrono>
 #include <sstream>
 #include <utility>
@@ -70,15 +71,15 @@ namespace service
 
 	bool CMarketService::Initialize(const std::string& strToken, const std::filesystem::path& root)
 	{
-		if ((m_pTcpServer == nullptr) || (strToken.empty() == true))
+		if ((m_pTcpServer == nullptr) || strToken.empty())
 		{
 			return false;
 		}
-		if (m_storage.Open(root / "data" / "hqmarket.db") == false)
+		if (!m_storage.Open(root / "data" / "hqmarket.db"))
 		{
 			return false;
 		}
-		if (m_python.Initialize(root / "runtime" / "python", root / "python") == false)
+		if (!m_python.Initialize(root / "runtime" / "python", root / "python"))
 		{
 			return false;
 		}
@@ -105,7 +106,7 @@ namespace service
 				market::CInstrument instrument = quote.m_instrument;
 				std::uint64_t sequence = m_cache.Update(std::move(quote));
 				std::optional<market::CQuote> cached = m_cache.GetQuote(instrument);
-				if (cached.has_value() == true)
+				if (cached.has_value())
 				{
 					PublishQuote(*cached, sequence);
 				}
@@ -115,7 +116,7 @@ namespace service
 			{
 				PublishDepth(depth, ++m_nDepthSequence);
 			});
-		if (m_mootdx.Initialize() == false)
+		if (!m_mootdx.Initialize())
 		{
 			return false;
 		}
@@ -125,15 +126,18 @@ namespace service
 
 	void CMarketService::Stop()
 	{
+		net::CNetPool::InstancePtr()->RegisterConnectedHandler({});
+		net::CNetPool::InstancePtr()->RegisterDisconnectedHandler({});
 		m_mootdx.Stop();
 		m_akshare.Stop();
+		ThreadPoolPtr->ShutDown();
 		m_python.Finalize();
 		m_storage.Close();
 	}
 
 	void CMarketService::OnClientConnected(ConnectionId connectionId)
 	{
-		std::lock_guard<std::mutex> lock(m_mtxSessions);
+		std::lock_guard<std::mutex> lock(m_mtx_sessions);
 		m_sessions.try_emplace(connectionId);
 	}
 
@@ -145,11 +149,11 @@ namespace service
 		}
 		ConnectionId connectionId = request->GetConnectionId();
 		{
-			std::lock_guard<std::mutex> lock(m_mtxSessions);
+			std::lock_guard<std::mutex> lock(m_mtx_sessions);
 			m_sessions.try_emplace(connectionId);
 		}
 		wire::MarketEnvelope envelope;
-		if (envelope.ParseFromString(request->GetPayload()) == false)
+		if (!envelope.ParseFromString(request->GetPayload()))
 		{
 			net::CNetPool::InstancePtr()->CloseAConnection(connectionId);
 			return 0;
@@ -162,11 +166,11 @@ namespace service
 	{
 		net::utility::ReleaseConnectionBuffer(connectionId);
 		{
-			std::lock_guard<std::mutex> lock(m_mtxSessions);
+			std::lock_guard<std::mutex> lock(m_mtx_sessions);
 			m_sessions.erase(connectionId);
 		}
 		std::vector<market::CSubscription> removed = m_subscriptions.RemoveClient(connectionId);
-		if (removed.empty() == false)
+		if (!removed.empty())
 		{
 			m_mootdx.Unsubscribe(removed);
 		}
@@ -188,9 +192,9 @@ namespace service
 		}
 		if (envelope.type() == wire::AUTH_REQUEST)
 		{
-			bool authenticated = (m_strToken.empty() == false) && (envelope.auth_request().token() == m_strToken);
+			bool authenticated = !m_strToken.empty() && (envelope.auth_request().token() == m_strToken);
 			{
-				std::lock_guard<std::mutex> lock(m_mtxSessions);
+				std::lock_guard<std::mutex> lock(m_mtx_sessions);
 				std::unordered_map<ConnectionId, CClientSession>::iterator session =
 					m_sessions.find(connectionId);
 				if (session != m_sessions.end())
@@ -200,11 +204,11 @@ namespace service
 			}
 			response.set_type(wire::AUTH_RESPONSE);
 			response.mutable_auth_response()->set_accepted(authenticated);
-			response.mutable_auth_response()->set_reason(authenticated == true ? "ok" : "invalid token");
+			response.mutable_auth_response()->set_reason(authenticated ? "ok" : "invalid token");
 			SendEnvelope(connectionId, response);
 			return;
 		}
-		if (IsAuthenticated(connectionId) == false)
+		if (!IsAuthenticated(connectionId))
 		{
 			response.set_type(wire::ERROR);
 			response.mutable_error()->set_code(1002);
@@ -222,14 +226,14 @@ namespace service
 
 		bool subscribe = envelope.type() == wire::SUBSCRIBE_REQUEST;
 		bool unsubscribe = envelope.type() == wire::UNSUBSCRIBE_REQUEST;
-		if ((subscribe == false) && (unsubscribe == false))
+		if (!subscribe && !unsubscribe)
 		{
 			return;
 		}
 		const auto& instruments =
-			subscribe == true ? envelope.subscribe_request().instruments() : envelope.unsubscribe_request().instruments();
+			subscribe ? envelope.subscribe_request().instruments() : envelope.unsubscribe_request().instruments();
 		const auto& channels =
-			subscribe == true ? envelope.subscribe_request().channels() : envelope.unsubscribe_request().channels();
+			subscribe ? envelope.subscribe_request().channels() : envelope.unsubscribe_request().channels();
 		std::vector<market::CSubscription> requested;
 		requested.reserve(static_cast<std::size_t>(instruments.size()) * static_cast<std::size_t>(channels.size()));
 		for (const wire::Instrument& instrument : instruments)
@@ -241,11 +245,11 @@ namespace service
 			}
 		}
 		std::vector<market::CSubscription> changed =
-			subscribe == true ? m_subscriptions.Subscribe(connectionId, requested)
+			subscribe ? m_subscriptions.Subscribe(connectionId, requested)
 							  : m_subscriptions.Unsubscribe(connectionId, requested);
-		if (changed.empty() == false)
+		if (!changed.empty())
 		{
-			if (subscribe == true)
+			if (subscribe)
 			{
 				m_mootdx.Subscribe(changed);
 			}
@@ -271,7 +275,7 @@ namespace service
 	{
 		envelope.set_server_time_ms(NowMilliseconds());
 		std::string payload;
-		if (envelope.SerializeToString(&payload) == false)
+		if (!envelope.SerializeToString(&payload))
 		{
 			return;
 		}
@@ -304,7 +308,7 @@ namespace service
 		market::CSubscription subscription{quote.m_instrument, market::Channel::quote};
 		for (ConnectionId connectionId : AuthenticatedClients())
 		{
-			if (m_subscriptions.IsSubscribed(connectionId, subscription) == true)
+			if (m_subscriptions.IsSubscribed(connectionId, subscription))
 			{
 				SendEnvelope(connectionId, envelope);
 			}
@@ -342,7 +346,7 @@ namespace service
 		market::CSubscription subscription{depth.m_instrument, market::Channel::depth};
 		for (ConnectionId connectionId : AuthenticatedClients())
 		{
-			if (m_subscriptions.IsSubscribed(connectionId, subscription) == true)
+			if (m_subscriptions.IsSubscribed(connectionId, subscription))
 			{
 				SendEnvelope(connectionId, envelope);
 			}
@@ -351,20 +355,20 @@ namespace service
 
 	bool CMarketService::IsAuthenticated(ConnectionId connectionId) const
 	{
-		std::lock_guard<std::mutex> lock(m_mtxSessions);
+		std::lock_guard<std::mutex> lock(m_mtx_sessions);
 		std::unordered_map<ConnectionId, CClientSession>::const_iterator session =
 			m_sessions.find(connectionId);
-		return (session != m_sessions.end()) && (session->second.m_bAuthenticated == true);
+		return (session != m_sessions.end()) && session->second.m_bAuthenticated;
 	}
 
 	std::vector<CMarketService::ConnectionId> CMarketService::AuthenticatedClients() const
 	{
-		std::lock_guard<std::mutex> lock(m_mtxSessions);
+		std::lock_guard<std::mutex> lock(m_mtx_sessions);
 		std::vector<ConnectionId> clients;
 		clients.reserve(m_sessions.size());
 		for (const std::pair<const ConnectionId, CClientSession>& session : m_sessions)
 		{
-			if (session.second.m_bAuthenticated == true)
+			if (session.second.m_bAuthenticated)
 			{
 				clients.emplace_back(session.first);
 			}
@@ -396,7 +400,7 @@ namespace service
 	std::string CMarketService::QuoteJson(const std::string& strInstrument) const
 	{
 		std::optional<market::CQuote> quote = m_cache.GetQuote(ParseInstrument(strInstrument));
-		if (quote.has_value() == false)
+		if (!quote.has_value())
 		{
 			return "{}";
 		}
@@ -417,7 +421,7 @@ namespace service
 		bool first = true;
 		for (const market::CInstrument& instrument : values)
 		{
-			if (first == false)
+			if (!first)
 			{
 				out << ',';
 			}
@@ -433,10 +437,10 @@ namespace service
 	{
 		market::CInstrument instrument = ParseInstrument(strInstrument);
 		std::vector<market::CBar> values = m_storage.QueryBars(instrument, channel, nBeginTime, nEndTime);
-		if (values.empty() == true)
+		if (values.empty())
 		{
 			values = m_akshare.QueryBars(instrument, channel, nBeginTime, nEndTime);
-			if (values.empty() == false)
+			if (!values.empty())
 			{
 				m_storage.UpsertBars(values);
 			}
@@ -446,7 +450,7 @@ namespace service
 		bool first = true;
 		for (const market::CBar& bar : values)
 		{
-			if (first == false)
+			if (!first)
 			{
 				out << ',';
 			}

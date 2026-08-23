@@ -12,7 +12,7 @@ namespace storage
 	}
 	bool CMarketStorage::Open(const std::filesystem::path& path)
 	{
-		std::lock_guard lock(m_mtxDatabase);
+		std::lock_guard<std::mutex> lock(m_mtx_database);
 		if (m_pDatabase != nullptr)
 		{
 			return true;
@@ -41,7 +41,7 @@ namespace storage
 	}
 	void CMarketStorage::Close()
 	{
-		std::lock_guard lock(m_mtxDatabase);
+		std::lock_guard<std::mutex> lock(m_mtx_database);
 		if (m_pDatabase != nullptr)
 		{
 			sqlite3_close(m_pDatabase);
@@ -50,12 +50,12 @@ namespace storage
 	}
 	bool CMarketStorage::IsOpen() const
 	{
-		std::lock_guard lock(m_mtxDatabase);
+		std::lock_guard<std::mutex> lock(m_mtx_database);
 		return m_pDatabase != nullptr;
 	}
 	bool CMarketStorage::UpsertBars(const std::vector<market::CBar>& bars)
 	{
-		std::lock_guard lock(m_mtxDatabase);
+		std::lock_guard<std::mutex> lock(m_mtx_database);
 		if (!m_pDatabase || sqlite3_exec(m_pDatabase, "BEGIN IMMEDIATE", nullptr, nullptr, nullptr) != SQLITE_OK)
 		{
 			return false;
@@ -70,7 +70,7 @@ namespace storage
 		bool ok = sqlite3_prepare_v2(m_pDatabase, sql, -1, &statement, nullptr) == SQLITE_OK;
 		for (const auto& bar : bars)
 		{
-			if (ok == false)
+			if (!ok)
 			{
 				break;
 			}
@@ -101,7 +101,7 @@ namespace storage
 	std::vector<market::CBar> CMarketStorage::QueryBars(const market::CInstrument& instrument, market::Channel channel,
 														std::int64_t nBeginTime, std::int64_t nEndTime)
 	{
-		std::lock_guard lock(m_mtxDatabase);
+		std::lock_guard<std::mutex> lock(m_mtx_database);
 		std::vector<market::CBar> result;
 		if (m_pDatabase == nullptr)
 		{

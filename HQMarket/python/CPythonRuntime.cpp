@@ -8,8 +8,8 @@ namespace provider
 	}
 	bool CPythonRuntime::Initialize(const std::filesystem::path& runtimeHome, const std::filesystem::path& scriptPath)
 	{
-		std::lock_guard lock(m_mtxRuntime);
-		if (m_bInitialized == true)
+		std::lock_guard<std::mutex> lock(m_mtx_runtime);
+		if (m_bInitialized)
 		{
 			return true;
 		}
@@ -58,8 +58,8 @@ namespace provider
 	}
 	void CPythonRuntime::Finalize()
 	{
-		std::lock_guard lock(m_mtxRuntime);
-		if (m_bInitialized == false)
+		std::lock_guard<std::mutex> lock(m_mtx_runtime);
+		if (!m_bInitialized)
 		{
 			return;
 		}
@@ -70,11 +70,12 @@ namespace provider
 	}
 	bool CPythonRuntime::IsInitialized() const
 	{
-		std::lock_guard lock(m_mtxRuntime);
+		std::lock_guard<std::mutex> lock(m_mtx_runtime);
 		return m_bInitialized;
 	}
-	const std::string& CPythonRuntime::GetLastError() const
+	std::string CPythonRuntime::GetLastError() const
 	{
+		std::lock_guard<std::mutex> lock(m_mtx_runtime);
 		return m_strLastError;
 	}
 } // namespace provider

@@ -20,7 +20,7 @@ namespace net
 	{
 		if (nullptr != m_pNet)
 		{
-			if (m_bRunning == true)
+			if (m_bRunning)
 			{
 				ShutDown();
 			}
@@ -36,7 +36,7 @@ namespace net
 
 	void CNet::ShutDown()
 	{
-		if ((nullptr != m_pNet) && (m_bRunning == true))
+		if ((nullptr != m_pNet) && m_bRunning)
 		{
 			event_base_loopbreak(m_pNet);
 			m_bRunning.store(false);
@@ -50,7 +50,7 @@ namespace net
 			return;
 		}
 		m_bRunning.store(true);
-		if (bRealTime == true)
+		if (bRealTime)
 		{
 			int nRet = event_base_dispatch(m_pNet);
 			if (-1 == nRet)
@@ -60,7 +60,7 @@ namespace net
 		}
 		else
 		{
-			while (m_bRunning == true)
+			while (m_bRunning)
 			{
 				int nRet = event_base_loop(m_pNet, EVLOOP_NONBLOCK);
 				if (-1 == nRet)

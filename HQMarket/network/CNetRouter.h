@@ -15,8 +15,7 @@ namespace net
 			virtual ~CNetRouter() = default;
 
 		protected:
-			static void ConnAccept_Callback(struct evconnlistener* pListener, evutil_socket_t fd, struct sockaddr* pAddr,
-											int nLength, void* pArg);
+			static void ConnAccept_Callback(struct evconnlistener* pListener, evutil_socket_t fd, struct sockaddr* pAddr, int nLength, void* pArg);
 			static void Event_Callback(struct bufferevent* pEvent, short events, void* pArg);
 			static void Read_Callback(struct bufferevent* pEvent, void* pArg);
 			static void Write_Callback(struct bufferevent* pEvent, void* pArg);

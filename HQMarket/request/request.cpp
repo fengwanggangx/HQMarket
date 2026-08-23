@@ -33,7 +33,7 @@ bool CRequest::Serialize(std::string* output) const
 	{
 		return false;
 	}
-	if (m_strPayload.empty() == false)
+	if (!m_strPayload.empty())
 	{
 		*output = m_strPayload;
 		return true;

@@ -5,6 +5,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <functional>
+#include <memory>
 #include "../common/ISingleton.h"
 #include "event2/bufferevent.h"
 namespace net
@@ -22,19 +23,16 @@ namespace net
 			std::size_t Count() const;
 			void RegisterConnectedHandler(ConnectionHandler handler);
 			void RegisterDisconnectedHandler(ConnectionHandler handler);
-			struct bufferevent* RegisterConnect(evutil_socket_t fd, struct event_base* pNet, struct sockaddr* pAddr,
-												int nLength, bufferevent_data_cb readcb, bufferevent_data_cb writecb,
-												bufferevent_event_cb eventcb, void* cbarg);
-			struct bufferevent* RegisterAConnection(evutil_socket_t fd, struct bufferevent* pEvent,
-													struct sockaddr_storage* pAddr);
+			struct bufferevent* RegisterConnect(evutil_socket_t fd, struct event_base* pNet, struct sockaddr* pAddr, int nLength, bufferevent_data_cb readcb, bufferevent_data_cb writecb, bufferevent_event_cb eventcb, void* cbarg);
+			struct bufferevent* RegisterAConnection(evutil_socket_t fd, struct bufferevent* pEvent, struct sockaddr_storage* pAddr);
 
 		private:
 			bool CloseAConnection(CNetInfo& info);
 			bool RegisterAConnection(evutil_socket_t fd, struct bufferevent* pEvent, struct sockaddr* pAddr);
 
 		private:
-			mutable std::shared_mutex m_mtxPool;
-			std::unordered_map<evutil_socket_t, CNetInfo*> m_pool;
+			mutable std::shared_mutex m_smtx_pool;
+			std::unordered_map<evutil_socket_t, std::unique_ptr<CNetInfo>> m_pool;
 			ConnectionHandler m_connectedHandler;
 			ConnectionHandler m_disconnectedHandler;
 	};

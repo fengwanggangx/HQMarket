@@ -22,11 +22,11 @@
   <ImportGroup Label="Shared" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <RemoteCompileLocalCopyObjectFiles>true</RemoteCompileLocalCopyObjectFiles>
+    <RemoteCompileLocalCopyObjectFiles>false</RemoteCompileLocalCopyObjectFiles>
     <CopyAdditionalIncludes>true</CopyAdditionalIncludes>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <RemoteCompileLocalCopyObjectFiles>true</RemoteCompileLocalCopyObjectFiles>
+    <RemoteCompileLocalCopyObjectFiles>false</RemoteCompileLocalCopyObjectFiles>
     <CopyAdditionalIncludes>true</CopyAdditionalIncludes>
   </PropertyGroup>
   <ItemGroup>

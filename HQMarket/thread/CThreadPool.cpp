@@ -79,8 +79,8 @@ std::mutex g_mtx;
 void CThreadPool::ShutDown()
 {
 	{
-		std::unique_lock<std::mutex> lck(m_task_mtx);
-		if (m_stop == true)
+		std::unique_lock<std::mutex> lck(m_mtx_task);
+		if (m_stop)
 		{
 			return;
 		}
@@ -90,10 +90,10 @@ void CThreadPool::ShutDown()
 	m_cond.notify_all();
 
 	{
-		std::unique_lock<std::mutex> lck(m_worker_mtx);
+		std::unique_lock<std::mutex> lck(m_mtx_worker);
 		for (auto& w : m_workers)
 		{
-			if (w.joinable() == true)
+			if (w.joinable())
 			{
 				w.join();
 			}
@@ -112,7 +112,7 @@ void CThreadPool::ThreadProc()
 	{
 		std::function<void()> task{nullptr};
 		{
-			std::unique_lock<std::mutex> lck(m_task_mtx);
+			std::unique_lock<std::mutex> lck(m_mtx_task);
 			m_cond.wait(lck,
 						[this]
 						{
@@ -133,7 +133,7 @@ void CThreadPool::ThreadProc()
 				queue.pop();
 				--m_nTasks;
 			}
-			else if (m_task_queue.empty() == false)
+			else if (!m_task_queue.empty())
 			{
 				task = std::move(m_task_queue.top().m_task);
 				m_task_queue.pop();
@@ -176,7 +176,7 @@ bool CThreadPool::IsNeedAssistant()
 
 void CThreadPool::BuildNewThread(std::size_t threads)
 {
-	std::unique_lock<std::mutex> lck(m_worker_mtx);
+	std::unique_lock<std::mutex> lck(m_mtx_worker);
 	if (m_nWorkers >= m_nMaxWorkers)
 	{
 		return;
