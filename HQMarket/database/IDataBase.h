@@ -47,8 +47,10 @@ namespace db
 			virtual bool EndTransaction() = 0;
 			virtual bool RollBackTransaction() = 0;
 
+			virtual bool Transaction(const std::string& strSQL);
+
 		public:
-			db::status m_status{db::status::free};
+			db::status m_status{ db::status::free };
 	};
 } // namespace db
 #endif

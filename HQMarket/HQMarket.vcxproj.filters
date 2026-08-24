@@ -54,6 +54,9 @@
     <ClCompile Include="database\CSQLite3.cpp">
       <Filter>database</Filter>
     </ClCompile>
+    <ClCompile Include="database\IDataBase.cpp">
+      <Filter>database</Filter>
+    </ClCompile>
     <ClCompile Include="request\request.cpp">
       <Filter>request</Filter>
     </ClCompile>

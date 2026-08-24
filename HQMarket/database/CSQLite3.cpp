@@ -77,7 +77,7 @@ namespace db
 			return table;
 		}
 
-		sstd::size_t nCols = static_cast<std::size_t>(sqlite3_column_count(statement.get()));
+		std::size_t nCols = static_cast<std::size_t>(sqlite3_column_count(statement.get()));
 		table.first.reserve(nCols);
 		for (std::size_t i = 0; i < nCols; ++i)
 		{
