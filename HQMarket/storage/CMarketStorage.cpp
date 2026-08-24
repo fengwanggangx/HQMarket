@@ -13,7 +13,10 @@ namespace storage
 			for (char ch : value)
 			{
 				result.push_back(ch);
-				if (ch == '\'') result.push_back(ch);
+				if ('\'' == ch)
+				{
+					result.push_back(ch);
+				}
 			}
 			result.push_back('\'');
 			return result;
@@ -25,7 +28,7 @@ namespace storage
 			const char* pBegin = value.data();
 			const char* pEnd = pBegin + value.size();
 			auto parsed = std::from_chars(pBegin, pEnd, result);
-			return parsed.ec == std::errc{} && parsed.ptr == pEnd;
+			return (std::errc{} == parsed.ec) && (pEnd == parsed.ptr);
 		}
 	}
 
@@ -34,43 +37,55 @@ namespace storage
 		Close();
 	}
 
-	bool CMarketStorage::Exec(const std::string& strSql)
+	bool CMarketStorage::Exec(const std::string& strSQL)
 	{
-		return m_database.ExecUpdate(strSql) == 0;
+		return 0 == m_database.ExecUpdate(strSQL);
 	}
 
 	bool CMarketStorage::Open(const std::filesystem::path& path)
 	{
-		std::lock_guard<std::mutex> lock(m_mtx_database);
-		if (m_bOpen) return true;
+		std::lock_guard<std::mutex> lck(m_mtx_database);
+		if (m_bOpen)
+		{
+			return true;
+		}
 		std::filesystem::create_directories(path.parent_path());
 		db::CConnectParam param("", 0, "", "", path.string(), "");
-		if (m_database.Connect(param) != 0) return false;
+		if (0 != m_database.Connect(param))
+		{
+			return false;
+		}
 		m_bOpen = Exec("PRAGMA journal_mode=WAL;") && Exec("PRAGMA synchronous=NORMAL;") &&
 			Exec("CREATE TABLE IF NOT EXISTS instrument(symbol TEXT NOT NULL, exchange INTEGER NOT NULL, name TEXT NOT NULL DEFAULT '', updated_at INTEGER NOT NULL, PRIMARY KEY(symbol, exchange));") &&
 			Exec("CREATE TABLE IF NOT EXISTS bar(symbol TEXT NOT NULL, exchange INTEGER NOT NULL, channel INTEGER NOT NULL, begin_time INTEGER NOT NULL, open INTEGER NOT NULL, high INTEGER NOT NULL, low INTEGER NOT NULL, close INTEGER NOT NULL, volume INTEGER NOT NULL, turnover INTEGER NOT NULL, price_scale INTEGER NOT NULL, adjustment TEXT NOT NULL, source TEXT NOT NULL, PRIMARY KEY(symbol, exchange, channel, begin_time, adjustment));") &&
 			Exec("CREATE TABLE IF NOT EXISTS sync_state(dataset TEXT PRIMARY KEY, cursor TEXT NOT NULL, updated_at INTEGER NOT NULL);");
-		if (!m_bOpen) m_database.Close();
+		if (!m_bOpen)
+		{
+			m_database.Close();
+		}
 		return m_bOpen;
 	}
 
 	void CMarketStorage::Close()
 	{
-		std::lock_guard<std::mutex> lock(m_mtx_database);
+		std::lock_guard<std::mutex> lck(m_mtx_database);
 		m_database.Close();
 		m_bOpen = false;
 	}
 
 	bool CMarketStorage::IsOpen() const
 	{
-		std::lock_guard<std::mutex> lock(m_mtx_database);
+		std::lock_guard<std::mutex> lck(m_mtx_database);
 		return m_bOpen;
 	}
 
 	bool CMarketStorage::UpsertBars(const std::vector<market::CBar>& bars)
 	{
-		std::lock_guard<std::mutex> lock(m_mtx_database);
-		if (!m_bOpen || !m_database.BeginTransaction()) return false;
+		std::lock_guard<std::mutex> lck(m_mtx_database);
+		if (!m_bOpen || !m_database.BeginTransaction())
+		{
+			return false;
+		}
 		bool bResult = true;
 		for (const market::CBar& bar : bars)
 		{
@@ -88,33 +103,44 @@ namespace storage
 				break;
 			}
 		}
-		if (bResult && m_database.EndTransaction()) return true;
+		if (bResult && m_database.EndTransaction())
+		{
+			return true;
+		}
 		m_database.RollBackTransaction();
 		return false;
 	}
 
-	std::vector<market::CBar> CMarketStorage::QueryBars(const market::CInstrument& instrument, market::Channel channel,
-		std::int64_t nBeginTime, std::int64_t nEndTime)
+	std::vector<market::CBar> CMarketStorage::QueryBars(const market::CInstrument& instrument, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime)
 	{
-		std::lock_guard<std::mutex> lock(m_mtx_database);
+		std::lock_guard<std::mutex> lck(m_mtx_database);
 		std::vector<market::CBar> result;
-		if (!m_bOpen) return result;
+		if (!m_bOpen)
+		{
+			return result;
+		}
 		std::string sql = "SELECT begin_time,open,high,low,close,volume,turnover,price_scale,adjustment,source FROM bar WHERE symbol=" +
 			Quote(instrument.m_strSymbol) + " AND exchange=" + std::to_string(static_cast<int>(instrument.m_exchange)) +
 			" AND channel=" + std::to_string(static_cast<int>(channel)) + " AND begin_time BETWEEN " +
 			std::to_string(nBeginTime) + " AND " + std::to_string(nEndTime) + " ORDER BY begin_time";
 		const db::_TyRows& rows = m_database.ExecQuery(sql).second;
 		result.reserve(rows.size());
-		for (const db::_TyRows::value_type& row : rows)
+		for (const auto& row : rows)
 		{
-			if (row.size() != 10) continue;
+			if (10 != row.size())
+			{
+				continue;
+			}
 			market::CBar bar;
 			bar.m_instrument = instrument;
 			bar.m_channel = channel;
 			if (!ParseNumber(row[0], bar.m_nBeginTime) || !ParseNumber(row[1], bar.m_nOpenPrice) ||
 				!ParseNumber(row[2], bar.m_nHighPrice) || !ParseNumber(row[3], bar.m_nLowPrice) ||
 				!ParseNumber(row[4], bar.m_nClosePrice) || !ParseNumber(row[5], bar.m_nVolume) ||
-				!ParseNumber(row[6], bar.m_nTurnover) || !ParseNumber(row[7], bar.m_nPriceScale)) continue;
+				!ParseNumber(row[6], bar.m_nTurnover) || !ParseNumber(row[7], bar.m_nPriceScale))
+			{
+				continue;
+			}
 			bar.m_strAdjustment = row[8];
 			bar.m_strSource = row[9];
 			result.emplace_back(std::move(bar));
