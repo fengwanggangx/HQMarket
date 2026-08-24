@@ -40,6 +40,7 @@ namespace service
 			std::string BarsJson(const std::string& strInstrument, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime);
 
 		private:
+			int OnNetEvent(const net::CNetEvent& netEvent);
 			int OnClientRequest(const std::unique_ptr<CRequest>& request);
 			void OnClientDisconnected(net::_TyConnectionId id);
 			void HandleEnvelope(net::_TyConnectionId id, const hqmarket::market::v1::MarketEnvelope& envelope);

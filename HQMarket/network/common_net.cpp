@@ -5,9 +5,13 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <event2/util.h>
+#include "../request/request.h"
 
 namespace net
 {
+	CNetEvent::~CNetEvent() = default;
+	CNetEvent::CNetEvent(CNetEvent&&) noexcept = default;
+	CNetEvent& CNetEvent::operator=(CNetEvent&&) noexcept = default;
 
 	std::string GetErrorStringx(int errorCode)
 	{

@@ -4,7 +4,6 @@
 #include <unordered_map>
 #include <mutex>
 #include <shared_mutex>
-#include <functional>
 #include <memory>
 #include "../common/ISingleton.h"
 #include "CNet.h"
@@ -17,13 +16,10 @@ namespace net
 			DECLARE_SINGLE_DFAULT(CNetPool)
 
 		public:
-			using ConnectionHandler = std::function<void(_TyConnectionId)>;
-
 			net::_TyConnectionId CloseAConnection(_TyConnectionId fd);
 			net::_TyConnectionId CloseAConnection(struct bufferevent* pEvent);
 			bool SendData2Client(_TyConnectionId fd, const char* data, size_t nLength);
 			std::size_t Count() const;
-			void RegisterDisconnectedHandler(ConnectionHandler handler);
 			struct bufferevent* RegisterConnect(_TyConnectionId fd, struct event_base* pNet, struct sockaddr* pAddr, int nLength, bufferevent_data_cb readcb, bufferevent_data_cb writecb, bufferevent_event_cb eventcb, void* cbarg);
 			struct bufferevent* RegisterAConnection(_TyConnectionId fd, struct bufferevent* pEvent, struct sockaddr_storage* pAddr);
 
@@ -34,7 +30,6 @@ namespace net
 		private:
 			mutable std::shared_mutex m_shared_mtx_pool;
 			std::unordered_map<_TyConnectionId, std::unique_ptr<CNetInfo>> m_pool;
-			ConnectionHandler m_disconnectedHandler;
 	};
 } // namespace net
 #endif

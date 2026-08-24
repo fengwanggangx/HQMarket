@@ -53,12 +53,12 @@ bool CRequest::Deserialize(const std::string& data)
 
 void CRequest::SetConnectionId(net::_TyConnectionId id)
 {
-	m_connectionId = id;
+	m_connection_id = id;
 }
 
 net::_TyConnectionId CRequest::GetConnectionId() const
 {
-	return m_connectionId;
+	return m_connection_id;
 }
 
 const std::string& CRequest::GetPayload() const

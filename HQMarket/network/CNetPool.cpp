@@ -143,7 +143,6 @@ namespace net
 	net::_TyConnectionId CNetPool::CloseAConnection(_TyConnectionId fd)
 	{
 		std::unique_ptr<CNetInfo> pInfo;
-		ConnectionHandler disconnectedHandler;
 		{
 			std::unique_lock<std::shared_mutex> lock(m_shared_mtx_pool);
 			std::unordered_map<_TyConnectionId, std::unique_ptr<CNetInfo>>::iterator mIter = m_pool.find(fd);
@@ -153,14 +152,9 @@ namespace net
 			}
 			pInfo = std::move(mIter->second);
 			m_pool.erase(mIter);
-			disconnectedHandler = m_disconnectedHandler;
 		}
 
 		CloseAConnection(*pInfo);
-		if (disconnectedHandler != nullptr)
-		{
-			disconnectedHandler(fd);
-		}
 		return fd;
 	}
 
@@ -172,7 +166,6 @@ namespace net
 		}
 
 		std::unique_ptr<CNetInfo> pInfo;
-		ConnectionHandler disconnectedHandler;
 		_TyConnectionId fd = -1;
 		{
 			std::unique_lock<std::shared_mutex> lock(m_shared_mtx_pool);
@@ -191,14 +184,9 @@ namespace net
 			fd = mIter->first;
 			pInfo = std::move(mIter->second);
 			m_pool.erase(mIter);
-			disconnectedHandler = m_disconnectedHandler;
 		}
 
 		CloseAConnection(*pInfo);
-		if (disconnectedHandler != nullptr)
-		{
-			disconnectedHandler(fd);
-		}
 		return fd;
 	}
 
@@ -235,9 +223,4 @@ namespace net
 		return m_pool.size();
 	}
 
-	void CNetPool::RegisterDisconnectedHandler(ConnectionHandler handler)
-	{
-		std::unique_lock<std::shared_mutex> lock(m_shared_mtx_pool);
-		m_disconnectedHandler = std::move(handler);
-	}
 } // namespace net

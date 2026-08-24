@@ -61,7 +61,7 @@ class CRequest
 	private:
 		std::unique_ptr<google::protobuf::Arena> m_arena;
 		request::RequestData* m_data{nullptr};
-		net::_TyConnectionId m_connectionId{-1};
+		net::_TyConnectionId m_connection_id{-1};
 		std::string m_strPayload;
 };
 

@@ -2,10 +2,14 @@
 #define __COMMON_NET_H__
 #include <netinet/in.h>
 #include <string>
+#include <memory>
+
+class CRequest;
+
 namespace net
 {
 	using _TyConnectionId = evutil_socket_t;
-	enum class event
+	enum class em_event
 	{
 		unknown = 0,
 		connected,
@@ -13,6 +17,27 @@ namespace net
 		disconnected,
 		error,
 		timeout
+	};
+
+	struct CNetEvent
+	{
+		explicit CNetEvent(em_event event) : m_event(event)
+		{
+		}
+
+		explicit CNetEvent(em_event event, _TyConnectionId id) : m_event(event), m_connection_id(id)
+		{
+		}
+		~CNetEvent();
+		CNetEvent(CNetEvent&&) noexcept;
+		CNetEvent& operator=(CNetEvent&&) noexcept;
+		CNetEvent(const CNetEvent&) = delete;
+		CNetEvent& operator=(const CNetEvent&) = delete;
+
+		em_event m_event{ em_event::unknown };
+		_TyConnectionId m_connection_id{ -1 };
+		std::unique_ptr<CRequest> m_request{ nullptr };
+		int m_error{-1};
 	};
 
 

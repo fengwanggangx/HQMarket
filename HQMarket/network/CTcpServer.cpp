@@ -48,9 +48,18 @@ namespace net
 	{
 		std::vector<std::unique_ptr<CRequest>> reqs;
 		std::size_t sz = net::utility::RequestFromBuffer(reqs, pEvent, m_buffer_recv);
-		if (m_dispatcher)
+		if (m_dispatcher != nullptr)
 		{
-			m_dispatcher->Dispatch(std::move(reqs));
+			std::vector<CNetEvent> events;
+			events.reserve(reqs.size());
+			for (auto& v : reqs)
+			{
+				events.emplace_back(em_event::request);
+				auto& ev = events.back();
+				ev.m_connection_id = v->GetConnectionId();
+				ev.m_request = std::move(v);
+			}
+			m_dispatcher->Dispatch(std::move(events));
 		}
 		return sz;
 	}
@@ -69,7 +78,8 @@ namespace net
 		_TyConnectionId fd = CNetPool::InstancePtr()->CloseAConnection(pEvent);
 		if ((fd >= 0) && (nullptr != m_dispatcher))
 		{
-			m_dispatcher->Dispatch(fd);
+			CNetEvent ev(em_event::disconnected, fd);
+			m_dispatcher->Dispatch(std::move(ev));
 		}
 	}
 

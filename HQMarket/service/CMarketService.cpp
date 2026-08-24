@@ -85,15 +85,9 @@ namespace service
 		}
 
 		m_strToken = strToken;
-		m_pTcpServer->RegisterHandler(
-			[this](const std::unique_ptr<CRequest>& request)
+		m_pTcpServer->RegisterHandler([this](const net::CNetEvent& netEvent)
 			{
-				return OnClientRequest(request);
-			});
-		net::CNetPool::InstancePtr()->RegisterDisconnectedHandler(
-			[this](net::_TyConnectionId id)
-			{
-				OnClientDisconnected(id);
+				return OnNetEvent(netEvent);
 			});
 		m_mootdx.SetQuoteHandler(
 			[this](market::CQuote&& quote)
@@ -119,9 +113,21 @@ namespace service
 		return true;
 	}
 
+	int CMarketService::OnNetEvent(const net::CNetEvent& netEvent)
+	{
+		if (netEvent.m_event == net::em_event::request)
+		{
+			return OnClientRequest(netEvent.m_request);
+		}
+		if (netEvent.m_event == net::em_event::disconnected)
+		{
+			OnClientDisconnected(netEvent.m_connection_id);
+		}
+		return 1;
+	}
+
 	void CMarketService::Stop()
 	{
-		net::CNetPool::InstancePtr()->RegisterDisconnectedHandler({});
 		m_mootdx.Stop();
 		m_akshare.Stop();
 		ThreadPoolPtr->ShutDown();
@@ -139,7 +145,10 @@ namespace service
 		wire::MarketEnvelope envelope;
 		if (!envelope.ParseFromString(request->GetPayload()))
 		{
-			net::CNetPool::InstancePtr()->CloseAConnection(id);
+			if (net::CNetPool::InstancePtr()->CloseAConnection(id) >= 0)
+			{
+				OnClientDisconnected(id);
+			}
 			return 0;
 		}
 		HandleEnvelope(id, envelope);

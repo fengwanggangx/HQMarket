@@ -6,6 +6,7 @@
 #include <functional>
 #include "CNet.h"
 #include "CNetRouter.h"
+#include "common_net.h"
 template<bool bAsyn, class _Ty, class _TyHandler>
 class CDistributor;
 
@@ -15,9 +16,8 @@ namespace net
 {
 	class CTcpServer final : public CNet, public CNetRouter<CTcpServer>
 	{
-		using _TyData = std::unique_ptr<CRequest>;
-		using _TyHandler = std::function<int(const _TyData&)>;
-		using _TyDistributor = CDistributor<true, std::vector<_TyData>, _TyHandler>;
+		using _TyHandler = std::function<int(const CNetEvent&)>;
+		using _TyDistributor = CDistributor<true, std::vector<CNetEvent>, _TyHandler>;
 	public:
 		explicit CTcpServer(int nPort);
 		~CTcpServer() = default;
