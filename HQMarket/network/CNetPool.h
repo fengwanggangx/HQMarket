@@ -8,6 +8,8 @@
 #include "../common/ISingleton.h"
 #include "CNet.h"
 #include "event2/bufferevent.h"
+#include "common_net.h"
+
 namespace net
 {
 	struct CNetInfo;
@@ -16,16 +18,16 @@ namespace net
 			DECLARE_SINGLE_DFAULT(CNetPool)
 
 		public:
-			net::_TyConnectionId CloseAConnection(_TyConnectionId fd);
+			net::_TyConnectionId CloseAConnection(_TyConnectionId id);
 			net::_TyConnectionId CloseAConnection(struct bufferevent* pEvent);
-			bool SendData2Client(_TyConnectionId fd, const char* data, size_t nLength);
+			bool SendData2Client(_TyConnectionId id, const char* data, size_t nLength);
 			std::size_t Count() const;
-			struct bufferevent* RegisterConnect(_TyConnectionId fd, struct event_base* pNet, struct sockaddr* pAddr, int nLength, bufferevent_data_cb readcb, bufferevent_data_cb writecb, bufferevent_event_cb eventcb, void* cbarg);
-			struct bufferevent* RegisterAConnection(_TyConnectionId fd, struct bufferevent* pEvent, struct sockaddr_storage* pAddr);
+			struct bufferevent* RegisterConnect(_TyConnectionId id, struct event_base* pNet, struct sockaddr* pAddr, int nLength, bufferevent_data_cb readcb, bufferevent_data_cb writecb, bufferevent_event_cb eventcb, void* cbarg);
+			struct bufferevent* RegisterAConnection(_TyConnectionId id, struct bufferevent* pEvent, struct sockaddr_storage* pAddr);
 
 		private:
 			bool CloseAConnection(CNetInfo& info);
-			bool RegisterAConnection(_TyConnectionId fd, struct bufferevent* pEvent, struct sockaddr* pAddr);
+			bool RegisterAConnection(_TyConnectionId id, struct bufferevent* pEvent, struct sockaddr* pAddr);
 
 		private:
 			mutable std::shared_mutex m_shared_mtx_pool;

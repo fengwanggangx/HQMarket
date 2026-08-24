@@ -31,6 +31,9 @@
     <Filter Include="database">
       <UniqueIdentifier>{84051DC7-B27E-41BA-8271-18224CE74A04}</UniqueIdentifier>
     </Filter>
+    <Filter Include="system">
+      <UniqueIdentifier>{D31FF061-2CBA-4A6B-82E4-BAE5F0A3DA2E}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="database\CDBEngine.cpp">
@@ -102,6 +105,9 @@
     </ClCompile>
     <ClCompile Include="python\CPythonRuntime.cpp">
       <Filter>python</Filter>
+    </ClCompile>
+    <ClCompile Include="system\CBootLoader.cpp">
+      <Filter>system</Filter>
     </ClCompile>
     <ClCompile Include="quote\CHQService.cpp">
       <Filter>quote</Filter>
@@ -206,6 +212,9 @@
     </ClInclude>
     <ClInclude Include="python\CPythonRuntime.h">
       <Filter>python</Filter>
+    </ClInclude>
+    <ClInclude Include="system\CBootLoader.h">
+      <Filter>system</Filter>
     </ClInclude>
     <ClInclude Include="quote\CHQService.h">
       <Filter>quote</Filter>

@@ -1,5 +1,5 @@
 #include "CNet.h"
-#include "netcommon.h"
+#include "common_net.h"
 #include <iostream>
 #include <event2/thread.h>
 #include <arpa/inet.h>
@@ -9,6 +9,14 @@
 
 namespace net
 {
+	CNetEvent::CNetEvent(em_event event) : m_event(event)
+	{
+	}
+
+	CNetEvent::CNetEvent(em_event event, _TyConnectionId id) : m_event(event), m_connection_id(id)
+	{
+	}
+
 	CNetEvent::~CNetEvent() = default;
 	CNetEvent::CNetEvent(CNetEvent&&) noexcept = default;
 	CNetEvent& CNetEvent::operator=(CNetEvent&&) noexcept = default;

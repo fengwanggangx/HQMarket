@@ -49,10 +49,10 @@ namespace net
 			{
 				return 0;
 			}
-			_TyConnectionId fd = bufferevent_getfd(pEvent);
+			_TyConnectionId id = bufferevent_getfd(pEvent);
 			std::lock_guard<std::mutex> lock(ConnectionBuffersMutex());
 			std::unordered_map<_TyConnectionId, std::vector<char>>& connectionBuffers = ConnectionBuffers();
-			std::vector<char>& connectionBuffer = connectionBuffers[fd];
+			std::vector<char>& connectionBuffer = connectionBuffers[id];
 			connectionBuffer.insert(connectionBuffer.end(), received.begin(), received.end());
 			buffer.clear();
 
@@ -76,7 +76,7 @@ namespace net
 				std::unique_ptr<CRequest> req = std::make_unique<CRequest>();
 				if (req->Deserialize(strData))
 				{
-					req->SetConnectionId(fd);
+					req->SetConnectionId(id);
 					reqs.emplace_back(std::move(req));
 					++nReqCount;
 				}
@@ -101,15 +101,15 @@ namespace net
 			}
 			if (connectionBuffer.empty())
 			{
-				connectionBuffers.erase(fd);
+				connectionBuffers.erase(id);
 			}
 			return nReqCount;
 		}
 
-		void ReleaseConnectionBuffer(_TyConnectionId fd)
+		void ReleaseConnectionBuffer(_TyConnectionId id)
 		{
 			std::lock_guard<std::mutex> lock(ConnectionBuffersMutex());
-			ConnectionBuffers().erase(fd);
+			ConnectionBuffers().erase(id);
 		}
 
 		bool SendRequest(CRequest* pRequest, struct bufferevent* pEvent, std::vector<char>& buffer)

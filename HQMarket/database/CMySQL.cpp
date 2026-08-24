@@ -107,7 +107,7 @@ namespace db
 			_TyColumnInfo& col = columns.back();
 			col.m_uId = static_cast<unsigned int>(i);
 			col.m_strName = pFields[i].name;
-			col.m_type = db::GetDataType(database::mysql, pFields[i].type);
+			col.m_type = db::GetDataType(em_database::mysql, pFields[i].type);
 		}
 		uint64_t nRows = mysql_num_rows(result.get());
 

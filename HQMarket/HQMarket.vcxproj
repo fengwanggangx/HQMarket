@@ -66,6 +66,7 @@
     <ClCompile Include="python\CMooTdxProvider.cpp" />
     <ClCompile Include="python\CAkShareProvider.cpp" />
     <ClCompile Include="python\CPythonRuntime.cpp" />
+    <ClCompile Include="system\CBootLoader.cpp" />
     <ClCompile Include="quote\CHQService.cpp" />
     <ClCompile Include="quote\CHQRecorder.cpp" />
     <ClCompile Include="thread\CThreadPool.cpp" />
@@ -102,6 +103,7 @@
     <ClInclude Include="python\CMooTdxProvider.h" />
     <ClInclude Include="python\CAkShareProvider.h" />
     <ClInclude Include="python\CPythonRuntime.h" />
+    <ClInclude Include="system\CBootLoader.h" />
     <ClInclude Include="quote\CHQService.h" />
     <ClInclude Include="quote\CHQRecorder.h" />
     <ClInclude Include="thread\CThreadPool.h" />
@@ -122,7 +124,6 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>./include/debug/libevent;./include/debug/protobuf;./include/debug/mysql;/usr/include/python3.12;./runtime/python/include/python3.12;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <CppLanguageStandard>c++20</CppLanguageStandard>
       <PreprocessorDefinitions>PROTOBUF_USE_DLLS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -135,7 +136,6 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>./include/release/libevent;./include/release/protobuf;./include/release/mysql;/usr/include/python3.12;./runtime/python/include/python3.12;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <CppLanguageStandard>c++20</CppLanguageStandard>
     </ClCompile>
     <Link>

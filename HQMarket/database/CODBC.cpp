@@ -121,7 +121,7 @@ namespace db
 			}
 		}
 
-		int nResult = CloseDatabases(dbs);
+		int nResult = CloseDataBases(dbs);
 		return bBusy ? -1 : nResult;
 	}
 

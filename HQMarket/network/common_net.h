@@ -1,5 +1,6 @@
 #ifndef __COMMON_NET_H__
 #define __COMMON_NET_H__
+#include <event2/util.h>
 #include <netinet/in.h>
 #include <string>
 #include <memory>
@@ -21,13 +22,8 @@ namespace net
 
 	struct CNetEvent
 	{
-		explicit CNetEvent(em_event event) : m_event(event)
-		{
-		}
-
-		explicit CNetEvent(em_event event, _TyConnectionId id) : m_event(event), m_connection_id(id)
-		{
-		}
+		explicit CNetEvent(em_event event);
+		explicit CNetEvent(em_event event, _TyConnectionId id);
 		~CNetEvent();
 		CNetEvent(CNetEvent&&) noexcept;
 		CNetEvent& operator=(CNetEvent&&) noexcept;

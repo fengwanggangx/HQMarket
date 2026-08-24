@@ -56,5 +56,5 @@ std::size_t CDBEngine::Count(db::em_database t) const
 	{
 		return 0;
 	}
-	return m_pODBC->Count(ty);
+	return m_pODBC->Count(t);
 }

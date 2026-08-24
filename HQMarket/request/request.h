@@ -4,7 +4,7 @@
 #include <string>
 #include <unordered_map>
 #include <memory>
-#include "../network/CNet.h"
+#include "../network/common_net.h"
 
 namespace request
 {

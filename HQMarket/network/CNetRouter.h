@@ -16,13 +16,13 @@ namespace net
 			virtual ~CNetRouter() = default;
 
 		protected:
-			static void ConnAccept_Callback(struct evconnlistener* pListener, _TyConnectionId fd, struct sockaddr* pAddr, int nLength, void* pArg);
+			static void ConnAccept_Callback(struct evconnlistener* pListener, _TyConnectionId id, struct sockaddr* pAddr, int nLength, void* pArg);
 			static void Event_Callback(struct bufferevent* pEvent, short events, void* pArg);
 			static void Read_Callback(struct bufferevent* pEvent, void* pArg);
 			static void Write_Callback(struct bufferevent* pEvent, void* pArg);
 
 		public:
-			virtual void OnConnAccept(struct evconnlistener* pListener, _TyConnectionId fd, struct sockaddr* pAddr, int nLength)
+			virtual void OnConnAccept(struct evconnlistener* pListener, _TyConnectionId id, struct sockaddr* pAddr, int nLength)
 			{
 			}
 			virtual void OnConnected(struct bufferevent* pEvent)
@@ -41,12 +41,12 @@ namespace net
 	};
 
 	template <typename _Ty>
-	void CNetRouter<_Ty>::ConnAccept_Callback(struct evconnlistener* pListener, _TyConnectionId fd, struct sockaddr* pAddr, int nLength, void* pArg)
+	void CNetRouter<_Ty>::ConnAccept_Callback(struct evconnlistener* pListener, _TyConnectionId id, struct sockaddr* pAddr, int nLength, void* pArg)
 	{
 		_Ty* pInstance = static_cast<_Ty*>(pArg);
 		if (nullptr != pInstance)
 		{
-			pInstance->OnConnAccept(pListener, fd, pAddr, nLength);
+			pInstance->OnConnAccept(pListener, id, pAddr, nLength);
 		}
 	}
 

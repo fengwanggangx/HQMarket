@@ -6,7 +6,7 @@
 #include <event2/listener.h>
 #include <chrono>
 #include <thread>
-#include "netcommon.h"
+#include "common_net.h"
 #include "CNetPool.h"
 #include "../request/request.h"
 #include "../basic/CDistributor.h"
@@ -14,6 +14,7 @@
 
 namespace net
 {
+	CTcpServer::~CTcpServer() = default;
 
 	CTcpServer::CTcpServer(int nPort) : m_nPort(nPort), m_dispatcher(std::make_unique<_TyDistributor>())
 	{
@@ -26,14 +27,14 @@ namespace net
 
 	}
 
-	void CTcpServer::OnConnAccept(struct evconnlistener* pListener, _TyConnectionId fd, struct sockaddr* pAddr, int nLength)
+	void CTcpServer::OnConnAccept(struct evconnlistener* pListener, _TyConnectionId id, struct sockaddr* pAddr, int nLength)
 	{
 		if (nullptr == GetNet())
 		{
 			return;
 		}
 
-		struct bufferevent* pBuffer = CNetPool::InstancePtr()->RegisterConnect(fd, GetNet(), pAddr, nLength, CTcpServer::Read_Callback, nullptr, CTcpServer::Event_Callback, this);
+		struct bufferevent* pBuffer = CNetPool::InstancePtr()->RegisterConnect(id, GetNet(), pAddr, nLength, CTcpServer::Read_Callback, nullptr, CTcpServer::Event_Callback, this);
 		if (nullptr != pBuffer)
 		{
 			CRequest* pReq = new CRequest;
@@ -75,11 +76,12 @@ namespace net
 			return;
 		}
 
-		_TyConnectionId fd = CNetPool::InstancePtr()->CloseAConnection(pEvent);
-		if ((fd >= 0) && (nullptr != m_dispatcher))
+		_TyConnectionId id = CNetPool::InstancePtr()->CloseAConnection(pEvent);
+		if ((id >= 0) && (nullptr != m_dispatcher))
 		{
-			CNetEvent ev(em_event::disconnected, fd);
-			m_dispatcher->Dispatch(std::move(ev));
+			std::vector<CNetEvent> events;
+			events.emplace_back(em_event::disconnected, id);
+			m_dispatcher->Dispatch(std::move(events));
 		}
 	}
 

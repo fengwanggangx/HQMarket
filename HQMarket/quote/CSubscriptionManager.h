@@ -2,6 +2,7 @@
 #define __CSUBSCRIPTION_MANAGER_H__
 #include "MarketTypes.h"
 #include "../network/CNet.h"
+#include "../network/common_net.h"
 #include <mutex>
 #include <string>
 #include <unordered_map>
