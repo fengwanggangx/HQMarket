@@ -3,6 +3,7 @@
 #include "network/CHttpServer.h"
 #include "network/CTcpServer.h"
 #include "network/netcommon.h"
+#include "python/CPythonRuntime.h"
 #include "quote/CHQService.h"
 #include <cstdint>
 #include <cstdlib>
@@ -49,9 +50,15 @@ int main()
 	}
 	const char* pszHome = std::getenv("HQMARKET_HOME");
 	std::filesystem::path root = ((pszHome != nullptr) && (*pszHome != '\0')) ? pszHome : std::filesystem::current_path();
+	auto python = std::make_unique<CPythonRuntime>();
+	if (!python->Initialize(root / "runtime" / "python", root / "python"))
+	{
+		std::cerr << "Python initialization failed: " << python->GetLastError() << '\n';
+		return 3;
+	}
 
 	std::unique_ptr<net::CTcpServer> pTcpServer = std::make_unique<net::CTcpServer>(9901);
-	service::CMarketService service(pTcpServer.get());
+	service::CMarketService service(pTcpServer.get(), python.get());
 	if (!service.Initialize(pszToken, root))
 	{
 		std::cerr << "HQMarket initialization failed\n";
@@ -117,5 +124,6 @@ int main()
 		tcpThread.join();
 	}
 	service.Stop();
+	python->Finalize();
 	return 0;
 }

@@ -9,7 +9,6 @@
 #include "../network/CTcpServer.h"
 #include "../python/CAkShareProvider.h"
 #include "../python/CMooTdxProvider.h"
-#include "../python/CPythonRuntime.h"
 #include <atomic>
 #include <filesystem>
 #include <mutex>
@@ -18,6 +17,7 @@
 #include <vector>
 
 class CRequest;
+class CPythonRuntime;
 
 namespace service
 {
@@ -30,7 +30,7 @@ namespace service
 			};
 
 		public:
-			explicit CMarketService(net::CTcpServer* pTcpServer);
+			explicit CMarketService(net::CTcpServer* pTcpServer, CPythonRuntime* pPythonRuntime);
 			bool Initialize(const std::string& strToken, const std::filesystem::path& root);
 			void Stop();
 			std::string HealthJson() const;
@@ -51,7 +51,6 @@ namespace service
 			std::vector<net::_TyConnectionId> AuthenticatedClients() const;
 
 		private:
-			provider::CPythonRuntime m_python;
 			provider::CMooTdxProvider m_mootdx;
 			provider::CAkShareProvider m_akshare;
 
@@ -65,6 +64,7 @@ namespace service
 			CHQCache m_cache;
 			CHQRecorder m_recorder;
 			net::CTcpServer* m_pTcpServer{ nullptr };
+			CPythonRuntime* m_pPythonRuntime{ nullptr };
 	};
 } // namespace service
 

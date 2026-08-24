@@ -1,4 +1,5 @@
 #include "CHQService.h"
+#include "../python/CPythonRuntime.h"
 #include "../network/CNetPool.h"
 #include "../network/CNetTools.h"
 #include "../request/request.h"
@@ -65,13 +66,13 @@ namespace service
 		}
 	} // namespace
 
-	CMarketService::CMarketService(net::CTcpServer* pTcpServer) : m_pTcpServer(pTcpServer)
+	CMarketService::CMarketService(net::CTcpServer* pTcpServer, CPythonRuntime* pPythonRuntime) : m_pTcpServer(pTcpServer), m_pPythonRuntime(pPythonRuntime)
 	{
 	}
 
 	bool CMarketService::Initialize(const std::string& strToken, const std::filesystem::path& root)
 	{
-		if ((m_pTcpServer == nullptr) || strToken.empty())
+		if ((nullptr == m_pTcpServer) || (nullptr == m_pPythonRuntime) || !m_pPythonRuntime->IsInitialized() || strToken.empty())
 		{
 			return false;
 		}
@@ -79,11 +80,6 @@ namespace service
 		{
 			return false;
 		}
-		if (!m_python.Initialize(root / "runtime" / "python", root / "python"))
-		{
-			return false;
-		}
-
 		m_strToken = strToken;
 		m_pTcpServer->RegisterHandler([this](const net::CNetEvent& netEvent)
 			{
@@ -128,8 +124,6 @@ namespace service
 	{
 		m_mootdx.Stop();
 		m_akshare.Stop();
-		ThreadPoolPtr->ShutDown();
-		m_python.Finalize();
 		m_recorder.Close();
 	}
 
@@ -369,7 +363,7 @@ namespace service
 		market::CProviderStatus history = m_akshare.GetStatus();
 		std::ostringstream out;
 		out << "{\"status\":\"" << ((realtime.m_bHealthy && history.m_bHealthy) ? "ok" : "degraded")
-			<< "\",\"python\":" << (m_python.IsInitialized() ? "true" : "false")
+			<< "\",\"python\":" << (((nullptr != m_pPythonRuntime) && m_pPythonRuntime->IsInitialized()) ? "true" : "false")
 			<< ",\"sqlite\":" << (m_recorder.IsOpen() ? "true" : "false")
 			<< ",\"mootdx\":" << (realtime.m_bHealthy ? "true" : "false")
 			<< ",\"akshare\":" << (history.m_bHealthy ? "true" : "false") << "}";
