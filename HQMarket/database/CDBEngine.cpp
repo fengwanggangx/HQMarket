@@ -27,22 +27,22 @@ int CDBEngine::Close()
 	return m_pODBC->Close();
 }
 
-int CDBEngine::Close(db::em_database ty)
+int CDBEngine::Close(db::em_database t)
 {
 	if (nullptr == m_pODBC)
 	{
 		return 0;
 	}
-	return m_pODBC->Close(ty);
+	return m_pODBC->Close(t);
 }
 
-db::_TyDBPtr CDBEngine::GetDBPtr(db::em_database ty)
+db::_TyDBPtr CDBEngine::GetDBPtr(db::em_database t)
 {
 	if (nullptr == m_pODBC)
 	{
 		return nullptr;
 	}
-	return m_pODBC->GetADataBase(ty);
+	return m_pODBC->GetADataBase(t);
 }
 
 db::_TyDBPtr CDBEngine::GetDBPtr(const std::string& strType)
@@ -50,7 +50,7 @@ db::_TyDBPtr CDBEngine::GetDBPtr(const std::string& strType)
 	return GetDBPtr(db::GetDBType(strType));
 }
 
-std::size_t CDBEngine::Count(db::em_database ty) const
+std::size_t CDBEngine::Count(db::em_database t) const
 {
 	if (nullptr == m_pODBC)
 	{

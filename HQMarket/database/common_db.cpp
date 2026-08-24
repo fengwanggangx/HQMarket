@@ -45,26 +45,26 @@ namespace db
 		return em_database::unknown;
 	}
 
-	DataTypes GetDataType(em_database ty, int nType)
+	em_data_types GetDataType(em_database ty, int nType)
 	{
-		if (ty != em_database::mysql) return DataTypes::em_string;
+		if (ty != em_database::mysql) return em_data_types::em_string;
 		switch (nType)
 		{
 		case MYSQL_TYPE_TINY:
 		case MYSQL_TYPE_SHORT:
 		case MYSQL_TYPE_INT24:
-		case MYSQL_TYPE_ENUM: return DataTypes::em_int32;
+		case MYSQL_TYPE_ENUM: return em_data_types::em_int32;
 		case MYSQL_TYPE_LONG:
-		case MYSQL_TYPE_LONGLONG: return DataTypes::em_int64;
+		case MYSQL_TYPE_LONGLONG: return em_data_types::em_int64;
 		case MYSQL_TYPE_DECIMAL:
 		case MYSQL_TYPE_FLOAT:
-		case MYSQL_TYPE_DOUBLE: return DataTypes::em_double;
-		case MYSQL_TYPE_BOOL: return DataTypes::em_bool;
+		case MYSQL_TYPE_DOUBLE: return em_data_types::em_double;
+		case MYSQL_TYPE_BOOL: return em_data_types::em_bool;
 		case MYSQL_TYPE_TINY_BLOB:
 		case MYSQL_TYPE_MEDIUM_BLOB:
 		case MYSQL_TYPE_LONG_BLOB:
-		case MYSQL_TYPE_BLOB: return DataTypes::binary;
-		default: return DataTypes::em_string;
+		case MYSQL_TYPE_BLOB: return em_data_types::binary;
+		default: return em_data_types::em_string;
 		}
 	}
 } // namespace db

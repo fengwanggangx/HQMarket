@@ -9,10 +9,10 @@ namespace db
 {
 	struct CColumnInfo
 	{
-			unsigned int m_uId{0};
-			std::string m_strName;
-			db::DataTypes m_type{db::DataTypes::em_string};
-			int m_nDecimal{-1};
+		unsigned int m_uId{ 0 };
+		std::string m_strName;
+		db::em_data_types m_type{ db::em_data_types::em_string };
+		int m_nDecimal{ -1 };
 	};
 
 	enum class status

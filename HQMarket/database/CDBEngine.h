@@ -10,10 +10,10 @@ class CDBEngine final : public ISingleton<CDBEngine>
 	public:
 		int Initialize(db::em_database ty, const db::CConnectParam& param, int nCount = 1);
 		int Close();
-		int Close(db::em_database ty);
-		db::_TyDBPtr GetDBPtr(db::em_database ty);
+		int Close(db::em_database t);
+		db::_TyDBPtr GetDBPtr(db::em_database t);
 		db::_TyDBPtr GetDBPtr(const std::string& strType);
-		std::size_t Count(db::em_database ty) const;
+		std::size_t Count(db::em_database t) const;
 
 	private:
 		std::unique_ptr<db::CODBC> m_pODBC{ nullptr };

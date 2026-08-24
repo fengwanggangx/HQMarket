@@ -17,7 +17,7 @@ namespace db
 		std::string m_strCharset;
 	};
 
-	enum class DataTypes
+	enum class em_data_types
 	{
 		em_string = 0,
 		em_int32,
@@ -35,7 +35,7 @@ namespace db
 		sqlite
 	};
 
-	DataTypes GetDataType(em_database ty, int nType);
+	em_data_types GetDataType(em_database ty, int nType);
 	std::string GetDBName(em_database ty);
 	em_database GetDBType(const std::string& strName);
 } // namespace db
