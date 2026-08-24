@@ -52,7 +52,7 @@
     <ClCompile Include="common\defines.cpp" />
     <ClCompile Include="common\utility.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="market\CMarketCache.cpp" />
+    <ClCompile Include="market\CHQCache.cpp" />
     <ClCompile Include="market\CSubscriptionManager.cpp" />
     <ClCompile Include="market\MarketTypes.cpp" />
     <ClCompile Include="market\v1\market.pb.cc" />
@@ -66,8 +66,8 @@
     <ClCompile Include="python\CMooTdxProvider.cpp" />
     <ClCompile Include="python\CAkShareProvider.cpp" />
     <ClCompile Include="python\CPythonRuntime.cpp" />
-    <ClCompile Include="service\CMarketService.cpp" />
-    <ClCompile Include="storage\CMarketStorage.cpp" />
+    <ClCompile Include="service\CHQService.cpp" />
+    <ClCompile Include="storage\CHQRecorder.cpp" />
     <ClCompile Include="thread\CThreadPool.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -86,7 +86,7 @@
     <ClInclude Include="common\ISingleton.h" />
     <ClInclude Include="common\traits.h" />
     <ClInclude Include="common\utility.h" />
-    <ClInclude Include="market\CMarketCache.h" />
+    <ClInclude Include="market\CHQCache.h" />
     <ClInclude Include="market\CSubscriptionManager.h" />
     <ClInclude Include="market\IMarketProvider.h" />
     <ClInclude Include="market\MarketTypes.h" />
@@ -102,8 +102,8 @@
     <ClInclude Include="python\CMooTdxProvider.h" />
     <ClInclude Include="python\CAkShareProvider.h" />
     <ClInclude Include="python\CPythonRuntime.h" />
-    <ClInclude Include="service\CMarketService.h" />
-    <ClInclude Include="storage\CMarketStorage.h" />
+    <ClInclude Include="service\CHQService.h" />
+    <ClInclude Include="storage\CHQRecorder.h" />
     <ClInclude Include="thread\CThreadPool.h" />
     <ClInclude Include="request\request.h" />
     <ClInclude Include="request\request.pb.h" />

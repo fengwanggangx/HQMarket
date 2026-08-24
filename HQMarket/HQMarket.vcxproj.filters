@@ -70,9 +70,6 @@
       <Filter>common</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="market\CMarketCache.cpp">
-      <Filter>market</Filter>
-    </ClCompile>
     <ClCompile Include="market\CSubscriptionManager.cpp">
       <Filter>market</Filter>
     </ClCompile>
@@ -112,11 +109,8 @@
     <ClCompile Include="python\CPythonRuntime.cpp">
       <Filter>python</Filter>
     </ClCompile>
-    <ClCompile Include="service\CMarketService.cpp">
+    <ClCompile Include="service\CHQService.cpp">
       <Filter>service</Filter>
-    </ClCompile>
-    <ClCompile Include="storage\CMarketStorage.cpp">
-      <Filter>storage</Filter>
     </ClCompile>
     <ClCompile Include="thread\CThreadPool.cpp">
       <Filter>thread</Filter>
@@ -124,6 +118,8 @@
     <ClCompile Include="database\common_db.cpp">
       <Filter>database</Filter>
     </ClCompile>
+    <ClCompile Include="market\CHQCache.cpp" />
+    <ClCompile Include="storage\CHQRecorder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="database\CDBEngine.h">
@@ -167,9 +163,6 @@
     </ClInclude>
     <ClInclude Include="common\utility.h">
       <Filter>common</Filter>
-    </ClInclude>
-    <ClInclude Include="market\CMarketCache.h">
-      <Filter>market</Filter>
     </ClInclude>
     <ClInclude Include="market\CSubscriptionManager.h">
       <Filter>market</Filter>
@@ -216,11 +209,8 @@
     <ClInclude Include="python\CPythonRuntime.h">
       <Filter>python</Filter>
     </ClInclude>
-    <ClInclude Include="service\CMarketService.h">
+    <ClInclude Include="service\CHQService.h">
       <Filter>service</Filter>
-    </ClInclude>
-    <ClInclude Include="storage\CMarketStorage.h">
-      <Filter>storage</Filter>
     </ClInclude>
     <ClInclude Include="thread\CThreadPool.h">
       <Filter>thread</Filter>
@@ -234,6 +224,8 @@
     <ClInclude Include="database\common_db.h">
       <Filter>database</Filter>
     </ClInclude>
+    <ClInclude Include="market\CHQCache.h" />
+    <ClInclude Include="storage\CHQRecorder.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="config\hqmarket.json">

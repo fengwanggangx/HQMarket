@@ -75,7 +75,7 @@ namespace service
 		{
 			return false;
 		}
-		if (!m_storage.Open(root / "data" / "hqmarket.db"))
+		if (!m_recorder.Open(root / "data" / "hqmarket.db"))
 		{
 			return false;
 		}
@@ -130,7 +130,7 @@ namespace service
 		m_akshare.Stop();
 		ThreadPoolPtr->ShutDown();
 		m_python.Finalize();
-		m_storage.Close();
+		m_recorder.Close();
 	}
 
 	int CMarketService::OnClientRequest(const std::unique_ptr<CRequest>& request)
@@ -370,7 +370,7 @@ namespace service
 		std::ostringstream out;
 		out << "{\"status\":\"" << ((realtime.m_bHealthy && history.m_bHealthy) ? "ok" : "degraded")
 			<< "\",\"python\":" << (m_python.IsInitialized() ? "true" : "false")
-			<< ",\"sqlite\":" << (m_storage.IsOpen() ? "true" : "false")
+			<< ",\"sqlite\":" << (m_recorder.IsOpen() ? "true" : "false")
 			<< ",\"mootdx\":" << (realtime.m_bHealthy ? "true" : "false")
 			<< ",\"akshare\":" << (history.m_bHealthy ? "true" : "false") << "}";
 		return out.str();
@@ -423,13 +423,13 @@ namespace service
 									 std::int64_t nBeginTime, std::int64_t nEndTime)
 	{
 		market::CInstrument instrument = ParseInstrument(strInstrument);
-		std::vector<market::CBar> values = m_storage.QueryBars(instrument, channel, nBeginTime, nEndTime);
+		std::vector<market::CBar> values = m_recorder.QueryBars(instrument, channel, nBeginTime, nEndTime);
 		if (values.empty())
 		{
 			values = m_akshare.QueryBars(instrument, channel, nBeginTime, nEndTime);
 			if (!values.empty())
 			{
-				m_storage.UpsertBars(values);
+				m_recorder.UpsertBars(values);
 			}
 		}
 		std::ostringstream out;

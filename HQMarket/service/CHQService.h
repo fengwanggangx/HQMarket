@@ -1,7 +1,7 @@
 #ifndef __CMARKET_SERVICE_H__
 #define __CMARKET_SERVICE_H__
 
-#include "../market/CMarketCache.h"
+#include "../market/CHQCache.h"
 #include "../market/CSubscriptionManager.h"
 #include "../market/v1/market.pb.h"
 #include "../network/CFrameCodec.h"
@@ -9,7 +9,7 @@
 #include "../python/CAkShareProvider.h"
 #include "../python/CMooTdxProvider.h"
 #include "../python/CPythonRuntime.h"
-#include "../storage/CMarketStorage.h"
+#include "../storage/CHQRecorder.h"
 #include <atomic>
 #include <filesystem>
 #include <mutex>
@@ -54,14 +54,17 @@ namespace service
 			provider::CPythonRuntime m_python;
 			provider::CMooTdxProvider m_mootdx;
 			provider::CAkShareProvider m_akshare;
-			market::CMarketCache m_cache;
-			storage::CMarketStorage m_storage;
-			net::CTcpServer* m_pTcpServer{nullptr};
+
 			std::string m_strToken;
 			mutable std::mutex m_mtx_sessions;
 			std::unordered_map<net::_TyConnectionId, CClientSession> m_sessions;
 			market::CSubscriptionManager m_subscriptions;
 			std::atomic_uint64_t m_nDepthSequence{0};
+
+		private:
+			CHQCache m_cache;
+			CHQRecorder m_recorder;
+			net::CTcpServer* m_pTcpServer{ nullptr };
 	};
 } // namespace service
 

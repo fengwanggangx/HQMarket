@@ -30,6 +30,15 @@ struct Typer<_Ty, std::enable_if_t<IsContainer<_Ty>>>
 
 namespace utility
 {
+	template <typename _Ty>
+	bool to_number(const std::string& value, _Ty& result)
+	{
+		const char* pBegin = value.data();
+		const char* pEnd = pBegin + value.size();
+		auto parsed = std::from_chars(pBegin, pEnd, result);
+		return (std::errc{} == parsed.ec) && (pEnd == parsed.ptr);
+	}
+
 	std::string lower(std::string strVal);
 
 	size_t stringsplit(const std::string& s, std::vector<std::string>& vc, char delim, bool bEmpty = false);
