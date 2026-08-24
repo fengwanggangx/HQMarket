@@ -45,29 +45,23 @@ int main()
 		{
 			return Response(200, service.MetricsText(), "text/plain; charset=utf-8");
 		});
-	httpServer.RegisterHandler(net::HttpMethod::GET, "/v1/instruments",
-		[&service](const net::CHttpRequest&)
+	httpServer.RegisterHandler(net::HttpMethod::GET, "/v1/instruments", [&service](const net::CHttpRequest&)
 		{
 			return Response(200, service.InstrumentsJson(), "application/json; charset=utf-8");
 		});
 	httpServer.RegisterHandler(net::HttpMethod::GET, "/v1/quotes", [&service](const net::CHttpRequest& request)
 		{
 			std::string instrument = request.GetQuery("instrument");
-			return Response(instrument.empty() ? 400 : 200,
-				instrument.empty() ? "{\"error\":\"instrument is required\"}" : service.QuoteJson(instrument),
-				"application/json; charset=utf-8");
+			return Response(instrument.empty() ? 400 : 200, instrument.empty() ? "{\"error\":\"instrument is required\"}" : service.QuoteJson(instrument), "application/json; charset=utf-8");
 		});
 	httpServer.RegisterHandler(net::HttpMethod::GET, "/v1/bars", [&service](const net::CHttpRequest& request)
 		{
 			std::string instrument = request.GetQuery("instrument");
 			if (instrument.empty())
 			{
-				return Response(400, "{\"error\":\"instrument is required\"}",
-								"application/json; charset=utf-8");
+				return Response(400, "{\"error\":\"instrument is required\"}", "application/json; charset=utf-8");
 			}
-			return Response(200,
-				service.BarsJson(instrument, market::Channel::bar_1d, 0, std::numeric_limits<std::int64_t>::max()),
-				"application/json; charset=utf-8");
+			return Response(200, service.BarsJson(instrument, market::Channel::bar_1d, 0, std::numeric_limits<std::int64_t>::max()), "application/json; charset=utf-8");
 		});
 	if (!boot.Run())
 	{
