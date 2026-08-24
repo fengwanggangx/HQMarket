@@ -9,21 +9,21 @@ namespace db
 {
 	namespace
 	{
-		std::unique_ptr<IDataBase> CreateDB(em_database ty)
+		IDataBase* CreateDB(em_database t)
 		{
-			switch (ty)
+			switch (t)
 			{
 			case em_database::sqlite:
 			{
-				return std::make_unique<CSQLite3>();
+				return new CSQLite3();
 			}
 			case em_database::mysql:
 			{
-				return std::make_unique<CMySQL>();
+				return new CMySQL();
 			}
 			case em_database::oracle:
 			{
-				return std::make_unique<COracle>();
+				return new COracle();
 			}
 			default:
 			{
@@ -32,7 +32,7 @@ namespace db
 			}
 		}
 
-		int CloseDatabases(std::vector<std::unique_ptr<IDataBase>>& dbs)
+		int CloseDataBases(std::vector<std::unique_ptr<IDataBase>>& dbs)
 		{
 			int nResult = 0;
 			for (const auto& v : dbs)
@@ -70,7 +70,7 @@ namespace db
 			std::unique_ptr<IDataBase> db(CreateDB(t));
 			if ((nullptr == db) || (0 != db->Connect(param)))
 			{
-				CloseDatabases(dbs);
+				CloseDataBases(dbs);
 				return -1;
 			}
 			dbs.emplace_back(std::move(db));
@@ -155,7 +155,7 @@ namespace db
 			}
 		}
 
-		int nResult = CloseDatabases(dbs);
+		int nResult = CloseDataBases(dbs);
 		return bBusy ? -1 : nResult;
 	}
 
