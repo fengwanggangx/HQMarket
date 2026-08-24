@@ -1,6 +1,6 @@
 #ifndef __CMOOTDX_PROVIDER_H__
 #define __CMOOTDX_PROVIDER_H__
-#include "../market/IMarketProvider.h"
+#include "../quote/IMarketProvider.h"
 #include <atomic>
 #include <mutex>
 #include <thread>

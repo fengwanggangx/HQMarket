@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../database/CDBEngine.h"
-#include "../market/MarketTypes.h"
+#include "MarketTypes.h"
 #include <filesystem>
 #include <mutex>
 #include <vector>

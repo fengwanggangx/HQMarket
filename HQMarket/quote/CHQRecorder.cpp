@@ -1,28 +1,27 @@
 #include "CHQRecorder.h"
+#include "../common/utility.h"
 #include "../database/IDataBase.h"
 #include <charconv>
 #include <system_error>
 
-namespace storage
+namespace
 {
-	namespace
+	std::string Quote(const std::string& value)
 	{
-		std::string Quote(const std::string& value)
+		std::string result("'");
+		result.reserve(value.size() + 2);
+		for (char ch : value)
 		{
-			std::string result("'");
-			result.reserve(value.size() + 2);
-			for (char ch : value)
+			result.push_back(ch);
+			if ('\'' == ch)
 			{
 				result.push_back(ch);
-				if ('\'' == ch)
-				{
-					result.push_back(ch);
-				}
 			}
-			result.push_back('\'');
-			return result;
 		}
+		result.push_back('\'');
+		return result;
 	}
+}
 
 	CHQRecorder::~CHQRecorder()
 	{
@@ -86,7 +85,7 @@ namespace storage
 
 	bool CHQRecorder::UpsertBars(const std::vector<market::CBar>& bars)
 	{
-		std::lock_guard<std::mutex> lck(m_mtx_db);
+		std::unique_lock<std::shared_mutex> lck(m_mtx_db);
 		if (!m_bOpen || (nullptr == m_db))
 		{
 			return false;
@@ -162,4 +161,3 @@ namespace storage
 		}
 		return result;
 	}
-} // namespace storage

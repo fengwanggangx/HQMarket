@@ -1,6 +1,6 @@
 #ifndef __CAKSHARE_PROVIDER_H__
 #define __CAKSHARE_PROVIDER_H__
-#include "../market/IMarketProvider.h"
+#include "../quote/IMarketProvider.h"
 #include <mutex>
 namespace provider
 {

@@ -1,5 +1,5 @@
-#include "../market/CMarketCache.h"
-#include "../market/CSubscriptionManager.h"
+#include "../quote/CHQCache.h"
+#include "../quote/CSubscriptionManager.h"
 #include "../network/CFrameCodec.h"
 #include <cassert>
 #include <iostream>
@@ -18,7 +18,7 @@ int main()
 	assert(subscriptions.Subscribe(2, {quote}).empty());
 	assert(subscriptions.RemoveClient(1).empty());
 	assert(subscriptions.RemoveClient(2).size() == 1);
-	market::CMarketCache cache;
+	CHQCache cache;
 	market::CQuote value;
 	value.m_instrument = quote.m_instrument;
 	value.m_nLastPrice = 16880000;

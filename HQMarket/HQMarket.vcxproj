@@ -52,10 +52,10 @@
     <ClCompile Include="common\defines.cpp" />
     <ClCompile Include="common\utility.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="market\CHQCache.cpp" />
-    <ClCompile Include="market\CSubscriptionManager.cpp" />
-    <ClCompile Include="market\MarketTypes.cpp" />
-    <ClCompile Include="market\v1\market.pb.cc" />
+    <ClCompile Include="quote\CHQCache.cpp" />
+    <ClCompile Include="quote\CSubscriptionManager.cpp" />
+    <ClCompile Include="quote\MarketTypes.cpp" />
+    <ClCompile Include="quote\v1\market.pb.cc" />
     <ClCompile Include="network\CFrameCodec.cpp" />
     <ClCompile Include="network\CHttpServer.cpp" />
     <ClCompile Include="network\CTcpServer.cpp" />
@@ -66,8 +66,8 @@
     <ClCompile Include="python\CMooTdxProvider.cpp" />
     <ClCompile Include="python\CAkShareProvider.cpp" />
     <ClCompile Include="python\CPythonRuntime.cpp" />
-    <ClCompile Include="service\CHQService.cpp" />
-    <ClCompile Include="storage\CHQRecorder.cpp" />
+    <ClCompile Include="quote\CHQService.cpp" />
+    <ClCompile Include="quote\CHQRecorder.cpp" />
     <ClCompile Include="thread\CThreadPool.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -86,11 +86,11 @@
     <ClInclude Include="common\ISingleton.h" />
     <ClInclude Include="common\traits.h" />
     <ClInclude Include="common\utility.h" />
-    <ClInclude Include="market\CHQCache.h" />
-    <ClInclude Include="market\CSubscriptionManager.h" />
-    <ClInclude Include="market\IMarketProvider.h" />
-    <ClInclude Include="market\MarketTypes.h" />
-    <ClInclude Include="market\v1\market.pb.h" />
+    <ClInclude Include="quote\CHQCache.h" />
+    <ClInclude Include="quote\CSubscriptionManager.h" />
+    <ClInclude Include="quote\IMarketProvider.h" />
+    <ClInclude Include="quote\MarketTypes.h" />
+    <ClInclude Include="quote\v1\market.pb.h" />
     <ClInclude Include="network\CFrameCodec.h" />
     <ClInclude Include="network\CHttpServer.h" />
     <ClInclude Include="network\CTcpServer.h" />
@@ -102,15 +102,15 @@
     <ClInclude Include="python\CMooTdxProvider.h" />
     <ClInclude Include="python\CAkShareProvider.h" />
     <ClInclude Include="python\CPythonRuntime.h" />
-    <ClInclude Include="service\CHQService.h" />
-    <ClInclude Include="storage\CHQRecorder.h" />
+    <ClInclude Include="quote\CHQService.h" />
+    <ClInclude Include="quote\CHQRecorder.h" />
     <ClInclude Include="thread\CThreadPool.h" />
     <ClInclude Include="request\request.h" />
     <ClInclude Include="request\request.pb.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="config\hqmarket.json" />
-    <None Include="market\v1\market.proto" />
+    <None Include="quote\v1\market.proto" />
     <None Include="python\requirements.lock" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -122,6 +122,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>./include/debug/libevent;./include/debug/protobuf;./include/debug/mysql;/usr/include/python3.12;./runtime/python/include/python3.12;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <CppLanguageStandard>c++20</CppLanguageStandard>
       <PreprocessorDefinitions>PROTOBUF_USE_DLLS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -134,6 +135,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>./include/release/libevent;./include/release/protobuf;./include/release/mysql;/usr/include/python3.12;./runtime/python/include/python3.12;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <CppLanguageStandard>c++20</CppLanguageStandard>
     </ClCompile>
     <Link>
