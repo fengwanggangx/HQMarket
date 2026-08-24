@@ -1,7 +1,7 @@
 #include "CMySQL.h"
 #include <unordered_map>
 #include <mysql/mysql.h>
-#include "dbcommon.h"
+#include "common_db.h"
 #include <memory>
 
 namespace db
@@ -25,14 +25,15 @@ namespace db
 		if (nullptr == m_pDB)
 		{
 			m_pDB = mysql_init(nullptr);
+			if (m_pDB == nullptr) return 1;
 		}
 
 		mysql_options(m_pDB, MYSQL_SET_CHARSET_NAME, param.m_strCharset.c_str());
-		mysql_options(m_pDB, MYSQL_OPT_RECONNECT, (const char*)1); // 自动重连
+		bool bReconnect = true;
+		mysql_options(m_pDB, MYSQL_OPT_RECONNECT, &bReconnect);
 		if (!mysql_real_connect(m_pDB, param.m_strHost.c_str(), param.m_strAccount.c_str(), param.m_strPasswd.c_str(),
 								param.m_strDataBase.c_str(), param.m_nPort, nullptr, 0))
 		{
-			const char* pError = mysql_error(m_pDB);
 			mysql_close(m_pDB);
 			m_pDB = nullptr;
 			return 1;
@@ -43,7 +44,7 @@ namespace db
 	void CMySQL::DisConnect()
 	{
 		std::lock_guard<std::mutex> lock(m_mtx);
-		if (IsValid())
+		if (m_pDB != nullptr)
 		{
 			mysql_close(m_pDB);
 		}
@@ -57,19 +58,20 @@ namespace db
 
 	int CMySQL::Close()
 	{
-		m_pDB = nullptr;
+		DisConnect();
 		return 0;
 	}
 
 	const _TyTableInfo& CMySQL::ExecQuery(const std::string& strSQL)
 	{
 		thread_local _TyTableInfo s_table;
+		std::lock_guard<std::mutex> lock(m_mtx);
 
 		_TyColumns& columns = s_table.first;
 		_TyRows& rows = s_table.second;
 
 		columns.clear();
-		columns.clear();
+		rows.clear();
 
 		if (!IsValid())
 		{
@@ -78,7 +80,6 @@ namespace db
 		int nRet = mysql_query(m_pDB, strSQL.c_str());
 		if (0 != nRet)
 		{
-			const char* pError = mysql_error(m_pDB);
 			return s_table;
 		}
 
@@ -93,7 +94,6 @@ namespace db
 		if (nullptr == result.get())
 		{
 			//(0 == mysql_field_count(m_pDB))
-			const char* pError = mysql_error(m_pDB);
 			return s_table;
 		}
 
@@ -103,7 +103,9 @@ namespace db
 		columns.reserve(nFields);
 		for (int i = 0; i < nFields; ++i)
 		{
-			_TyColumnInfo& col = columns[i];
+			columns.emplace_back();
+			_TyColumnInfo& col = columns.back();
+			col.m_uId = static_cast<unsigned int>(i);
 			col.m_strName = pFields[i].name;
 			col.m_type = db::GetDataType(database::mysql, pFields[i].type);
 		}
@@ -113,7 +115,8 @@ namespace db
 		MYSQL_ROW row;
 		while ((row = mysql_fetch_row(result.get())))
 		{
-			std::vector<std::string> rowData(nFields);
+			std::vector<std::string> rowData;
+			rowData.reserve(nFields);
 			unsigned long* lengths = mysql_fetch_lengths(result.get());
 
 			for (int i = 0; i < nFields; ++i)
@@ -138,12 +141,11 @@ namespace db
 		std::lock_guard<std::mutex> lock(m_mtx);
 		if (!IsValid())
 		{
-			return 0;
+			return -1;
 		}
 		int nRet = mysql_query(m_pDB, strSQL.c_str());
 		if (0 != nRet)
 		{
-			const char* pError = mysql_error(m_pDB);
 		}
 		return nRet;
 	}

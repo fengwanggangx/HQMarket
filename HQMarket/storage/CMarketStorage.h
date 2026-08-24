@@ -1,10 +1,10 @@
 #ifndef __CMARKET_STORAGE_H__
 #define __CMARKET_STORAGE_H__
 #include "../market/MarketTypes.h"
+#include "../database/CSQLite3.h"
 #include <filesystem>
 #include <mutex>
 #include <vector>
-struct sqlite3;
 namespace storage
 {
 	class CMarketStorage final
@@ -19,9 +19,10 @@ namespace storage
 			bool IsOpen() const;
 
 		private:
-			bool Exec(const char* pszSql);
+			bool Exec(const std::string& strSql);
 			mutable std::mutex m_mtx_database;
-			sqlite3* m_pDatabase{nullptr};
+			db::CSQLite3 m_database;
+			bool m_bOpen{false};
 	};
 } // namespace storage
 #endif

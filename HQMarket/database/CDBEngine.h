@@ -2,26 +2,20 @@
 #define __CDBENGINE_H__
 
 #include "../common/ISingleton.h"
-#include <memory>
-#include <functional>
-#include <string>
-
-namespace db
-{
-	class IDataBase;
-	class CODBC;
-	using _TyDBReleasor = std::function<void(IDataBase*)>;
-	using _TyDBPtr = std::unique_ptr<IDataBase, _TyDBReleasor>;
-} // namespace db
+#include "CODBC.h"
 
 class CDBEngine final : public ISingleton<CDBEngine>
 {
 		DECLARE_SINGLE_DFAULT(CDBEngine)
 	public:
-		void Initialize();
+		int Initialize(db::em_database ty, const db::CConnectParam& param, int nCount = 1);
+		int Close();
+		int Close(db::em_database ty);
+		db::_TyDBPtr GetDBPtr(db::em_database ty);
 		db::_TyDBPtr GetDBPtr(const std::string& strType);
+		std::size_t Count(db::em_database ty) const;
 
 	private:
-		std::unique_ptr<db::CODBC> m_pODBC;
+		std::unique_ptr<db::CODBC> m_pODBC{ nullptr };
 };
 #endif

@@ -34,8 +34,26 @@
     <Filter Include="request">
       <UniqueIdentifier>{D704967E-EAA8-4F89-860C-AFA51A3FAD83}</UniqueIdentifier>
     </Filter>
+    <Filter Include="database">
+      <UniqueIdentifier>{84051DC7-B27E-41BA-8271-18224CE74A04}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="database\CDBEngine.cpp">
+      <Filter>database</Filter>
+    </ClCompile>
+    <ClCompile Include="database\CMySQL.cpp">
+      <Filter>database</Filter>
+    </ClCompile>
+    <ClCompile Include="database\CODBC.cpp">
+      <Filter>database</Filter>
+    </ClCompile>
+    <ClCompile Include="database\COracle.cpp">
+      <Filter>database</Filter>
+    </ClCompile>
+    <ClCompile Include="database\CSQLite3.cpp">
+      <Filter>database</Filter>
+    </ClCompile>
     <ClCompile Include="request\request.cpp">
       <Filter>request</Filter>
     </ClCompile>
@@ -100,8 +118,29 @@
     <ClCompile Include="thread\CThreadPool.cpp">
       <Filter>thread</Filter>
     </ClCompile>
+    <ClCompile Include="database\common_db.cpp">
+      <Filter>database</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="database\CDBEngine.h">
+      <Filter>database</Filter>
+    </ClInclude>
+    <ClInclude Include="database\CMySQL.h">
+      <Filter>database</Filter>
+    </ClInclude>
+    <ClInclude Include="database\CODBC.h">
+      <Filter>database</Filter>
+    </ClInclude>
+    <ClInclude Include="database\COracle.h">
+      <Filter>database</Filter>
+    </ClInclude>
+    <ClInclude Include="database\CSQLite3.h">
+      <Filter>database</Filter>
+    </ClInclude>
+    <ClInclude Include="database\IDataBase.h">
+      <Filter>database</Filter>
+    </ClInclude>
     <ClInclude Include="basic\CDistributor.h">
       <Filter>basic</Filter>
     </ClInclude>
@@ -188,6 +227,9 @@
     </ClInclude>
     <ClInclude Include="request\request.pb.h">
       <Filter>request</Filter>
+    </ClInclude>
+    <ClInclude Include="database\common_db.h">
+      <Filter>database</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

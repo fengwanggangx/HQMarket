@@ -24,6 +24,7 @@ namespace db
 
 		private:
 			void* m_pDB{nullptr};
+			_TyTableInfo m_table;
 	};
 } // namespace db
 #endif

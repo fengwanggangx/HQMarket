@@ -89,8 +89,7 @@ namespace service
 			{
 				return OnNetEvent(netEvent);
 			});
-		m_mootdx.SetQuoteHandler(
-			[this](market::CQuote&& quote)
+		m_mootdx.SetQuoteHandler([this](market::CQuote&& quote)
 			{
 				market::CInstrument instrument = quote.m_instrument;
 				std::uint64_t sequence = m_cache.Update(std::move(quote));
@@ -100,8 +99,7 @@ namespace service
 					PublishQuote(*cached, sequence);
 				}
 			});
-		m_mootdx.SetDepthHandler(
-			[this](market::CDepth&& depth)
+		m_mootdx.SetDepthHandler([this](market::CDepth&& depth)
 			{
 				PublishDepth(depth, ++m_nDepthSequence);
 			});

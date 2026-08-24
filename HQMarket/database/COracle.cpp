@@ -14,7 +14,7 @@ namespace db
 
 	int COracle::Connect(const CConnectParam& param)
 	{
-		return 0;
+		return -1;
 	}
 
 	int COracle::Close()
@@ -24,7 +24,7 @@ namespace db
 
 	int COracle::ExecUpdate(const std::string& strSQL)
 	{
-		return 0;
+		return -1;
 	}
 
 	const _TyTableInfo& COracle::ExecQuery(const std::string& strSQL)
