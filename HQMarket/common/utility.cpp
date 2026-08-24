@@ -14,7 +14,7 @@ namespace utility
 		return strVal;
 	}
 
-	size_t stringsplit(const std::string& s, std::vector<std::string>& vc, char delim, bool bEmpty)
+	size_t SplitString(const std::string& s, std::vector<std::string>& vc, char delim, bool bEmpty)
 	{
 		vc.clear();
 		const char* p = s.c_str();
@@ -48,6 +48,54 @@ namespace utility
 			}
 		}
 		return vc.size();
+	}
+
+	std::size_t SplitStringView(const std::string& str, std::vector<stringview>& views, char delim, bool bEmpty)
+	{
+		std::size_t nLength = str.length();
+		if (nLength <= 0)
+		{
+			views.clear();
+			return 0;
+		}
+		std::size_t sz = views.size();
+		std::size_t n = 0;
+		std::size_t nStart = 0;
+		for (std::size_t i = 0; i < nLength; ++i)
+		{
+			if (str[i] == delim)
+			{
+				if ((!bEmpty) && (nStart == i))
+				{
+					nStart = i + 1;
+					continue;
+				}
+				if (n < sz)
+				{
+					views.at(n).SetView(nStart, i);
+				}
+				else
+				{
+					views.emplace_back(nStart, i);
+				}
+				++n;
+				nStart = i + 1;
+			}
+		}
+		if (n < sz)
+		{
+			views.at(n).SetView(nStart, nLength);
+		}
+		else
+		{
+			views.emplace_back(nStart, nLength);
+		}
+		++n;
+		if (n < sz)
+		{
+			views.resize(n);
+		}
+		return n;
 	}
 
 } // namespace utility

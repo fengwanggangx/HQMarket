@@ -15,10 +15,10 @@ namespace db
 	CConnectParam::CConnectParam(const std::string& strParam, char delimiter)
 	{
 		std::vector<std::string> data;
-		if (utility::stringsplit(strParam, data, delimiter, false) == 6)
+		if (utility::SplitString(strParam, data, delimiter, false) == 6)
 		{
 			m_strHost = data[0];
-			utility::s2n(data[1], m_nPort);
+			utility::to_number(data[1], m_nPort);
 			m_strAccount = data[2];
 			m_strPasswd = data[3];
 			m_strDataBase = data[4];

@@ -65,7 +65,7 @@ namespace db
 		std::vector<std::unique_ptr<IDataBase>> dbs;
 		dbs.reserve(nCount);
 
-		for (int i = 0; i < nCount; ++i)
+		for (std::size_t i = 0; i < nCount; ++i)
 		{
 			std::unique_ptr<IDataBase> db(CreateDB(t));
 			if ((nullptr == db) || (0 != db->Connect(param)))

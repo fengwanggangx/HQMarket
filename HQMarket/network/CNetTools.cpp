@@ -40,8 +40,7 @@ namespace net
 			return n;
 		}
 
-		std::size_t RequestFromBuffer(std::vector<std::unique_ptr<CRequest>>& reqs, struct bufferevent* pEvent,
-									  std::vector<char>& buffer)
+		std::size_t RequestFromBuffer(std::vector<std::unique_ptr<CRequest>>& reqs, struct bufferevent* pEvent, std::vector<char>& buffer)
 		{
 			std::vector<char> received;
 			std::size_t nReceived = net::utility::BufferEventReader(pEvent, received);
