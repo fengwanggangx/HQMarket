@@ -64,6 +64,72 @@ namespace service
 			}
 			return result;
 		}
+
+		bool IsValidInstrument(const market::CInstrument& instrument)
+		{
+			return !instrument.m_strSymbol.empty() && (instrument.m_exchange != market::Exchange::unknown);
+		}
+
+		bool IsRealtimeChannel(market::Channel channel)
+		{
+			return (channel == market::Channel::quote) || (channel == market::Channel::depth);
+		}
+
+		void FillQuote(const market::CQuote& quote, wire::QuoteData* value)
+		{
+			value->mutable_instrument()->set_symbol(quote.m_instrument.m_strSymbol);
+			value->mutable_instrument()->set_exchange(ToWire(quote.m_instrument.m_exchange));
+			value->set_exchange_time_ms(quote.m_nExchangeTime);
+			value->set_receive_time_ms(quote.m_nReceiveTime);
+			value->set_last_price(quote.m_nLastPrice);
+			value->set_open_price(quote.m_nOpenPrice);
+			value->set_high_price(quote.m_nHighPrice);
+			value->set_low_price(quote.m_nLowPrice);
+			value->set_pre_close(quote.m_nPreClose);
+			value->set_volume(quote.m_nVolume);
+			value->set_turnover(quote.m_nTurnover);
+			value->set_price_scale(quote.m_nPriceScale);
+			value->set_source(quote.m_strSource);
+			value->set_stale(quote.m_bStale);
+		}
+
+		void FillBar(const market::CBar& bar, wire::BarData* value)
+		{
+			value->mutable_instrument()->set_symbol(bar.m_instrument.m_strSymbol);
+			value->mutable_instrument()->set_exchange(ToWire(bar.m_instrument.m_exchange));
+			value->set_channel(static_cast<wire::Channel>(static_cast<int>(bar.m_channel)));
+			value->set_begin_time_ms(bar.m_nBeginTime);
+			value->set_open_price(bar.m_nOpenPrice);
+			value->set_high_price(bar.m_nHighPrice);
+			value->set_low_price(bar.m_nLowPrice);
+			value->set_close_price(bar.m_nClosePrice);
+			value->set_volume(bar.m_nVolume);
+			value->set_turnover(bar.m_nTurnover);
+			value->set_price_scale(bar.m_nPriceScale);
+			value->set_adjustment(bar.m_strAdjustment);
+			value->set_source(bar.m_strSource);
+		}
+
+		template <typename T>
+		bool SetPayload(CRequest& request, const T& payload)
+		{
+			std::string data;
+			if (!payload.SerializeToString(&data))
+			{
+				return false;
+			}
+			request.SetPayload(data);
+			return true;
+		}
+
+		void SetError(CRequest& response, int code, const std::string& message)
+		{
+			wire::ErrorData error;
+			error.set_code(code);
+			error.set_message(message);
+			response.SetCmd("error");
+			SetPayload(response, error);
+		}
 	} // namespace
 
 	CMarketService::CMarketService(net::CTcpServer* pTcpServer, CPythonRuntime* pPythonRuntime) : m_pTcpServer(pTcpServer), m_pPythonRuntime(pPythonRuntime)
@@ -114,50 +180,6 @@ namespace service
 			return OnClientRequest(netEvent.m_request);
 		}
 
-		bool IsValidInstrument(const market::CInstrument& instrument)
-		{
-			return !instrument.m_strSymbol.empty() && (instrument.m_exchange != market::Exchange::unknown);
-		}
-
-		bool IsRealtimeChannel(market::Channel channel)
-		{
-			return (channel == market::Channel::quote) || (channel == market::Channel::depth);
-		}
-
-		void FillQuote(const market::CQuote& quote, wire::QuoteData* value)
-		{
-			value->mutable_instrument()->set_symbol(quote.m_instrument.m_strSymbol);
-			value->mutable_instrument()->set_exchange(ToWire(quote.m_instrument.m_exchange));
-			value->set_exchange_time_ms(quote.m_nExchangeTime);
-			value->set_receive_time_ms(quote.m_nReceiveTime);
-			value->set_last_price(quote.m_nLastPrice);
-			value->set_open_price(quote.m_nOpenPrice);
-			value->set_high_price(quote.m_nHighPrice);
-			value->set_low_price(quote.m_nLowPrice);
-			value->set_pre_close(quote.m_nPreClose);
-			value->set_volume(quote.m_nVolume);
-			value->set_turnover(quote.m_nTurnover);
-			value->set_price_scale(quote.m_nPriceScale);
-			value->set_source(quote.m_strSource);
-			value->set_stale(quote.m_bStale);
-		}
-
-		void FillBar(const market::CBar& bar, wire::BarData* value)
-		{
-			value->mutable_instrument()->set_symbol(bar.m_instrument.m_strSymbol);
-			value->mutable_instrument()->set_exchange(ToWire(bar.m_instrument.m_exchange));
-			value->set_channel(static_cast<wire::Channel>(static_cast<int>(bar.m_channel)));
-			value->set_begin_time_ms(bar.m_nBeginTime);
-			value->set_open_price(bar.m_nOpenPrice);
-			value->set_high_price(bar.m_nHighPrice);
-			value->set_low_price(bar.m_nLowPrice);
-			value->set_close_price(bar.m_nClosePrice);
-			value->set_volume(bar.m_nVolume);
-			value->set_turnover(bar.m_nTurnover);
-			value->set_price_scale(bar.m_nPriceScale);
-			value->set_adjustment(bar.m_strAdjustment);
-			value->set_source(bar.m_strSource);
-		}
 		if (netEvent.m_event == net::em_event::disconnected)
 		{
 			OnClientDisconnected(netEvent.m_connection_id);
@@ -178,17 +200,7 @@ namespace service
 		{
 			return 0;
 		}
-		net::_TyConnectionId id = request->GetConnectionId();
-		wire::MarketEnvelope envelope;
-		if (!envelope.ParseFromString(request->GetPayload()))
-		{
-			if (net::CNetPool::InstancePtr()->CloseAConnection(id) >= 0)
-			{
-				OnClientDisconnected(id);
-			}
-			return 0;
-		}
-		HandleEnvelope(id, envelope);
+		HandleRequest(request->GetConnectionId(), *request);
 		return 1;
 	}
 
@@ -206,65 +218,75 @@ namespace service
 		}
 	}
 
-	void CMarketService::HandleEnvelope(net::_TyConnectionId id, const wire::MarketEnvelope& envelope)
+	void CMarketService::HandleRequest(net::_TyConnectionId id, const CRequest& request)
 	{
-		wire::MarketEnvelope response;
-		response.set_protocol_major(1);
-		response.set_protocol_minor(0);
-		response.set_request_id(envelope.request_id());
-		if (envelope.protocol_major() != 1)
+		CRequest response;
+		response.SetRequestId(request.GetRequestId());
+		const std::string& command = request.GetCmd();
+		const std::string& payload = request.GetPayload();
+		if (command == "auth")
 		{
-			response.set_type(wire::ERROR);
-			response.mutable_error()->set_code(1001);
-			response.mutable_error()->set_message("unsupported protocol version");
-			SendEnvelope(id, response);
-			return;
-		}
-		if (envelope.type() == wire::AUTH_REQUEST)
-		{
-			bool authenticated = !m_strToken.empty() && (envelope.auth_request().token() == m_strToken);
+			wire::AuthRequest auth;
+			bool authenticated = auth.ParseFromString(payload) && !m_strToken.empty() && (auth.token() == m_strToken);
 			if (authenticated)
 			{
 				std::lock_guard<std::mutex> lock(m_mtx_sessions);
 				m_sessions.try_emplace(id, CClientSession{true});
 			}
-			response.set_type(wire::AUTH_RESPONSE);
-			response.mutable_auth_response()->set_accepted(authenticated);
-			response.mutable_auth_response()->set_reason(authenticated ? "ok" : "invalid token");
-			SendEnvelope(id, response);
+			wire::AuthResponse result;
+			result.set_accepted(authenticated);
+			result.set_reason(authenticated ? "ok" : "invalid token");
+			response.SetCmd("auth_response");
+			SetPayload(response, result);
+			SendRequest(id, response);
 			return;
 		}
 		if (!IsAuthenticated(id))
 		{
-			response.set_type(wire::ERROR);
-			response.mutable_error()->set_code(1002);
-			response.mutable_error()->set_message("authentication required");
-			SendEnvelope(id, response);
+			SetError(response, 1002, "authentication required");
+			SendRequest(id, response);
 			return;
 		}
-		if (envelope.type() == wire::HEARTBEAT)
+		if (command == "heartbeat")
 		{
-			response.set_type(wire::HEARTBEAT);
-			response.mutable_heartbeat()->set_client_time_ms(envelope.heartbeat().client_time_ms());
-			SendEnvelope(id, response);
+			wire::HeartbeatData heartbeat;
+			if (!heartbeat.ParseFromString(payload))
+			{
+				SetError(response, 1005, "invalid heartbeat payload");
+			}
+			else
+			{
+				response.SetCmd("heartbeat");
+				SetPayload(response, heartbeat);
+			}
+			SendRequest(id, response);
 			return;
 		}
-		if (envelope.type() == wire::QUERY_REQUEST)
+		if (command == "query")
 		{
-			HandleQuery(id, envelope);
+			HandleQuery(id, request);
 			return;
 		}
 
-		bool subscribe = envelope.type() == wire::SUBSCRIBE_REQUEST;
-		bool unsubscribe = envelope.type() == wire::UNSUBSCRIBE_REQUEST;
+		bool subscribe = command == "subscribe";
+		bool unsubscribe = command == "unsubscribe";
 		if (!subscribe && !unsubscribe)
 		{
+			SetError(response, 1006, "unknown command");
+			SendRequest(id, response);
 			return;
 		}
-		const auto& instruments =
-			subscribe ? envelope.subscribe_request().instruments() : envelope.unsubscribe_request().instruments();
-		const auto& channels =
-			subscribe ? envelope.subscribe_request().channels() : envelope.unsubscribe_request().channels();
+		wire::SubscribeRequest subscribeRequest;
+		wire::UnsubscribeRequest unsubscribeRequest;
+		if ((subscribe && !subscribeRequest.ParseFromString(payload)) ||
+			(unsubscribe && !unsubscribeRequest.ParseFromString(payload)))
+		{
+			SetError(response, 1005, "invalid subscription payload");
+			SendRequest(id, response);
+			return;
+		}
+		const auto& instruments = subscribe ? subscribeRequest.instruments() : unsubscribeRequest.instruments();
+		const auto& channels = subscribe ? subscribeRequest.channels() : unsubscribeRequest.channels();
 		std::vector<market::CSubscription> requested;
 		std::vector<market::CSubscription> valid;
 		requested.reserve(static_cast<std::size_t>(instruments.size()) * static_cast<std::size_t>(channels.size()));
@@ -296,10 +318,10 @@ namespace service
 			}
 		}
 
-		response.set_type(wire::SUBSCRIPTION_ACK);
+		wire::SubscriptionAck ack;
 		for (const market::CSubscription& subscription : requested)
 		{
-			wire::SubscriptionResult* pResult = response.mutable_subscription_ack()->add_results();
+			wire::SubscriptionResult* pResult = ack.add_results();
 			pResult->mutable_instrument()->set_symbol(subscription.m_instrument.m_strSymbol);
 			pResult->mutable_instrument()->set_exchange(ToWire(subscription.m_instrument.m_exchange));
 			pResult->set_channel(static_cast<wire::Channel>(static_cast<int>(subscription.m_channel)));
@@ -310,7 +332,9 @@ namespace service
 				pResult->set_reason("invalid instrument or unsupported subscription channel");
 			}
 		}
-		SendEnvelope(id, response);
+		response.SetCmd("subscription_ack");
+		SetPayload(response, ack);
+		SendRequest(id, response);
 		if (subscribe)
 		{
 			for (const market::CSubscription& subscription : valid)
@@ -322,46 +346,47 @@ namespace service
 				std::optional<market::CQuote> quote = m_cache.GetQuote(subscription.m_instrument);
 				if (quote.has_value())
 				{
-					wire::MarketEnvelope snapshot;
-					snapshot.set_protocol_major(1);
-					snapshot.set_protocol_minor(0);
-					snapshot.set_type(wire::QUOTE);
-					FillQuote(*quote, snapshot.mutable_quote());
-					SendEnvelope(id, snapshot);
+					wire::QuoteData snapshotPayload;
+					FillQuote(*quote, &snapshotPayload);
+					CRequest snapshot;
+					snapshot.SetCmd("quote");
+					SetPayload(snapshot, snapshotPayload);
+					SendRequest(id, snapshot);
 				}
 			}
 		}
 	}
 
-	void CMarketService::HandleQuery(net::_TyConnectionId id, const wire::MarketEnvelope& envelope)
+	void CMarketService::HandleQuery(net::_TyConnectionId id, const CRequest& requestData)
 	{
-		const wire::QueryRequest& request = envelope.query_request();
+		wire::QueryRequest request;
+		CRequest response;
+		response.SetRequestId(requestData.GetRequestId());
+		if (!request.ParseFromString(requestData.GetPayload()))
+		{
+			SetError(response, 1005, "invalid query payload");
+			SendRequest(id, response);
+			return;
+		}
 		market::CInstrument instrument{request.instrument().symbol(), FromWire(request.instrument().exchange())};
 		market::Channel channel = FromWire(request.channel());
-		wire::MarketEnvelope response;
-		response.set_protocol_major(1);
-		response.set_protocol_minor(0);
-		response.set_request_id(envelope.request_id());
 		if (!IsValidInstrument(instrument) || ((channel != market::Channel::quote) &&
 			(channel != market::Channel::bar_1m) && (channel != market::Channel::bar_1d)))
 		{
-			response.set_type(wire::ERROR);
-			response.mutable_error()->set_code(1003);
-			response.mutable_error()->set_message("invalid instrument or unsupported query channel");
-			SendEnvelope(id, response);
+			SetError(response, 1003, "invalid instrument or unsupported query channel");
+			SendRequest(id, response);
 			return;
 		}
-		response.set_type(wire::QUERY_RESPONSE);
-		wire::QueryResponse* result = response.mutable_query_response();
-		result->mutable_instrument()->CopyFrom(request.instrument());
-		result->set_channel(request.channel());
+		wire::QueryResponse result;
+		result.mutable_instrument()->CopyFrom(request.instrument());
+		result.set_channel(request.channel());
 		if (channel == market::Channel::quote)
 		{
 			std::optional<market::CQuote> quote = m_cache.GetQuote(instrument);
-			result->set_found(quote.has_value());
+			result.set_found(quote.has_value());
 			if (quote.has_value())
 			{
-				FillQuote(*quote, result->mutable_quote());
+				FillQuote(*quote, result.mutable_quote());
 			}
 		}
 		else
@@ -370,11 +395,8 @@ namespace service
 			std::int64_t end = request.end_time_ms() > 0 ? request.end_time_ms() : NowMilliseconds();
 			if ((begin < 0) || (end < begin))
 			{
-				response.set_type(wire::ERROR);
-				response.clear_query_response();
-				response.mutable_error()->set_code(1004);
-				response.mutable_error()->set_message("invalid query time range");
-				SendEnvelope(id, response);
+				SetError(response, 1004, "invalid query time range");
+				SendRequest(id, response);
 				return;
 			}
 			std::vector<market::CBar> bars = m_recorder.QueryBars(instrument, channel, begin, end);
@@ -386,20 +408,22 @@ namespace service
 					m_recorder.UpsertBars(bars);
 				}
 			}
-			result->set_found(!bars.empty());
+			result.set_found(!bars.empty());
 			for (const market::CBar& bar : bars)
 			{
-				FillBar(bar, result->add_bars());
+				FillBar(bar, result.add_bars());
 			}
 		}
-		SendEnvelope(id, response);
+		response.SetCmd("query_response");
+		SetPayload(response, result);
+		SendRequest(id, response);
 	}
 
-	void CMarketService::SendEnvelope(net::_TyConnectionId id, wire::MarketEnvelope& envelope)
+	void CMarketService::SendRequest(net::_TyConnectionId id, CRequest& request)
 	{
-		envelope.set_server_time_ms(NowMilliseconds());
+		request.SetServerTime(NowMilliseconds());
 		std::string payload;
-		if (!envelope.SerializeToString(&payload))
+		if (!request.Serialize(&payload))
 		{
 			return;
 		}
@@ -409,30 +433,26 @@ namespace service
 
 	void CMarketService::PublishQuote(const market::CQuote& quote, std::uint64_t nSequence)
 	{
-		wire::MarketEnvelope envelope;
-		envelope.set_protocol_major(1);
-		envelope.set_protocol_minor(0);
-		envelope.set_type(wire::QUOTE);
-		envelope.set_sequence(nSequence);
-		FillQuote(quote, envelope.mutable_quote());
+		wire::QuoteData payload;
+		FillQuote(quote, &payload);
+		CRequest request;
+		request.SetCmd("quote");
+		request.SetSequence(nSequence);
+		SetPayload(request, payload);
 		market::CSubscription subscription{quote.m_instrument, market::Channel::quote};
 		for (net::_TyConnectionId id : AuthenticatedClients())
 		{
 			if (m_subscriptions.IsSubscribed(id, subscription))
 			{
-				SendEnvelope(id, envelope);
+				SendRequest(id, request);
 			}
 		}
 	}
 
 	void CMarketService::PublishDepth(const market::CDepth& depth, std::uint64_t nSequence)
 	{
-		wire::MarketEnvelope envelope;
-		envelope.set_protocol_major(1);
-		envelope.set_protocol_minor(0);
-		envelope.set_type(wire::DEPTH);
-		envelope.set_sequence(nSequence);
-		wire::DepthData* pValue = envelope.mutable_depth();
+		wire::DepthData payload;
+		wire::DepthData* pValue = &payload;
 		pValue->mutable_instrument()->set_symbol(depth.m_instrument.m_strSymbol);
 		pValue->mutable_instrument()->set_exchange(ToWire(depth.m_instrument.m_exchange));
 		pValue->set_exchange_time_ms(depth.m_nExchangeTime);
@@ -453,12 +473,16 @@ namespace service
 			pLevel->set_volume(level.m_nVolume);
 			pLevel->set_price_scale(level.m_nPriceScale);
 		}
+		CRequest request;
+		request.SetCmd("depth");
+		request.SetSequence(nSequence);
+		SetPayload(request, payload);
 		market::CSubscription subscription{depth.m_instrument, market::Channel::depth};
 		for (net::_TyConnectionId id : AuthenticatedClients())
 		{
 			if (m_subscriptions.IsSubscribed(id, subscription))
 			{
-				SendEnvelope(id, envelope);
+				SendRequest(id, request);
 			}
 		}
 	}

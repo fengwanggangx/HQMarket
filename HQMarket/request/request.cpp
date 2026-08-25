@@ -33,11 +33,6 @@ bool CRequest::Serialize(std::string* output) const
 	{
 		return false;
 	}
-	if (!m_strPayload.empty())
-	{
-		*output = m_strPayload;
-		return true;
-	}
 	if ((m_data == nullptr) || (GetCmd() == "connet_build"))
 	{
 		return false;
@@ -47,8 +42,11 @@ bool CRequest::Serialize(std::string* output) const
 
 bool CRequest::Deserialize(const std::string& data)
 {
-	m_strPayload = data;
-	return true;
+	if (m_data == nullptr)
+	{
+		return false;
+	}
+	return m_data->ParseFromString(data);
 }
 
 void CRequest::SetConnectionId(net::_TyConnectionId id)
@@ -59,11 +57,6 @@ void CRequest::SetConnectionId(net::_TyConnectionId id)
 net::_TyConnectionId CRequest::GetConnectionId() const
 {
 	return m_connection_id;
-}
-
-const std::string& CRequest::GetPayload() const
-{
-	return m_strPayload;
 }
 
 void CRequest::SetType(CRequest::Type type)
@@ -101,6 +94,11 @@ void CRequest::SetReturnData(const std::string& strKey, const std::string& strVa
 	}
 	(*(m_data->mutable_ret()))[strKey] = strVal;
 }
+
+void CRequest::SetPayload(const std::string& payload) { m_data->set_payload(payload); }
+void CRequest::SetRequestId(std::uint64_t id) { m_data->set_request_id(id); }
+void CRequest::SetSequence(std::uint64_t sequence) { m_data->set_sequence(sequence); }
+void CRequest::SetServerTime(std::int64_t time) { m_data->set_server_time_ms(time); }
 
 CRequest::Type CRequest::GetType() const
 {
@@ -158,3 +156,6 @@ std::unordered_map<std::string, std::string> CRequest::GetReturnData() const
 	}
 	return {m_data->ret().begin(), m_data->ret().end()};
 }
+
+const std::string& CRequest::GetPayload() const { return m_data->payload(); }
+std::uint64_t CRequest::GetRequestId() const { return m_data->request_id(); }

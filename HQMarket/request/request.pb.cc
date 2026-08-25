@@ -69,6 +69,12 @@ inline constexpr RequestData::Impl_::Impl_(
         cmd_(
             &::google::protobuf::internal::fixed_address_empty_string,
             ::_pbi::ConstantInitialized()),
+        payload_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()),
+        request_id_{::uint64_t{0u}},
+        sequence_{::uint64_t{0u}},
+        server_time_ms_{::int64_t{0}},
         type_{static_cast< ::request::RequestType >(0)},
         _cached_size_{0} {}
 
@@ -134,6 +140,10 @@ const ::uint32_t
         PROTOBUF_FIELD_OFFSET(::request::RequestData, _impl_.cmd_),
         PROTOBUF_FIELD_OFFSET(::request::RequestData, _impl_.extra_),
         PROTOBUF_FIELD_OFFSET(::request::RequestData, _impl_.ret_),
+        PROTOBUF_FIELD_OFFSET(::request::RequestData, _impl_.payload_),
+        PROTOBUF_FIELD_OFFSET(::request::RequestData, _impl_.request_id_),
+        PROTOBUF_FIELD_OFFSET(::request::RequestData, _impl_.sequence_),
+        PROTOBUF_FIELD_OFFSET(::request::RequestData, _impl_.server_time_ms_),
 };
 
 static const ::_pbi::MigrationSchema
@@ -149,22 +159,24 @@ static const ::_pb::Message* const file_default_instances[] = {
 };
 const char descriptor_table_protodef_request_2eproto[] ABSL_ATTRIBUTE_SECTION_VARIABLE(
     protodesc_cold) = {
-    "\n\rrequest.proto\022\007request\"\364\001\n\013RequestData"
+    "\n\rrequest.proto\022\007request\"\303\002\n\013RequestData"
     "\022\"\n\004type\030\001 \001(\0162\024.request.RequestType\022\013\n\003"
     "cmd\030\002 \001(\t\022.\n\005extra\030\003 \003(\0132\037.request.Reque"
     "stData.ExtraEntry\022*\n\003ret\030\004 \003(\0132\035.request"
-    ".RequestData.RetEntry\032,\n\nExtraEntry\022\013\n\003k"
-    "ey\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\032*\n\010RetEntry\022"
-    "\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001*b\n\013Reque"
-    "stType\022\013\n\007UNKNOWN\020\000\022\016\n\nQUERY_AUTH\020\001\022\022\n\016Q"
-    "UERY_USERINFO\020\002\022\017\n\013UPDATE_AUTH\020\003\022\021\n\rUPDA"
-    "T_PRODUCT\020\004b\006proto3"
+    ".RequestData.RetEntry\022\017\n\007payload\030\005 \001(\014\022\022"
+    "\n\nrequest_id\030\006 \001(\004\022\020\n\010sequence\030\007 \001(\004\022\026\n\016"
+    "server_time_ms\030\010 \001(\003\032,\n\nExtraEntry\022\013\n\003ke"
+    "y\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\032*\n\010RetEntry\022\013"
+    "\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001*b\n\013Reques"
+    "tType\022\013\n\007UNKNOWN\020\000\022\016\n\nQUERY_AUTH\020\001\022\022\n\016QU"
+    "ERY_USERINFO\020\002\022\017\n\013UPDATE_AUTH\020\003\022\021\n\rUPDAT"
+    "_PRODUCT\020\004b\006proto3"
 };
 static ::absl::once_flag descriptor_table_request_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_request_2eproto = {
     false,
     false,
-    379,
+    458,
     descriptor_table_protodef_request_2eproto,
     "request.proto",
     &descriptor_table_request_2eproto_once,
@@ -390,6 +402,7 @@ inline PROTOBUF_NDEBUG_INLINE RequestData::Impl_::Impl_(
       : extra_{visibility, arena, from.extra_},
         ret_{visibility, arena, from.ret_},
         cmd_(arena, from.cmd_),
+        payload_(arena, from.payload_),
         _cached_size_{0} {}
 
 RequestData::RequestData(
@@ -405,7 +418,13 @@ RequestData::RequestData(
   _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
       from._internal_metadata_);
   new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
-  _impl_.type_ = from._impl_.type_;
+  ::memcpy(reinterpret_cast<char *>(&_impl_) +
+               offsetof(Impl_, request_id_),
+           reinterpret_cast<const char *>(&from._impl_) +
+               offsetof(Impl_, request_id_),
+           offsetof(Impl_, type_) -
+               offsetof(Impl_, request_id_) +
+               sizeof(Impl_::type_));
 
   // @@protoc_insertion_point(copy_constructor:request.RequestData)
 }
@@ -415,11 +434,17 @@ inline PROTOBUF_NDEBUG_INLINE RequestData::Impl_::Impl_(
       : extra_{visibility, arena},
         ret_{visibility, arena},
         cmd_(arena),
+        payload_(arena),
         _cached_size_{0} {}
 
 inline void RequestData::SharedCtor(::_pb::Arena* arena) {
   new (&_impl_) Impl_(internal_visibility(), arena);
-  _impl_.type_ = {};
+  ::memset(reinterpret_cast<char *>(&_impl_) +
+               offsetof(Impl_, request_id_),
+           0,
+           offsetof(Impl_, type_) -
+               offsetof(Impl_, request_id_) +
+               sizeof(Impl_::type_));
 }
 RequestData::~RequestData() {
   // @@protoc_insertion_point(destructor:request.RequestData)
@@ -430,6 +455,7 @@ inline void RequestData::SharedDtor(MessageLite& self) {
   this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
   ABSL_DCHECK(this_.GetArena() == nullptr);
   this_._impl_.cmd_.Destroy();
+  this_._impl_.payload_.Destroy();
   this_._impl_.~Impl_();
 }
 
@@ -493,15 +519,15 @@ const ::google::protobuf::internal::ClassData* RequestData::GetClassData() const
   return _class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<1, 4, 2, 39, 2> RequestData::_table_ = {
+const ::_pbi::TcParseTable<3, 8, 2, 47, 2> RequestData::_table_ = {
   {
     0,  // no _has_bits_
     0, // no _extensions_
-    4, 8,  // max_field_number, fast_idx_mask
+    8, 56,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    4294967280,  // skipmap
+    4294967040,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    4,  // num_field_entries
+    8,  // num_field_entries
     2,  // num_aux_entries
     offsetof(decltype(_table_), aux_entries),
     _class_data_.base(),
@@ -511,12 +537,26 @@ const ::_pbi::TcParseTable<1, 4, 2, 39, 2> RequestData::_table_ = {
     ::_pbi::TcParser::GetTable<::request::RequestData>(),  // to_prefetch
     #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
   }, {{
-    // string cmd = 2;
-    {::_pbi::TcParser::FastUS1,
-     {18, 63, 0, PROTOBUF_FIELD_OFFSET(RequestData, _impl_.cmd_)}},
+    // int64 server_time_ms = 8;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(RequestData, _impl_.server_time_ms_), 63>(),
+     {64, 63, 0, PROTOBUF_FIELD_OFFSET(RequestData, _impl_.server_time_ms_)}},
     // .request.RequestType type = 1;
     {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(RequestData, _impl_.type_), 63>(),
      {8, 63, 0, PROTOBUF_FIELD_OFFSET(RequestData, _impl_.type_)}},
+    // string cmd = 2;
+    {::_pbi::TcParser::FastUS1,
+     {18, 63, 0, PROTOBUF_FIELD_OFFSET(RequestData, _impl_.cmd_)}},
+    {::_pbi::TcParser::MiniParse, {}},
+    {::_pbi::TcParser::MiniParse, {}},
+    // bytes payload = 5;
+    {::_pbi::TcParser::FastBS1,
+     {42, 63, 0, PROTOBUF_FIELD_OFFSET(RequestData, _impl_.payload_)}},
+    // uint64 request_id = 6;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(RequestData, _impl_.request_id_), 63>(),
+     {48, 63, 0, PROTOBUF_FIELD_OFFSET(RequestData, _impl_.request_id_)}},
+    // uint64 sequence = 7;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(RequestData, _impl_.sequence_), 63>(),
+     {56, 63, 0, PROTOBUF_FIELD_OFFSET(RequestData, _impl_.sequence_)}},
   }}, {{
     65535, 65535
   }}, {{
@@ -532,6 +572,18 @@ const ::_pbi::TcParseTable<1, 4, 2, 39, 2> RequestData::_table_ = {
     // map<string, string> ret = 4;
     {PROTOBUF_FIELD_OFFSET(RequestData, _impl_.ret_), 0, 1,
     (0 | ::_fl::kFcRepeated | ::_fl::kMap)},
+    // bytes payload = 5;
+    {PROTOBUF_FIELD_OFFSET(RequestData, _impl_.payload_), 0, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kBytes | ::_fl::kRepAString)},
+    // uint64 request_id = 6;
+    {PROTOBUF_FIELD_OFFSET(RequestData, _impl_.request_id_), 0, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUInt64)},
+    // uint64 sequence = 7;
+    {PROTOBUF_FIELD_OFFSET(RequestData, _impl_.sequence_), 0, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUInt64)},
+    // int64 server_time_ms = 8;
+    {PROTOBUF_FIELD_OFFSET(RequestData, _impl_.server_time_ms_), 0, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kInt64)},
   }}, {{
     {::_pbi::TcParser::GetMapAuxInfo<
         decltype(RequestData()._impl_.extra_)>(
@@ -542,7 +594,7 @@ const ::_pbi::TcParseTable<1, 4, 2, 39, 2> RequestData::_table_ = {
         1, 0, 0, 9,
         9)},
   }}, {{
-    "\23\0\3\5\3\0\0\0"
+    "\23\0\3\5\3\0\0\0\0\0\0\0\0\0\0\0"
     "request.RequestData"
     "cmd"
     "extra"
@@ -560,7 +612,10 @@ PROTOBUF_NOINLINE void RequestData::Clear() {
   _impl_.extra_.Clear();
   _impl_.ret_.Clear();
   _impl_.cmd_.ClearToEmpty();
-  _impl_.type_ = 0;
+  _impl_.payload_.ClearToEmpty();
+  ::memset(&_impl_.request_id_, 0, static_cast<::size_t>(
+      reinterpret_cast<char*>(&_impl_.type_) -
+      reinterpret_cast<char*>(&_impl_.request_id_)) + sizeof(_impl_.type_));
   _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
 }
 
@@ -660,6 +715,33 @@ PROTOBUF_NOINLINE void RequestData::Clear() {
             }
           }
 
+          // bytes payload = 5;
+          if (!this_._internal_payload().empty()) {
+            const std::string& _s = this_._internal_payload();
+            target = stream->WriteBytesMaybeAliased(5, _s, target);
+          }
+
+          // uint64 request_id = 6;
+          if (this_._internal_request_id() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteUInt64ToArray(
+                6, this_._internal_request_id(), target);
+          }
+
+          // uint64 sequence = 7;
+          if (this_._internal_sequence() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteUInt64ToArray(
+                7, this_._internal_sequence(), target);
+          }
+
+          // int64 server_time_ms = 8;
+          if (this_._internal_server_time_ms() != 0) {
+            target = ::google::protobuf::internal::WireFormatLite::
+                WriteInt64ToArrayWithField<8>(
+                    stream, this_._internal_server_time_ms(), target);
+          }
+
           if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
             target =
                 ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
@@ -712,6 +794,26 @@ PROTOBUF_NOINLINE void RequestData::Clear() {
               total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
                                               this_._internal_cmd());
             }
+            // bytes payload = 5;
+            if (!this_._internal_payload().empty()) {
+              total_size += 1 + ::google::protobuf::internal::WireFormatLite::BytesSize(
+                                              this_._internal_payload());
+            }
+            // uint64 request_id = 6;
+            if (this_._internal_request_id() != 0) {
+              total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(
+                  this_._internal_request_id());
+            }
+            // uint64 sequence = 7;
+            if (this_._internal_sequence() != 0) {
+              total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(
+                  this_._internal_sequence());
+            }
+            // int64 server_time_ms = 8;
+            if (this_._internal_server_time_ms() != 0) {
+              total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(
+                  this_._internal_server_time_ms());
+            }
             // .request.RequestType type = 1;
             if (this_._internal_type() != 0) {
               total_size += 1 +
@@ -735,6 +837,18 @@ void RequestData::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::goo
   if (!from._internal_cmd().empty()) {
     _this->_internal_set_cmd(from._internal_cmd());
   }
+  if (!from._internal_payload().empty()) {
+    _this->_internal_set_payload(from._internal_payload());
+  }
+  if (from._internal_request_id() != 0) {
+    _this->_impl_.request_id_ = from._impl_.request_id_;
+  }
+  if (from._internal_sequence() != 0) {
+    _this->_impl_.sequence_ = from._impl_.sequence_;
+  }
+  if (from._internal_server_time_ms() != 0) {
+    _this->_impl_.server_time_ms_ = from._impl_.server_time_ms_;
+  }
   if (from._internal_type() != 0) {
     _this->_impl_.type_ = from._impl_.type_;
   }
@@ -757,7 +871,13 @@ void RequestData::InternalSwap(RequestData* PROTOBUF_RESTRICT other) {
   _impl_.extra_.InternalSwap(&other->_impl_.extra_);
   _impl_.ret_.InternalSwap(&other->_impl_.ret_);
   ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.cmd_, &other->_impl_.cmd_, arena);
-  swap(_impl_.type_, other->_impl_.type_);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.payload_, &other->_impl_.payload_, arena);
+  ::google::protobuf::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(RequestData, _impl_.type_)
+      + sizeof(RequestData::_impl_.type_)
+      - PROTOBUF_FIELD_OFFSET(RequestData, _impl_.request_id_)>(
+          reinterpret_cast<char*>(&_impl_.request_id_),
+          reinterpret_cast<char*>(&other->_impl_.request_id_));
 }
 
 ::google::protobuf::Metadata RequestData::GetMetadata() const {

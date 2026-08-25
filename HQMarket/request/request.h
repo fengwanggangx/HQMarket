@@ -2,6 +2,7 @@
 #define __REQUEST_H__
 
 #include <string>
+#include <cstdint>
 #include <unordered_map>
 #include <memory>
 #include "../network/common_net.h"
@@ -43,6 +44,10 @@ class CRequest
 		void SetCmd(const std::string& strCmd);
 		void SetExtraData(const std::string& strKey, const std::string& strVal);
 		void SetReturnData(const std::string& strKey, const std::string& strVal);
+		void SetPayload(const std::string& payload);
+		void SetRequestId(std::uint64_t id);
+		void SetSequence(std::uint64_t sequence);
+		void SetServerTime(std::int64_t time);
 
 		CRequest::Type GetType() const;
 		const std::string& GetCmd() const;
@@ -50,19 +55,19 @@ class CRequest
 		const std::string& GetReturnData(const std::string& strKey) const;
 		std::unordered_map<std::string, std::string> GetExtraData() const;
 		std::unordered_map<std::string, std::string> GetReturnData() const;
+		const std::string& GetPayload() const;
+		std::uint64_t GetRequestId() const;
 
 	public:
 		bool Serialize(std::string* output) const;
 		bool Deserialize(const std::string& data);
 		void SetConnectionId(net::_TyConnectionId id);
 		net::_TyConnectionId GetConnectionId() const;
-		const std::string& GetPayload() const;
 
 	private:
 		std::unique_ptr<google::protobuf::Arena> m_arena;
 		request::RequestData* m_data{nullptr};
 		net::_TyConnectionId m_connection_id{-1};
-		std::string m_strPayload;
 };
 
 #endif
