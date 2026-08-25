@@ -88,6 +88,12 @@ extern PriceLevelDefaultTypeInternal _PriceLevel_default_instance_;
 class ProviderStatusData;
 struct ProviderStatusDataDefaultTypeInternal;
 extern ProviderStatusDataDefaultTypeInternal _ProviderStatusData_default_instance_;
+class QueryRequest;
+struct QueryRequestDefaultTypeInternal;
+extern QueryRequestDefaultTypeInternal _QueryRequest_default_instance_;
+class QueryResponse;
+struct QueryResponseDefaultTypeInternal;
+extern QueryResponseDefaultTypeInternal _QueryResponse_default_instance_;
 class QuoteData;
 struct QuoteDataDefaultTypeInternal;
 extern QuoteDataDefaultTypeInternal _QuoteData_default_instance_;
@@ -132,6 +138,8 @@ enum MessageType : int {
   HEARTBEAT = 11,
   PROVIDER_STATUS = 12,
   ERROR = 13,
+  QUERY_REQUEST = 14,
+  QUERY_RESPONSE = 15,
   MessageType_INT_MIN_SENTINEL_DO_NOT_USE_ =
       std::numeric_limits<::int32_t>::min(),
   MessageType_INT_MAX_SENTINEL_DO_NOT_USE_ =
@@ -141,8 +149,8 @@ enum MessageType : int {
 bool MessageType_IsValid(int value);
 extern const uint32_t MessageType_internal_data_[];
 constexpr MessageType MessageType_MIN = static_cast<MessageType>(0);
-constexpr MessageType MessageType_MAX = static_cast<MessageType>(13);
-constexpr int MessageType_ARRAYSIZE = 13 + 1;
+constexpr MessageType MessageType_MAX = static_cast<MessageType>(15);
+constexpr int MessageType_ARRAYSIZE = 15 + 1;
 const ::google::protobuf::EnumDescriptor*
 MessageType_descriptor();
 template <typename T>
@@ -155,7 +163,7 @@ const std::string& MessageType_Name(T value) {
 template <>
 inline const std::string& MessageType_Name(MessageType value) {
   return ::google::protobuf::internal::NameOfDenseEnum<MessageType_descriptor,
-                                                 0, 13>(
+                                                 0, 15>(
       static_cast<int>(value));
 }
 inline bool MessageType_Parse(absl::string_view name, MessageType* value) {
@@ -3223,6 +3231,238 @@ class QuoteData final : public ::google::protobuf::Message
 };
 // -------------------------------------------------------------------
 
+class QueryRequest final : public ::google::protobuf::Message
+/* @@protoc_insertion_point(class_definition:hqmarket.market.v1.QueryRequest) */ {
+ public:
+  inline QueryRequest() : QueryRequest(nullptr) {}
+  ~QueryRequest() PROTOBUF_FINAL;
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+  void operator delete(QueryRequest* msg, std::destroying_delete_t) {
+    SharedDtor(*msg);
+    ::google::protobuf::internal::SizedDelete(msg, sizeof(QueryRequest));
+  }
+#endif
+
+  template <typename = void>
+  explicit PROTOBUF_CONSTEXPR QueryRequest(
+      ::google::protobuf::internal::ConstantInitialized);
+
+  inline QueryRequest(const QueryRequest& from) : QueryRequest(nullptr, from) {}
+  inline QueryRequest(QueryRequest&& from) noexcept
+      : QueryRequest(nullptr, std::move(from)) {}
+  inline QueryRequest& operator=(const QueryRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline QueryRequest& operator=(QueryRequest&& from) noexcept {
+    if (this == &from) return *this;
+    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
+  }
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields()
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::google::protobuf::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::google::protobuf::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const QueryRequest& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const QueryRequest* internal_default_instance() {
+    return reinterpret_cast<const QueryRequest*>(
+        &_QueryRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages = 16;
+  friend void swap(QueryRequest& a, QueryRequest& b) { a.Swap(&b); }
+  inline void Swap(QueryRequest* other) {
+    if (other == this) return;
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
+      InternalSwap(other);
+    } else {
+      ::google::protobuf::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(QueryRequest* other) {
+    if (other == this) return;
+    ABSL_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  QueryRequest* New(::google::protobuf::Arena* arena = nullptr) const {
+    return ::google::protobuf::Message::DefaultConstruct<QueryRequest>(arena);
+  }
+  using ::google::protobuf::Message::CopyFrom;
+  void CopyFrom(const QueryRequest& from);
+  using ::google::protobuf::Message::MergeFrom;
+  void MergeFrom(const QueryRequest& from) { QueryRequest::MergeImpl(*this, from); }
+
+  private:
+  static void MergeImpl(
+      ::google::protobuf::MessageLite& to_msg,
+      const ::google::protobuf::MessageLite& from_msg);
+
+  public:
+  bool IsInitialized() const {
+    return true;
+  }
+  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
+  #if defined(PROTOBUF_CUSTOM_VTABLE)
+  private:
+  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
+  static ::uint8_t* _InternalSerialize(
+      const MessageLite& msg, ::uint8_t* target,
+      ::google::protobuf::io::EpsCopyOutputStream* stream);
+
+  public:
+  ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
+  ::uint8_t* _InternalSerialize(
+      ::uint8_t* target,
+      ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+    return _InternalSerialize(*this, target, stream);
+  }
+  #else   // PROTOBUF_CUSTOM_VTABLE
+  ::size_t ByteSizeLong() const final;
+  ::uint8_t* _InternalSerialize(
+      ::uint8_t* target,
+      ::google::protobuf::io::EpsCopyOutputStream* stream) const final;
+  #endif  // PROTOBUF_CUSTOM_VTABLE
+  int GetCachedSize() const { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::google::protobuf::Arena* arena);
+  static void SharedDtor(MessageLite& self);
+  void InternalSwap(QueryRequest* other);
+ private:
+  template <typename T>
+  friend ::absl::string_view(
+      ::google::protobuf::internal::GetAnyMessageName)();
+  static ::absl::string_view FullMessageName() { return "hqmarket.market.v1.QueryRequest"; }
+
+ protected:
+  explicit QueryRequest(::google::protobuf::Arena* arena);
+  QueryRequest(::google::protobuf::Arena* arena, const QueryRequest& from);
+  QueryRequest(::google::protobuf::Arena* arena, QueryRequest&& from) noexcept
+      : QueryRequest(arena) {
+    *this = ::std::move(from);
+  }
+  const ::google::protobuf::internal::ClassData* GetClassData() const PROTOBUF_FINAL;
+  static void* PlacementNew_(const void*, void* mem,
+                             ::google::protobuf::Arena* arena);
+  static constexpr auto InternalNewImpl_();
+  static const ::google::protobuf::internal::ClassDataFull _class_data_;
+
+ public:
+  ::google::protobuf::Metadata GetMetadata() const;
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+  enum : int {
+    kInstrumentFieldNumber = 1,
+    kBeginTimeMsFieldNumber = 3,
+    kEndTimeMsFieldNumber = 4,
+    kChannelFieldNumber = 2,
+  };
+  // .hqmarket.market.v1.Instrument instrument = 1;
+  bool has_instrument() const;
+  void clear_instrument() ;
+  const ::hqmarket::market::v1::Instrument& instrument() const;
+  PROTOBUF_NODISCARD ::hqmarket::market::v1::Instrument* release_instrument();
+  ::hqmarket::market::v1::Instrument* mutable_instrument();
+  void set_allocated_instrument(::hqmarket::market::v1::Instrument* value);
+  void unsafe_arena_set_allocated_instrument(::hqmarket::market::v1::Instrument* value);
+  ::hqmarket::market::v1::Instrument* unsafe_arena_release_instrument();
+
+  private:
+  const ::hqmarket::market::v1::Instrument& _internal_instrument() const;
+  ::hqmarket::market::v1::Instrument* _internal_mutable_instrument();
+
+  public:
+  // int64 begin_time_ms = 3;
+  void clear_begin_time_ms() ;
+  ::int64_t begin_time_ms() const;
+  void set_begin_time_ms(::int64_t value);
+
+  private:
+  ::int64_t _internal_begin_time_ms() const;
+  void _internal_set_begin_time_ms(::int64_t value);
+
+  public:
+  // int64 end_time_ms = 4;
+  void clear_end_time_ms() ;
+  ::int64_t end_time_ms() const;
+  void set_end_time_ms(::int64_t value);
+
+  private:
+  ::int64_t _internal_end_time_ms() const;
+  void _internal_set_end_time_ms(::int64_t value);
+
+  public:
+  // .hqmarket.market.v1.Channel channel = 2;
+  void clear_channel() ;
+  ::hqmarket::market::v1::Channel channel() const;
+  void set_channel(::hqmarket::market::v1::Channel value);
+
+  private:
+  ::hqmarket::market::v1::Channel _internal_channel() const;
+  void _internal_set_channel(::hqmarket::market::v1::Channel value);
+
+  public:
+  // @@protoc_insertion_point(class_scope:hqmarket.market.v1.QueryRequest)
+ private:
+  class _Internal;
+  friend class ::google::protobuf::internal::TcParser;
+  static const ::google::protobuf::internal::TcParseTable<
+      2, 4, 1,
+      0, 2>
+      _table_;
+
+  friend class ::google::protobuf::MessageLite;
+  friend class ::google::protobuf::Arena;
+  template <typename T>
+  friend class ::google::protobuf::Arena::InternalHelper;
+  using InternalArenaConstructable_ = void;
+  using DestructorSkippable_ = void;
+  struct Impl_ {
+    inline explicit constexpr Impl_(
+        ::google::protobuf::internal::ConstantInitialized) noexcept;
+    inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
+                          ::google::protobuf::Arena* arena);
+    inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
+                          ::google::protobuf::Arena* arena, const Impl_& from,
+                          const QueryRequest& from_msg);
+    ::google::protobuf::internal::HasBits<1> _has_bits_;
+    ::google::protobuf::internal::CachedSize _cached_size_;
+    ::hqmarket::market::v1::Instrument* instrument_;
+    ::int64_t begin_time_ms_;
+    ::int64_t end_time_ms_;
+    int channel_;
+    PROTOBUF_TSAN_DECLARE_MEMBER
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_market_2eproto;
+};
+// -------------------------------------------------------------------
+
 class DepthData final : public ::google::protobuf::Message
 /* @@protoc_insertion_point(class_definition:hqmarket.market.v1.DepthData) */ {
  public:
@@ -4048,6 +4288,262 @@ class SubscriptionAck final : public ::google::protobuf::Message
 };
 // -------------------------------------------------------------------
 
+class QueryResponse final : public ::google::protobuf::Message
+/* @@protoc_insertion_point(class_definition:hqmarket.market.v1.QueryResponse) */ {
+ public:
+  inline QueryResponse() : QueryResponse(nullptr) {}
+  ~QueryResponse() PROTOBUF_FINAL;
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+  void operator delete(QueryResponse* msg, std::destroying_delete_t) {
+    SharedDtor(*msg);
+    ::google::protobuf::internal::SizedDelete(msg, sizeof(QueryResponse));
+  }
+#endif
+
+  template <typename = void>
+  explicit PROTOBUF_CONSTEXPR QueryResponse(
+      ::google::protobuf::internal::ConstantInitialized);
+
+  inline QueryResponse(const QueryResponse& from) : QueryResponse(nullptr, from) {}
+  inline QueryResponse(QueryResponse&& from) noexcept
+      : QueryResponse(nullptr, std::move(from)) {}
+  inline QueryResponse& operator=(const QueryResponse& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline QueryResponse& operator=(QueryResponse&& from) noexcept {
+    if (this == &from) return *this;
+    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
+  }
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields()
+      ABSL_ATTRIBUTE_LIFETIME_BOUND {
+    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::google::protobuf::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::google::protobuf::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const QueryResponse& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const QueryResponse* internal_default_instance() {
+    return reinterpret_cast<const QueryResponse*>(
+        &_QueryResponse_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages = 17;
+  friend void swap(QueryResponse& a, QueryResponse& b) { a.Swap(&b); }
+  inline void Swap(QueryResponse* other) {
+    if (other == this) return;
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
+      InternalSwap(other);
+    } else {
+      ::google::protobuf::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(QueryResponse* other) {
+    if (other == this) return;
+    ABSL_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  QueryResponse* New(::google::protobuf::Arena* arena = nullptr) const {
+    return ::google::protobuf::Message::DefaultConstruct<QueryResponse>(arena);
+  }
+  using ::google::protobuf::Message::CopyFrom;
+  void CopyFrom(const QueryResponse& from);
+  using ::google::protobuf::Message::MergeFrom;
+  void MergeFrom(const QueryResponse& from) { QueryResponse::MergeImpl(*this, from); }
+
+  private:
+  static void MergeImpl(
+      ::google::protobuf::MessageLite& to_msg,
+      const ::google::protobuf::MessageLite& from_msg);
+
+  public:
+  bool IsInitialized() const {
+    return true;
+  }
+  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
+  #if defined(PROTOBUF_CUSTOM_VTABLE)
+  private:
+  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
+  static ::uint8_t* _InternalSerialize(
+      const MessageLite& msg, ::uint8_t* target,
+      ::google::protobuf::io::EpsCopyOutputStream* stream);
+
+  public:
+  ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
+  ::uint8_t* _InternalSerialize(
+      ::uint8_t* target,
+      ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+    return _InternalSerialize(*this, target, stream);
+  }
+  #else   // PROTOBUF_CUSTOM_VTABLE
+  ::size_t ByteSizeLong() const final;
+  ::uint8_t* _InternalSerialize(
+      ::uint8_t* target,
+      ::google::protobuf::io::EpsCopyOutputStream* stream) const final;
+  #endif  // PROTOBUF_CUSTOM_VTABLE
+  int GetCachedSize() const { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::google::protobuf::Arena* arena);
+  static void SharedDtor(MessageLite& self);
+  void InternalSwap(QueryResponse* other);
+ private:
+  template <typename T>
+  friend ::absl::string_view(
+      ::google::protobuf::internal::GetAnyMessageName)();
+  static ::absl::string_view FullMessageName() { return "hqmarket.market.v1.QueryResponse"; }
+
+ protected:
+  explicit QueryResponse(::google::protobuf::Arena* arena);
+  QueryResponse(::google::protobuf::Arena* arena, const QueryResponse& from);
+  QueryResponse(::google::protobuf::Arena* arena, QueryResponse&& from) noexcept
+      : QueryResponse(arena) {
+    *this = ::std::move(from);
+  }
+  const ::google::protobuf::internal::ClassData* GetClassData() const PROTOBUF_FINAL;
+  static void* PlacementNew_(const void*, void* mem,
+                             ::google::protobuf::Arena* arena);
+  static constexpr auto InternalNewImpl_();
+  static const ::google::protobuf::internal::ClassDataFull _class_data_;
+
+ public:
+  ::google::protobuf::Metadata GetMetadata() const;
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+  enum : int {
+    kBarsFieldNumber = 4,
+    kInstrumentFieldNumber = 1,
+    kQuoteFieldNumber = 3,
+    kChannelFieldNumber = 2,
+    kFoundFieldNumber = 5,
+  };
+  // repeated .hqmarket.market.v1.BarData bars = 4;
+  int bars_size() const;
+  private:
+  int _internal_bars_size() const;
+
+  public:
+  void clear_bars() ;
+  ::hqmarket::market::v1::BarData* mutable_bars(int index);
+  ::google::protobuf::RepeatedPtrField<::hqmarket::market::v1::BarData>* mutable_bars();
+
+  private:
+  const ::google::protobuf::RepeatedPtrField<::hqmarket::market::v1::BarData>& _internal_bars() const;
+  ::google::protobuf::RepeatedPtrField<::hqmarket::market::v1::BarData>* _internal_mutable_bars();
+  public:
+  const ::hqmarket::market::v1::BarData& bars(int index) const;
+  ::hqmarket::market::v1::BarData* add_bars();
+  const ::google::protobuf::RepeatedPtrField<::hqmarket::market::v1::BarData>& bars() const;
+  // .hqmarket.market.v1.Instrument instrument = 1;
+  bool has_instrument() const;
+  void clear_instrument() ;
+  const ::hqmarket::market::v1::Instrument& instrument() const;
+  PROTOBUF_NODISCARD ::hqmarket::market::v1::Instrument* release_instrument();
+  ::hqmarket::market::v1::Instrument* mutable_instrument();
+  void set_allocated_instrument(::hqmarket::market::v1::Instrument* value);
+  void unsafe_arena_set_allocated_instrument(::hqmarket::market::v1::Instrument* value);
+  ::hqmarket::market::v1::Instrument* unsafe_arena_release_instrument();
+
+  private:
+  const ::hqmarket::market::v1::Instrument& _internal_instrument() const;
+  ::hqmarket::market::v1::Instrument* _internal_mutable_instrument();
+
+  public:
+  // .hqmarket.market.v1.QuoteData quote = 3;
+  bool has_quote() const;
+  void clear_quote() ;
+  const ::hqmarket::market::v1::QuoteData& quote() const;
+  PROTOBUF_NODISCARD ::hqmarket::market::v1::QuoteData* release_quote();
+  ::hqmarket::market::v1::QuoteData* mutable_quote();
+  void set_allocated_quote(::hqmarket::market::v1::QuoteData* value);
+  void unsafe_arena_set_allocated_quote(::hqmarket::market::v1::QuoteData* value);
+  ::hqmarket::market::v1::QuoteData* unsafe_arena_release_quote();
+
+  private:
+  const ::hqmarket::market::v1::QuoteData& _internal_quote() const;
+  ::hqmarket::market::v1::QuoteData* _internal_mutable_quote();
+
+  public:
+  // .hqmarket.market.v1.Channel channel = 2;
+  void clear_channel() ;
+  ::hqmarket::market::v1::Channel channel() const;
+  void set_channel(::hqmarket::market::v1::Channel value);
+
+  private:
+  ::hqmarket::market::v1::Channel _internal_channel() const;
+  void _internal_set_channel(::hqmarket::market::v1::Channel value);
+
+  public:
+  // bool found = 5;
+  void clear_found() ;
+  bool found() const;
+  void set_found(bool value);
+
+  private:
+  bool _internal_found() const;
+  void _internal_set_found(bool value);
+
+  public:
+  // @@protoc_insertion_point(class_scope:hqmarket.market.v1.QueryResponse)
+ private:
+  class _Internal;
+  friend class ::google::protobuf::internal::TcParser;
+  static const ::google::protobuf::internal::TcParseTable<
+      3, 5, 3,
+      0, 2>
+      _table_;
+
+  friend class ::google::protobuf::MessageLite;
+  friend class ::google::protobuf::Arena;
+  template <typename T>
+  friend class ::google::protobuf::Arena::InternalHelper;
+  using InternalArenaConstructable_ = void;
+  using DestructorSkippable_ = void;
+  struct Impl_ {
+    inline explicit constexpr Impl_(
+        ::google::protobuf::internal::ConstantInitialized) noexcept;
+    inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
+                          ::google::protobuf::Arena* arena);
+    inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
+                          ::google::protobuf::Arena* arena, const Impl_& from,
+                          const QueryResponse& from_msg);
+    ::google::protobuf::internal::HasBits<1> _has_bits_;
+    ::google::protobuf::internal::CachedSize _cached_size_;
+    ::google::protobuf::RepeatedPtrField< ::hqmarket::market::v1::BarData > bars_;
+    ::hqmarket::market::v1::Instrument* instrument_;
+    ::hqmarket::market::v1::QuoteData* quote_;
+    int channel_;
+    bool found_;
+    PROTOBUF_TSAN_DECLARE_MEMBER
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_market_2eproto;
+};
+// -------------------------------------------------------------------
+
 class MarketEnvelope final : public ::google::protobuf::Message
 /* @@protoc_insertion_point(class_definition:hqmarket.market.v1.MarketEnvelope) */ {
  public:
@@ -4117,13 +4613,15 @@ class MarketEnvelope final : public ::google::protobuf::Message
     kHeartbeat = 30,
     kProviderStatus = 31,
     kError = 32,
+    kQueryRequest = 33,
+    kQueryResponse = 34,
     PAYLOAD_NOT_SET = 0,
   };
   static inline const MarketEnvelope* internal_default_instance() {
     return reinterpret_cast<const MarketEnvelope*>(
         &_MarketEnvelope_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 16;
+  static constexpr int kIndexInFileMessages = 18;
   friend void swap(MarketEnvelope& a, MarketEnvelope& b) { a.Swap(&b); }
   inline void Swap(MarketEnvelope* other) {
     if (other == this) return;
@@ -4229,6 +4727,8 @@ class MarketEnvelope final : public ::google::protobuf::Message
     kHeartbeatFieldNumber = 30,
     kProviderStatusFieldNumber = 31,
     kErrorFieldNumber = 32,
+    kQueryRequestFieldNumber = 33,
+    kQueryResponseFieldNumber = 34,
   };
   // uint32 protocol_major = 1;
   void clear_protocol_major() ;
@@ -4537,6 +5037,44 @@ class MarketEnvelope final : public ::google::protobuf::Message
   ::hqmarket::market::v1::ErrorData* _internal_mutable_error();
 
   public:
+  // .hqmarket.market.v1.QueryRequest query_request = 33;
+  bool has_query_request() const;
+  private:
+  bool _internal_has_query_request() const;
+
+  public:
+  void clear_query_request() ;
+  const ::hqmarket::market::v1::QueryRequest& query_request() const;
+  PROTOBUF_NODISCARD ::hqmarket::market::v1::QueryRequest* release_query_request();
+  ::hqmarket::market::v1::QueryRequest* mutable_query_request();
+  void set_allocated_query_request(::hqmarket::market::v1::QueryRequest* value);
+  void unsafe_arena_set_allocated_query_request(::hqmarket::market::v1::QueryRequest* value);
+  ::hqmarket::market::v1::QueryRequest* unsafe_arena_release_query_request();
+
+  private:
+  const ::hqmarket::market::v1::QueryRequest& _internal_query_request() const;
+  ::hqmarket::market::v1::QueryRequest* _internal_mutable_query_request();
+
+  public:
+  // .hqmarket.market.v1.QueryResponse query_response = 34;
+  bool has_query_response() const;
+  private:
+  bool _internal_has_query_response() const;
+
+  public:
+  void clear_query_response() ;
+  const ::hqmarket::market::v1::QueryResponse& query_response() const;
+  PROTOBUF_NODISCARD ::hqmarket::market::v1::QueryResponse* release_query_response();
+  ::hqmarket::market::v1::QueryResponse* mutable_query_response();
+  void set_allocated_query_response(::hqmarket::market::v1::QueryResponse* value);
+  void unsafe_arena_set_allocated_query_response(::hqmarket::market::v1::QueryResponse* value);
+  ::hqmarket::market::v1::QueryResponse* unsafe_arena_release_query_response();
+
+  private:
+  const ::hqmarket::market::v1::QueryResponse& _internal_query_response() const;
+  ::hqmarket::market::v1::QueryResponse* _internal_mutable_query_response();
+
+  public:
   void clear_payload();
   PayloadCase payload_case() const;
   // @@protoc_insertion_point(class_scope:hqmarket.market.v1.MarketEnvelope)
@@ -4555,12 +5093,14 @@ class MarketEnvelope final : public ::google::protobuf::Message
   void set_has_heartbeat();
   void set_has_provider_status();
   void set_has_error();
+  void set_has_query_request();
+  void set_has_query_response();
   inline bool has_payload() const;
   inline void clear_has_payload();
   friend class ::google::protobuf::internal::TcParser;
   static const ::google::protobuf::internal::TcParseTable<
-      3, 19, 13,
-      0, 2>
+      3, 21, 15,
+      0, 7>
       _table_;
 
   friend class ::google::protobuf::MessageLite;
@@ -4599,6 +5139,8 @@ class MarketEnvelope final : public ::google::protobuf::Message
       ::hqmarket::market::v1::HeartbeatData* heartbeat_;
       ::hqmarket::market::v1::ProviderStatusData* provider_status_;
       ::hqmarket::market::v1::ErrorData* error_;
+      ::hqmarket::market::v1::QueryRequest* query_request_;
+      ::hqmarket::market::v1::QueryResponse* query_response_;
     } payload_;
     ::google::protobuf::internal::CachedSize _cached_size_;
     ::uint32_t _oneof_case_[1];
@@ -7031,6 +7573,461 @@ inline void ErrorData::set_allocated_message(std::string* value) {
 
 // -------------------------------------------------------------------
 
+// QueryRequest
+
+// .hqmarket.market.v1.Instrument instrument = 1;
+inline bool QueryRequest::has_instrument() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000001u) != 0;
+  PROTOBUF_ASSUME(!value || _impl_.instrument_ != nullptr);
+  return value;
+}
+inline void QueryRequest::clear_instrument() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (_impl_.instrument_ != nullptr) _impl_.instrument_->Clear();
+  _impl_._has_bits_[0] &= ~0x00000001u;
+}
+inline const ::hqmarket::market::v1::Instrument& QueryRequest::_internal_instrument() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  const ::hqmarket::market::v1::Instrument* p = _impl_.instrument_;
+  return p != nullptr ? *p : reinterpret_cast<const ::hqmarket::market::v1::Instrument&>(::hqmarket::market::v1::_Instrument_default_instance_);
+}
+inline const ::hqmarket::market::v1::Instrument& QueryRequest::instrument() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:hqmarket.market.v1.QueryRequest.instrument)
+  return _internal_instrument();
+}
+inline void QueryRequest::unsafe_arena_set_allocated_instrument(::hqmarket::market::v1::Instrument* value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (GetArena() == nullptr) {
+    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.instrument_);
+  }
+  _impl_.instrument_ = reinterpret_cast<::hqmarket::market::v1::Instrument*>(value);
+  if (value != nullptr) {
+    _impl_._has_bits_[0] |= 0x00000001u;
+  } else {
+    _impl_._has_bits_[0] &= ~0x00000001u;
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:hqmarket.market.v1.QueryRequest.instrument)
+}
+inline ::hqmarket::market::v1::Instrument* QueryRequest::release_instrument() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+
+  _impl_._has_bits_[0] &= ~0x00000001u;
+  ::hqmarket::market::v1::Instrument* released = _impl_.instrument_;
+  _impl_.instrument_ = nullptr;
+  if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
+    auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
+    released = ::google::protobuf::internal::DuplicateIfNonNull(released);
+    if (GetArena() == nullptr) {
+      delete old;
+    }
+  } else {
+    if (GetArena() != nullptr) {
+      released = ::google::protobuf::internal::DuplicateIfNonNull(released);
+    }
+  }
+  return released;
+}
+inline ::hqmarket::market::v1::Instrument* QueryRequest::unsafe_arena_release_instrument() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  // @@protoc_insertion_point(field_release:hqmarket.market.v1.QueryRequest.instrument)
+
+  _impl_._has_bits_[0] &= ~0x00000001u;
+  ::hqmarket::market::v1::Instrument* temp = _impl_.instrument_;
+  _impl_.instrument_ = nullptr;
+  return temp;
+}
+inline ::hqmarket::market::v1::Instrument* QueryRequest::_internal_mutable_instrument() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (_impl_.instrument_ == nullptr) {
+    auto* p = ::google::protobuf::Message::DefaultConstruct<::hqmarket::market::v1::Instrument>(GetArena());
+    _impl_.instrument_ = reinterpret_cast<::hqmarket::market::v1::Instrument*>(p);
+  }
+  return _impl_.instrument_;
+}
+inline ::hqmarket::market::v1::Instrument* QueryRequest::mutable_instrument() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  _impl_._has_bits_[0] |= 0x00000001u;
+  ::hqmarket::market::v1::Instrument* _msg = _internal_mutable_instrument();
+  // @@protoc_insertion_point(field_mutable:hqmarket.market.v1.QueryRequest.instrument)
+  return _msg;
+}
+inline void QueryRequest::set_allocated_instrument(::hqmarket::market::v1::Instrument* value) {
+  ::google::protobuf::Arena* message_arena = GetArena();
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (message_arena == nullptr) {
+    delete (_impl_.instrument_);
+  }
+
+  if (value != nullptr) {
+    ::google::protobuf::Arena* submessage_arena = (value)->GetArena();
+    if (message_arena != submessage_arena) {
+      value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
+    }
+    _impl_._has_bits_[0] |= 0x00000001u;
+  } else {
+    _impl_._has_bits_[0] &= ~0x00000001u;
+  }
+
+  _impl_.instrument_ = reinterpret_cast<::hqmarket::market::v1::Instrument*>(value);
+  // @@protoc_insertion_point(field_set_allocated:hqmarket.market.v1.QueryRequest.instrument)
+}
+
+// .hqmarket.market.v1.Channel channel = 2;
+inline void QueryRequest::clear_channel() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.channel_ = 0;
+}
+inline ::hqmarket::market::v1::Channel QueryRequest::channel() const {
+  // @@protoc_insertion_point(field_get:hqmarket.market.v1.QueryRequest.channel)
+  return _internal_channel();
+}
+inline void QueryRequest::set_channel(::hqmarket::market::v1::Channel value) {
+  _internal_set_channel(value);
+  // @@protoc_insertion_point(field_set:hqmarket.market.v1.QueryRequest.channel)
+}
+inline ::hqmarket::market::v1::Channel QueryRequest::_internal_channel() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return static_cast<::hqmarket::market::v1::Channel>(_impl_.channel_);
+}
+inline void QueryRequest::_internal_set_channel(::hqmarket::market::v1::Channel value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.channel_ = value;
+}
+
+// int64 begin_time_ms = 3;
+inline void QueryRequest::clear_begin_time_ms() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.begin_time_ms_ = ::int64_t{0};
+}
+inline ::int64_t QueryRequest::begin_time_ms() const {
+  // @@protoc_insertion_point(field_get:hqmarket.market.v1.QueryRequest.begin_time_ms)
+  return _internal_begin_time_ms();
+}
+inline void QueryRequest::set_begin_time_ms(::int64_t value) {
+  _internal_set_begin_time_ms(value);
+  // @@protoc_insertion_point(field_set:hqmarket.market.v1.QueryRequest.begin_time_ms)
+}
+inline ::int64_t QueryRequest::_internal_begin_time_ms() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.begin_time_ms_;
+}
+inline void QueryRequest::_internal_set_begin_time_ms(::int64_t value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.begin_time_ms_ = value;
+}
+
+// int64 end_time_ms = 4;
+inline void QueryRequest::clear_end_time_ms() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.end_time_ms_ = ::int64_t{0};
+}
+inline ::int64_t QueryRequest::end_time_ms() const {
+  // @@protoc_insertion_point(field_get:hqmarket.market.v1.QueryRequest.end_time_ms)
+  return _internal_end_time_ms();
+}
+inline void QueryRequest::set_end_time_ms(::int64_t value) {
+  _internal_set_end_time_ms(value);
+  // @@protoc_insertion_point(field_set:hqmarket.market.v1.QueryRequest.end_time_ms)
+}
+inline ::int64_t QueryRequest::_internal_end_time_ms() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.end_time_ms_;
+}
+inline void QueryRequest::_internal_set_end_time_ms(::int64_t value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.end_time_ms_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// QueryResponse
+
+// .hqmarket.market.v1.Instrument instrument = 1;
+inline bool QueryResponse::has_instrument() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000001u) != 0;
+  PROTOBUF_ASSUME(!value || _impl_.instrument_ != nullptr);
+  return value;
+}
+inline void QueryResponse::clear_instrument() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (_impl_.instrument_ != nullptr) _impl_.instrument_->Clear();
+  _impl_._has_bits_[0] &= ~0x00000001u;
+}
+inline const ::hqmarket::market::v1::Instrument& QueryResponse::_internal_instrument() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  const ::hqmarket::market::v1::Instrument* p = _impl_.instrument_;
+  return p != nullptr ? *p : reinterpret_cast<const ::hqmarket::market::v1::Instrument&>(::hqmarket::market::v1::_Instrument_default_instance_);
+}
+inline const ::hqmarket::market::v1::Instrument& QueryResponse::instrument() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:hqmarket.market.v1.QueryResponse.instrument)
+  return _internal_instrument();
+}
+inline void QueryResponse::unsafe_arena_set_allocated_instrument(::hqmarket::market::v1::Instrument* value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (GetArena() == nullptr) {
+    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.instrument_);
+  }
+  _impl_.instrument_ = reinterpret_cast<::hqmarket::market::v1::Instrument*>(value);
+  if (value != nullptr) {
+    _impl_._has_bits_[0] |= 0x00000001u;
+  } else {
+    _impl_._has_bits_[0] &= ~0x00000001u;
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:hqmarket.market.v1.QueryResponse.instrument)
+}
+inline ::hqmarket::market::v1::Instrument* QueryResponse::release_instrument() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+
+  _impl_._has_bits_[0] &= ~0x00000001u;
+  ::hqmarket::market::v1::Instrument* released = _impl_.instrument_;
+  _impl_.instrument_ = nullptr;
+  if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
+    auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
+    released = ::google::protobuf::internal::DuplicateIfNonNull(released);
+    if (GetArena() == nullptr) {
+      delete old;
+    }
+  } else {
+    if (GetArena() != nullptr) {
+      released = ::google::protobuf::internal::DuplicateIfNonNull(released);
+    }
+  }
+  return released;
+}
+inline ::hqmarket::market::v1::Instrument* QueryResponse::unsafe_arena_release_instrument() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  // @@protoc_insertion_point(field_release:hqmarket.market.v1.QueryResponse.instrument)
+
+  _impl_._has_bits_[0] &= ~0x00000001u;
+  ::hqmarket::market::v1::Instrument* temp = _impl_.instrument_;
+  _impl_.instrument_ = nullptr;
+  return temp;
+}
+inline ::hqmarket::market::v1::Instrument* QueryResponse::_internal_mutable_instrument() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (_impl_.instrument_ == nullptr) {
+    auto* p = ::google::protobuf::Message::DefaultConstruct<::hqmarket::market::v1::Instrument>(GetArena());
+    _impl_.instrument_ = reinterpret_cast<::hqmarket::market::v1::Instrument*>(p);
+  }
+  return _impl_.instrument_;
+}
+inline ::hqmarket::market::v1::Instrument* QueryResponse::mutable_instrument() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  _impl_._has_bits_[0] |= 0x00000001u;
+  ::hqmarket::market::v1::Instrument* _msg = _internal_mutable_instrument();
+  // @@protoc_insertion_point(field_mutable:hqmarket.market.v1.QueryResponse.instrument)
+  return _msg;
+}
+inline void QueryResponse::set_allocated_instrument(::hqmarket::market::v1::Instrument* value) {
+  ::google::protobuf::Arena* message_arena = GetArena();
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (message_arena == nullptr) {
+    delete (_impl_.instrument_);
+  }
+
+  if (value != nullptr) {
+    ::google::protobuf::Arena* submessage_arena = (value)->GetArena();
+    if (message_arena != submessage_arena) {
+      value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
+    }
+    _impl_._has_bits_[0] |= 0x00000001u;
+  } else {
+    _impl_._has_bits_[0] &= ~0x00000001u;
+  }
+
+  _impl_.instrument_ = reinterpret_cast<::hqmarket::market::v1::Instrument*>(value);
+  // @@protoc_insertion_point(field_set_allocated:hqmarket.market.v1.QueryResponse.instrument)
+}
+
+// .hqmarket.market.v1.Channel channel = 2;
+inline void QueryResponse::clear_channel() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.channel_ = 0;
+}
+inline ::hqmarket::market::v1::Channel QueryResponse::channel() const {
+  // @@protoc_insertion_point(field_get:hqmarket.market.v1.QueryResponse.channel)
+  return _internal_channel();
+}
+inline void QueryResponse::set_channel(::hqmarket::market::v1::Channel value) {
+  _internal_set_channel(value);
+  // @@protoc_insertion_point(field_set:hqmarket.market.v1.QueryResponse.channel)
+}
+inline ::hqmarket::market::v1::Channel QueryResponse::_internal_channel() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return static_cast<::hqmarket::market::v1::Channel>(_impl_.channel_);
+}
+inline void QueryResponse::_internal_set_channel(::hqmarket::market::v1::Channel value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.channel_ = value;
+}
+
+// .hqmarket.market.v1.QuoteData quote = 3;
+inline bool QueryResponse::has_quote() const {
+  bool value = (_impl_._has_bits_[0] & 0x00000002u) != 0;
+  PROTOBUF_ASSUME(!value || _impl_.quote_ != nullptr);
+  return value;
+}
+inline void QueryResponse::clear_quote() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (_impl_.quote_ != nullptr) _impl_.quote_->Clear();
+  _impl_._has_bits_[0] &= ~0x00000002u;
+}
+inline const ::hqmarket::market::v1::QuoteData& QueryResponse::_internal_quote() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  const ::hqmarket::market::v1::QuoteData* p = _impl_.quote_;
+  return p != nullptr ? *p : reinterpret_cast<const ::hqmarket::market::v1::QuoteData&>(::hqmarket::market::v1::_QuoteData_default_instance_);
+}
+inline const ::hqmarket::market::v1::QuoteData& QueryResponse::quote() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:hqmarket.market.v1.QueryResponse.quote)
+  return _internal_quote();
+}
+inline void QueryResponse::unsafe_arena_set_allocated_quote(::hqmarket::market::v1::QuoteData* value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (GetArena() == nullptr) {
+    delete reinterpret_cast<::google::protobuf::MessageLite*>(_impl_.quote_);
+  }
+  _impl_.quote_ = reinterpret_cast<::hqmarket::market::v1::QuoteData*>(value);
+  if (value != nullptr) {
+    _impl_._has_bits_[0] |= 0x00000002u;
+  } else {
+    _impl_._has_bits_[0] &= ~0x00000002u;
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:hqmarket.market.v1.QueryResponse.quote)
+}
+inline ::hqmarket::market::v1::QuoteData* QueryResponse::release_quote() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+
+  _impl_._has_bits_[0] &= ~0x00000002u;
+  ::hqmarket::market::v1::QuoteData* released = _impl_.quote_;
+  _impl_.quote_ = nullptr;
+  if (::google::protobuf::internal::DebugHardenForceCopyInRelease()) {
+    auto* old = reinterpret_cast<::google::protobuf::MessageLite*>(released);
+    released = ::google::protobuf::internal::DuplicateIfNonNull(released);
+    if (GetArena() == nullptr) {
+      delete old;
+    }
+  } else {
+    if (GetArena() != nullptr) {
+      released = ::google::protobuf::internal::DuplicateIfNonNull(released);
+    }
+  }
+  return released;
+}
+inline ::hqmarket::market::v1::QuoteData* QueryResponse::unsafe_arena_release_quote() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  // @@protoc_insertion_point(field_release:hqmarket.market.v1.QueryResponse.quote)
+
+  _impl_._has_bits_[0] &= ~0x00000002u;
+  ::hqmarket::market::v1::QuoteData* temp = _impl_.quote_;
+  _impl_.quote_ = nullptr;
+  return temp;
+}
+inline ::hqmarket::market::v1::QuoteData* QueryResponse::_internal_mutable_quote() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (_impl_.quote_ == nullptr) {
+    auto* p = ::google::protobuf::Message::DefaultConstruct<::hqmarket::market::v1::QuoteData>(GetArena());
+    _impl_.quote_ = reinterpret_cast<::hqmarket::market::v1::QuoteData*>(p);
+  }
+  return _impl_.quote_;
+}
+inline ::hqmarket::market::v1::QuoteData* QueryResponse::mutable_quote() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  _impl_._has_bits_[0] |= 0x00000002u;
+  ::hqmarket::market::v1::QuoteData* _msg = _internal_mutable_quote();
+  // @@protoc_insertion_point(field_mutable:hqmarket.market.v1.QueryResponse.quote)
+  return _msg;
+}
+inline void QueryResponse::set_allocated_quote(::hqmarket::market::v1::QuoteData* value) {
+  ::google::protobuf::Arena* message_arena = GetArena();
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (message_arena == nullptr) {
+    delete (_impl_.quote_);
+  }
+
+  if (value != nullptr) {
+    ::google::protobuf::Arena* submessage_arena = (value)->GetArena();
+    if (message_arena != submessage_arena) {
+      value = ::google::protobuf::internal::GetOwnedMessage(message_arena, value, submessage_arena);
+    }
+    _impl_._has_bits_[0] |= 0x00000002u;
+  } else {
+    _impl_._has_bits_[0] &= ~0x00000002u;
+  }
+
+  _impl_.quote_ = reinterpret_cast<::hqmarket::market::v1::QuoteData*>(value);
+  // @@protoc_insertion_point(field_set_allocated:hqmarket.market.v1.QueryResponse.quote)
+}
+
+// repeated .hqmarket.market.v1.BarData bars = 4;
+inline int QueryResponse::_internal_bars_size() const {
+  return _internal_bars().size();
+}
+inline int QueryResponse::bars_size() const {
+  return _internal_bars_size();
+}
+inline void QueryResponse::clear_bars() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.bars_.Clear();
+}
+inline ::hqmarket::market::v1::BarData* QueryResponse::mutable_bars(int index)
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_mutable:hqmarket.market.v1.QueryResponse.bars)
+  return _internal_mutable_bars()->Mutable(index);
+}
+inline ::google::protobuf::RepeatedPtrField<::hqmarket::market::v1::BarData>* QueryResponse::mutable_bars()
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_mutable_list:hqmarket.market.v1.QueryResponse.bars)
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  return _internal_mutable_bars();
+}
+inline const ::hqmarket::market::v1::BarData& QueryResponse::bars(int index) const
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:hqmarket.market.v1.QueryResponse.bars)
+  return _internal_bars().Get(index);
+}
+inline ::hqmarket::market::v1::BarData* QueryResponse::add_bars() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  ::hqmarket::market::v1::BarData* _add = _internal_mutable_bars()->Add();
+  // @@protoc_insertion_point(field_add:hqmarket.market.v1.QueryResponse.bars)
+  return _add;
+}
+inline const ::google::protobuf::RepeatedPtrField<::hqmarket::market::v1::BarData>& QueryResponse::bars() const
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_list:hqmarket.market.v1.QueryResponse.bars)
+  return _internal_bars();
+}
+inline const ::google::protobuf::RepeatedPtrField<::hqmarket::market::v1::BarData>&
+QueryResponse::_internal_bars() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.bars_;
+}
+inline ::google::protobuf::RepeatedPtrField<::hqmarket::market::v1::BarData>*
+QueryResponse::_internal_mutable_bars() {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return &_impl_.bars_;
+}
+
+// bool found = 5;
+inline void QueryResponse::clear_found() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.found_ = false;
+}
+inline bool QueryResponse::found() const {
+  // @@protoc_insertion_point(field_get:hqmarket.market.v1.QueryResponse.found)
+  return _internal_found();
+}
+inline void QueryResponse::set_found(bool value) {
+  _internal_set_found(value);
+  // @@protoc_insertion_point(field_set:hqmarket.market.v1.QueryResponse.found)
+}
+inline bool QueryResponse::_internal_found() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.found_;
+}
+inline void QueryResponse::_internal_set_found(bool value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.found_ = value;
+}
+
+// -------------------------------------------------------------------
+
 // MarketEnvelope
 
 // uint32 protocol_major = 1;
@@ -8189,6 +9186,164 @@ inline ::hqmarket::market::v1::ErrorData* MarketEnvelope::_internal_mutable_erro
 inline ::hqmarket::market::v1::ErrorData* MarketEnvelope::mutable_error() ABSL_ATTRIBUTE_LIFETIME_BOUND {
   ::hqmarket::market::v1::ErrorData* _msg = _internal_mutable_error();
   // @@protoc_insertion_point(field_mutable:hqmarket.market.v1.MarketEnvelope.error)
+  return _msg;
+}
+
+// .hqmarket.market.v1.QueryRequest query_request = 33;
+inline bool MarketEnvelope::has_query_request() const {
+  return payload_case() == kQueryRequest;
+}
+inline bool MarketEnvelope::_internal_has_query_request() const {
+  return payload_case() == kQueryRequest;
+}
+inline void MarketEnvelope::set_has_query_request() {
+  _impl_._oneof_case_[0] = kQueryRequest;
+}
+inline void MarketEnvelope::clear_query_request() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (payload_case() == kQueryRequest) {
+    if (GetArena() == nullptr) {
+      delete _impl_.payload_.query_request_;
+    } else if (::google::protobuf::internal::DebugHardenClearOneofMessageOnArena()) {
+      ::google::protobuf::internal::MaybePoisonAfterClear(_impl_.payload_.query_request_);
+    }
+    clear_has_payload();
+  }
+}
+inline ::hqmarket::market::v1::QueryRequest* MarketEnvelope::release_query_request() {
+  // @@protoc_insertion_point(field_release:hqmarket.market.v1.MarketEnvelope.query_request)
+  if (payload_case() == kQueryRequest) {
+    clear_has_payload();
+    auto* temp = _impl_.payload_.query_request_;
+    if (GetArena() != nullptr) {
+      temp = ::google::protobuf::internal::DuplicateIfNonNull(temp);
+    }
+    _impl_.payload_.query_request_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline const ::hqmarket::market::v1::QueryRequest& MarketEnvelope::_internal_query_request() const {
+  return payload_case() == kQueryRequest ? *_impl_.payload_.query_request_ : reinterpret_cast<::hqmarket::market::v1::QueryRequest&>(::hqmarket::market::v1::_QueryRequest_default_instance_);
+}
+inline const ::hqmarket::market::v1::QueryRequest& MarketEnvelope::query_request() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:hqmarket.market.v1.MarketEnvelope.query_request)
+  return _internal_query_request();
+}
+inline ::hqmarket::market::v1::QueryRequest* MarketEnvelope::unsafe_arena_release_query_request() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:hqmarket.market.v1.MarketEnvelope.query_request)
+  if (payload_case() == kQueryRequest) {
+    clear_has_payload();
+    auto* temp = _impl_.payload_.query_request_;
+    _impl_.payload_.query_request_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline void MarketEnvelope::unsafe_arena_set_allocated_query_request(::hqmarket::market::v1::QueryRequest* value) {
+  // We rely on the oneof clear method to free the earlier contents
+  // of this oneof. We can directly use the pointer we're given to
+  // set the new value.
+  clear_payload();
+  if (value) {
+    set_has_query_request();
+    _impl_.payload_.query_request_ = value;
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:hqmarket.market.v1.MarketEnvelope.query_request)
+}
+inline ::hqmarket::market::v1::QueryRequest* MarketEnvelope::_internal_mutable_query_request() {
+  if (payload_case() != kQueryRequest) {
+    clear_payload();
+    set_has_query_request();
+    _impl_.payload_.query_request_ =
+        ::google::protobuf::Message::DefaultConstruct<::hqmarket::market::v1::QueryRequest>(GetArena());
+  }
+  return _impl_.payload_.query_request_;
+}
+inline ::hqmarket::market::v1::QueryRequest* MarketEnvelope::mutable_query_request() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  ::hqmarket::market::v1::QueryRequest* _msg = _internal_mutable_query_request();
+  // @@protoc_insertion_point(field_mutable:hqmarket.market.v1.MarketEnvelope.query_request)
+  return _msg;
+}
+
+// .hqmarket.market.v1.QueryResponse query_response = 34;
+inline bool MarketEnvelope::has_query_response() const {
+  return payload_case() == kQueryResponse;
+}
+inline bool MarketEnvelope::_internal_has_query_response() const {
+  return payload_case() == kQueryResponse;
+}
+inline void MarketEnvelope::set_has_query_response() {
+  _impl_._oneof_case_[0] = kQueryResponse;
+}
+inline void MarketEnvelope::clear_query_response() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (payload_case() == kQueryResponse) {
+    if (GetArena() == nullptr) {
+      delete _impl_.payload_.query_response_;
+    } else if (::google::protobuf::internal::DebugHardenClearOneofMessageOnArena()) {
+      ::google::protobuf::internal::MaybePoisonAfterClear(_impl_.payload_.query_response_);
+    }
+    clear_has_payload();
+  }
+}
+inline ::hqmarket::market::v1::QueryResponse* MarketEnvelope::release_query_response() {
+  // @@protoc_insertion_point(field_release:hqmarket.market.v1.MarketEnvelope.query_response)
+  if (payload_case() == kQueryResponse) {
+    clear_has_payload();
+    auto* temp = _impl_.payload_.query_response_;
+    if (GetArena() != nullptr) {
+      temp = ::google::protobuf::internal::DuplicateIfNonNull(temp);
+    }
+    _impl_.payload_.query_response_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline const ::hqmarket::market::v1::QueryResponse& MarketEnvelope::_internal_query_response() const {
+  return payload_case() == kQueryResponse ? *_impl_.payload_.query_response_ : reinterpret_cast<::hqmarket::market::v1::QueryResponse&>(::hqmarket::market::v1::_QueryResponse_default_instance_);
+}
+inline const ::hqmarket::market::v1::QueryResponse& MarketEnvelope::query_response() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:hqmarket.market.v1.MarketEnvelope.query_response)
+  return _internal_query_response();
+}
+inline ::hqmarket::market::v1::QueryResponse* MarketEnvelope::unsafe_arena_release_query_response() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:hqmarket.market.v1.MarketEnvelope.query_response)
+  if (payload_case() == kQueryResponse) {
+    clear_has_payload();
+    auto* temp = _impl_.payload_.query_response_;
+    _impl_.payload_.query_response_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline void MarketEnvelope::unsafe_arena_set_allocated_query_response(::hqmarket::market::v1::QueryResponse* value) {
+  // We rely on the oneof clear method to free the earlier contents
+  // of this oneof. We can directly use the pointer we're given to
+  // set the new value.
+  clear_payload();
+  if (value) {
+    set_has_query_response();
+    _impl_.payload_.query_response_ = value;
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:hqmarket.market.v1.MarketEnvelope.query_response)
+}
+inline ::hqmarket::market::v1::QueryResponse* MarketEnvelope::_internal_mutable_query_response() {
+  if (payload_case() != kQueryResponse) {
+    clear_payload();
+    set_has_query_response();
+    _impl_.payload_.query_response_ =
+        ::google::protobuf::Message::DefaultConstruct<::hqmarket::market::v1::QueryResponse>(GetArena());
+  }
+  return _impl_.payload_.query_response_;
+}
+inline ::hqmarket::market::v1::QueryResponse* MarketEnvelope::mutable_query_response() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  ::hqmarket::market::v1::QueryResponse* _msg = _internal_mutable_query_response();
+  // @@protoc_insertion_point(field_mutable:hqmarket.market.v1.MarketEnvelope.query_response)
   return _msg;
 }
 

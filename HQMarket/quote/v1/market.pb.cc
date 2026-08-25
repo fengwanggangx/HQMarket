@@ -409,6 +409,34 @@ struct QuoteDataDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 QuoteDataDefaultTypeInternal _QuoteData_default_instance_;
 
+inline constexpr QueryRequest::Impl_::Impl_(
+    ::_pbi::ConstantInitialized) noexcept
+      : _cached_size_{0},
+        instrument_{nullptr},
+        begin_time_ms_{::int64_t{0}},
+        end_time_ms_{::int64_t{0}},
+        channel_{static_cast< ::hqmarket::market::v1::Channel >(0)} {}
+
+template <typename>
+PROTOBUF_CONSTEXPR QueryRequest::QueryRequest(::_pbi::ConstantInitialized)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(_class_data_.base()),
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(),
+#endif  // PROTOBUF_CUSTOM_VTABLE
+      _impl_(::_pbi::ConstantInitialized()) {
+}
+struct QueryRequestDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR QueryRequestDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~QueryRequestDefaultTypeInternal() {}
+  union {
+    QueryRequest _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 QueryRequestDefaultTypeInternal _QueryRequest_default_instance_;
+
 inline constexpr DepthData::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
       : _cached_size_{0},
@@ -506,6 +534,35 @@ struct SubscriptionAckDefaultTypeInternal {
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 SubscriptionAckDefaultTypeInternal _SubscriptionAck_default_instance_;
+
+inline constexpr QueryResponse::Impl_::Impl_(
+    ::_pbi::ConstantInitialized) noexcept
+      : _cached_size_{0},
+        bars_{},
+        instrument_{nullptr},
+        quote_{nullptr},
+        channel_{static_cast< ::hqmarket::market::v1::Channel >(0)},
+        found_{false} {}
+
+template <typename>
+PROTOBUF_CONSTEXPR QueryResponse::QueryResponse(::_pbi::ConstantInitialized)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(_class_data_.base()),
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(),
+#endif  // PROTOBUF_CUSTOM_VTABLE
+      _impl_(::_pbi::ConstantInitialized()) {
+}
+struct QueryResponseDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR QueryResponseDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~QueryResponseDefaultTypeInternal() {}
+  union {
+    QueryResponse _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 QueryResponseDefaultTypeInternal _QueryResponse_default_instance_;
 
 inline constexpr MarketEnvelope::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
@@ -783,6 +840,40 @@ const ::uint32_t
         ~0u,  // no sizeof(Split)
         PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::ErrorData, _impl_.code_),
         PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::ErrorData, _impl_.message_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::QueryRequest, _impl_._has_bits_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::QueryRequest, _internal_metadata_),
+        ~0u,  // no _extensions_
+        ~0u,  // no _oneof_case_
+        ~0u,  // no _weak_field_map_
+        ~0u,  // no _inlined_string_donated_
+        ~0u,  // no _split_
+        ~0u,  // no sizeof(Split)
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::QueryRequest, _impl_.instrument_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::QueryRequest, _impl_.channel_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::QueryRequest, _impl_.begin_time_ms_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::QueryRequest, _impl_.end_time_ms_),
+        0,
+        ~0u,
+        ~0u,
+        ~0u,
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::QueryResponse, _impl_._has_bits_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::QueryResponse, _internal_metadata_),
+        ~0u,  // no _extensions_
+        ~0u,  // no _oneof_case_
+        ~0u,  // no _weak_field_map_
+        ~0u,  // no _inlined_string_donated_
+        ~0u,  // no _split_
+        ~0u,  // no sizeof(Split)
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::QueryResponse, _impl_.instrument_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::QueryResponse, _impl_.channel_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::QueryResponse, _impl_.quote_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::QueryResponse, _impl_.bars_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::QueryResponse, _impl_.found_),
+        0,
+        ~0u,
+        1,
+        ~0u,
+        ~0u,
         ~0u,  // no _has_bits_
         PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketEnvelope, _internal_metadata_),
         ~0u,  // no _extensions_
@@ -797,6 +888,8 @@ const ::uint32_t
         PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketEnvelope, _impl_.request_id_),
         PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketEnvelope, _impl_.sequence_),
         PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketEnvelope, _impl_.server_time_ms_),
+        ::_pbi::kInvalidFieldOffsetTag,
+        ::_pbi::kInvalidFieldOffsetTag,
         ::_pbi::kInvalidFieldOffsetTag,
         ::_pbi::kInvalidFieldOffsetTag,
         ::_pbi::kInvalidFieldOffsetTag,
@@ -831,7 +924,9 @@ static const ::_pbi::MigrationSchema
         {206, -1, -1, sizeof(::hqmarket::market::v1::HeartbeatData)},
         {215, -1, -1, sizeof(::hqmarket::market::v1::ProviderStatusData)},
         {226, -1, -1, sizeof(::hqmarket::market::v1::ErrorData)},
-        {236, -1, -1, sizeof(::hqmarket::market::v1::MarketEnvelope)},
+        {236, 248, -1, sizeof(::hqmarket::market::v1::QueryRequest)},
+        {252, 265, -1, sizeof(::hqmarket::market::v1::QueryResponse)},
+        {270, -1, -1, sizeof(::hqmarket::market::v1::MarketEnvelope)},
 };
 static const ::_pb::Message* const file_default_instances[] = {
     &::hqmarket::market::v1::_Instrument_default_instance_._instance,
@@ -850,6 +945,8 @@ static const ::_pb::Message* const file_default_instances[] = {
     &::hqmarket::market::v1::_HeartbeatData_default_instance_._instance,
     &::hqmarket::market::v1::_ProviderStatusData_default_instance_._instance,
     &::hqmarket::market::v1::_ErrorData_default_instance_._instance,
+    &::hqmarket::market::v1::_QueryRequest_default_instance_._instance,
+    &::hqmarket::market::v1::_QueryResponse_default_instance_._instance,
     &::hqmarket::market::v1::_MarketEnvelope_default_instance_._instance,
 };
 const char descriptor_table_protodef_market_2eproto[] ABSL_ATTRIBUTE_SECTION_VARIABLE(
@@ -904,57 +1001,71 @@ const char descriptor_table_protodef_market_2eproto[] ABSL_ATTRIBUTE_SECTION_VAR
     "a\022\026\n\016client_time_ms\030\001 \001(\003\"G\n\022ProviderSta"
     "tusData\022\020\n\010provider\030\001 \001(\t\022\017\n\007healthy\030\002 \001"
     "(\010\022\016\n\006detail\030\003 \001(\t\"*\n\tErrorData\022\014\n\004code\030"
-    "\001 \001(\005\022\017\n\007message\030\002 \001(\t\"\235\007\n\016MarketEnvelop"
-    "e\022\026\n\016protocol_major\030\001 \001(\r\022\026\n\016protocol_mi"
-    "nor\030\002 \001(\r\022-\n\004type\030\003 \001(\0162\037.hqmarket.marke"
-    "t.v1.MessageType\022\022\n\nrequest_id\030\004 \001(\004\022\020\n\010"
-    "sequence\030\005 \001(\004\022\026\n\016server_time_ms\030\006 \001(\003\0227"
-    "\n\014auth_request\030\024 \001(\0132\037.hqmarket.market.v"
-    "1.AuthRequestH\000\0229\n\rauth_response\030\025 \001(\0132 "
-    ".hqmarket.market.v1.AuthResponseH\000\022A\n\021su"
-    "bscribe_request\030\026 \001(\0132$.hqmarket.market."
-    "v1.SubscribeRequestH\000\022E\n\023unsubscribe_req"
-    "uest\030\027 \001(\0132&.hqmarket.market.v1.Unsubscr"
-    "ibeRequestH\000\022\?\n\020subscription_ack\030\030 \001(\0132#"
-    ".hqmarket.market.v1.SubscriptionAckH\000\022.\n"
-    "\005quote\030\031 \001(\0132\035.hqmarket.market.v1.QuoteD"
-    "ataH\000\022.\n\005depth\030\032 \001(\0132\035.hqmarket.market.v"
-    "1.DepthDataH\000\022.\n\005trade\030\033 \001(\0132\035.hqmarket."
-    "market.v1.TradeDataH\000\022*\n\003bar\030\034 \001(\0132\033.hqm"
-    "arket.market.v1.BarDataH\000\022=\n\rmarket_stat"
-    "us\030\035 \001(\0132$.hqmarket.market.v1.MarketStat"
-    "usDataH\000\0226\n\theartbeat\030\036 \001(\0132!.hqmarket.m"
-    "arket.v1.HeartbeatDataH\000\022A\n\017provider_sta"
-    "tus\030\037 \001(\0132&.hqmarket.market.v1.ProviderS"
-    "tatusDataH\000\022.\n\005error\030  \001(\0132\035.hqmarket.ma"
-    "rket.v1.ErrorDataH\000B\t\n\007payload*\202\002\n\013Messa"
-    "geType\022\034\n\030MESSAGE_TYPE_UNSPECIFIED\020\000\022\020\n\014"
-    "AUTH_REQUEST\020\001\022\021\n\rAUTH_RESPONSE\020\002\022\025\n\021SUB"
-    "SCRIBE_REQUEST\020\003\022\027\n\023UNSUBSCRIBE_REQUEST\020"
-    "\004\022\024\n\020SUBSCRIPTION_ACK\020\005\022\t\n\005QUOTE\020\006\022\t\n\005DE"
-    "PTH\020\007\022\t\n\005TRADE\020\010\022\007\n\003BAR\020\t\022\021\n\rMARKET_STAT"
-    "US\020\n\022\r\n\tHEARTBEAT\020\013\022\023\n\017PROVIDER_STATUS\020\014"
-    "\022\t\n\005ERROR\020\r*\247\001\n\010Exchange\022\030\n\024EXCHANGE_UNS"
-    "PECIFIED\020\000\022\007\n\003SSE\020\001\022\010\n\004SZSE\020\002\022\007\n\003BSE\020\003\022\010"
-    "\n\004HKEX\020\004\022\t\n\005CFFEX\020\005\022\010\n\004SHFE\020\006\022\007\n\003DCE\020\007\022\010"
-    "\n\004CZCE\020\010\022\007\n\003INE\020\t\022\010\n\004GFEX\020\n\022\n\n\006NASDAQ\020\013\022"
-    "\010\n\004NYSE\020\014\022\n\n\006CRYPTO\020\r*\236\001\n\007Channel\022\027\n\023CHA"
-    "NNEL_UNSPECIFIED\020\000\022\021\n\rCHANNEL_QUOTE\020\001\022\021\n"
-    "\rCHANNEL_DEPTH\020\002\022\021\n\rCHANNEL_TRADE\020\003\022\022\n\016C"
-    "HANNEL_BAR_1M\020\004\022\022\n\016CHANNEL_BAR_1D\020\005\022\031\n\025C"
-    "HANNEL_MARKET_STATUS\020\006b\006proto3"
+    "\001 \001(\005\022\017\n\007message\030\002 \001(\t\"\234\001\n\014QueryRequest\022"
+    "2\n\ninstrument\030\001 \001(\0132\036.hqmarket.market.v1"
+    ".Instrument\022,\n\007channel\030\002 \001(\0162\033.hqmarket."
+    "market.v1.Channel\022\025\n\rbegin_time_ms\030\003 \001(\003"
+    "\022\023\n\013end_time_ms\030\004 \001(\003\"\331\001\n\rQueryResponse\022"
+    "2\n\ninstrument\030\001 \001(\0132\036.hqmarket.market.v1"
+    ".Instrument\022,\n\007channel\030\002 \001(\0162\033.hqmarket."
+    "market.v1.Channel\022,\n\005quote\030\003 \001(\0132\035.hqmar"
+    "ket.market.v1.QuoteData\022)\n\004bars\030\004 \003(\0132\033."
+    "hqmarket.market.v1.BarData\022\r\n\005found\030\005 \001("
+    "\010\"\225\010\n\016MarketEnvelope\022\026\n\016protocol_major\030\001"
+    " \001(\r\022\026\n\016protocol_minor\030\002 \001(\r\022-\n\004type\030\003 \001"
+    "(\0162\037.hqmarket.market.v1.MessageType\022\022\n\nr"
+    "equest_id\030\004 \001(\004\022\020\n\010sequence\030\005 \001(\004\022\026\n\016ser"
+    "ver_time_ms\030\006 \001(\003\0227\n\014auth_request\030\024 \001(\0132"
+    "\037.hqmarket.market.v1.AuthRequestH\000\0229\n\rau"
+    "th_response\030\025 \001(\0132 .hqmarket.market.v1.A"
+    "uthResponseH\000\022A\n\021subscribe_request\030\026 \001(\013"
+    "2$.hqmarket.market.v1.SubscribeRequestH\000"
+    "\022E\n\023unsubscribe_request\030\027 \001(\0132&.hqmarket"
+    ".market.v1.UnsubscribeRequestH\000\022\?\n\020subsc"
+    "ription_ack\030\030 \001(\0132#.hqmarket.market.v1.S"
+    "ubscriptionAckH\000\022.\n\005quote\030\031 \001(\0132\035.hqmark"
+    "et.market.v1.QuoteDataH\000\022.\n\005depth\030\032 \001(\0132"
+    "\035.hqmarket.market.v1.DepthDataH\000\022.\n\005trad"
+    "e\030\033 \001(\0132\035.hqmarket.market.v1.TradeDataH\000"
+    "\022*\n\003bar\030\034 \001(\0132\033.hqmarket.market.v1.BarDa"
+    "taH\000\022=\n\rmarket_status\030\035 \001(\0132$.hqmarket.m"
+    "arket.v1.MarketStatusDataH\000\0226\n\theartbeat"
+    "\030\036 \001(\0132!.hqmarket.market.v1.HeartbeatDat"
+    "aH\000\022A\n\017provider_status\030\037 \001(\0132&.hqmarket."
+    "market.v1.ProviderStatusDataH\000\022.\n\005error\030"
+    "  \001(\0132\035.hqmarket.market.v1.ErrorDataH\000\0229"
+    "\n\rquery_request\030! \001(\0132 .hqmarket.market."
+    "v1.QueryRequestH\000\022;\n\016query_response\030\" \001("
+    "\0132!.hqmarket.market.v1.QueryResponseH\000B\t"
+    "\n\007payload*\251\002\n\013MessageType\022\034\n\030MESSAGE_TYP"
+    "E_UNSPECIFIED\020\000\022\020\n\014AUTH_REQUEST\020\001\022\021\n\rAUT"
+    "H_RESPONSE\020\002\022\025\n\021SUBSCRIBE_REQUEST\020\003\022\027\n\023U"
+    "NSUBSCRIBE_REQUEST\020\004\022\024\n\020SUBSCRIPTION_ACK"
+    "\020\005\022\t\n\005QUOTE\020\006\022\t\n\005DEPTH\020\007\022\t\n\005TRADE\020\010\022\007\n\003B"
+    "AR\020\t\022\021\n\rMARKET_STATUS\020\n\022\r\n\tHEARTBEAT\020\013\022\023"
+    "\n\017PROVIDER_STATUS\020\014\022\t\n\005ERROR\020\r\022\021\n\rQUERY_"
+    "REQUEST\020\016\022\022\n\016QUERY_RESPONSE\020\017*\247\001\n\010Exchan"
+    "ge\022\030\n\024EXCHANGE_UNSPECIFIED\020\000\022\007\n\003SSE\020\001\022\010\n"
+    "\004SZSE\020\002\022\007\n\003BSE\020\003\022\010\n\004HKEX\020\004\022\t\n\005CFFEX\020\005\022\010\n"
+    "\004SHFE\020\006\022\007\n\003DCE\020\007\022\010\n\004CZCE\020\010\022\007\n\003INE\020\t\022\010\n\004G"
+    "FEX\020\n\022\n\n\006NASDAQ\020\013\022\010\n\004NYSE\020\014\022\n\n\006CRYPTO\020\r*"
+    "\236\001\n\007Channel\022\027\n\023CHANNEL_UNSPECIFIED\020\000\022\021\n\r"
+    "CHANNEL_QUOTE\020\001\022\021\n\rCHANNEL_DEPTH\020\002\022\021\n\rCH"
+    "ANNEL_TRADE\020\003\022\022\n\016CHANNEL_BAR_1M\020\004\022\022\n\016CHA"
+    "NNEL_BAR_1D\020\005\022\031\n\025CHANNEL_MARKET_STATUS\020\006"
+    "b\006proto3"
 };
 static ::absl::once_flag descriptor_table_market_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_market_2eproto = {
     false,
     false,
-    3550,
+    4088,
     descriptor_table_protodef_market_2eproto,
     "market.proto",
     &descriptor_table_market_2eproto_once,
     nullptr,
     0,
-    17,
+    19,
     schemas,
     file_default_instances,
     TableStruct_market_2eproto::offsets,
@@ -969,9 +1080,9 @@ const ::google::protobuf::EnumDescriptor* MessageType_descriptor() {
   return file_level_enum_descriptors_market_2eproto[0];
 }
 PROTOBUF_CONSTINIT const uint32_t MessageType_internal_data_[] = {
-    917504u, 0u, };
+    1048576u, 0u, };
 bool MessageType_IsValid(int value) {
-  return 0 <= value && value <= 13;
+  return 0 <= value && value <= 15;
 }
 const ::google::protobuf::EnumDescriptor* Exchange_descriptor() {
   ::google::protobuf::internal::AssignDescriptors(&descriptor_table_market_2eproto);
@@ -6122,6 +6233,744 @@ void ErrorData::InternalSwap(ErrorData* PROTOBUF_RESTRICT other) {
 }
 // ===================================================================
 
+class QueryRequest::_Internal {
+ public:
+  using HasBits =
+      decltype(std::declval<QueryRequest>()._impl_._has_bits_);
+  static constexpr ::int32_t kHasBitsOffset =
+      8 * PROTOBUF_FIELD_OFFSET(QueryRequest, _impl_._has_bits_);
+};
+
+QueryRequest::QueryRequest(::google::protobuf::Arena* arena)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  SharedCtor(arena);
+  // @@protoc_insertion_point(arena_constructor:hqmarket.market.v1.QueryRequest)
+}
+inline PROTOBUF_NDEBUG_INLINE QueryRequest::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
+    const Impl_& from, const ::hqmarket::market::v1::QueryRequest& from_msg)
+      : _has_bits_{from._has_bits_},
+        _cached_size_{0} {}
+
+QueryRequest::QueryRequest(
+    ::google::protobuf::Arena* arena,
+    const QueryRequest& from)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  QueryRequest* const _this = this;
+  (void)_this;
+  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
+  ::uint32_t cached_has_bits = _impl_._has_bits_[0];
+  _impl_.instrument_ = (cached_has_bits & 0x00000001u) ? ::google::protobuf::Message::CopyConstruct<::hqmarket::market::v1::Instrument>(
+                              arena, *from._impl_.instrument_)
+                        : nullptr;
+  ::memcpy(reinterpret_cast<char *>(&_impl_) +
+               offsetof(Impl_, begin_time_ms_),
+           reinterpret_cast<const char *>(&from._impl_) +
+               offsetof(Impl_, begin_time_ms_),
+           offsetof(Impl_, channel_) -
+               offsetof(Impl_, begin_time_ms_) +
+               sizeof(Impl_::channel_));
+
+  // @@protoc_insertion_point(copy_constructor:hqmarket.market.v1.QueryRequest)
+}
+inline PROTOBUF_NDEBUG_INLINE QueryRequest::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility,
+    ::google::protobuf::Arena* arena)
+      : _cached_size_{0} {}
+
+inline void QueryRequest::SharedCtor(::_pb::Arena* arena) {
+  new (&_impl_) Impl_(internal_visibility(), arena);
+  ::memset(reinterpret_cast<char *>(&_impl_) +
+               offsetof(Impl_, instrument_),
+           0,
+           offsetof(Impl_, channel_) -
+               offsetof(Impl_, instrument_) +
+               sizeof(Impl_::channel_));
+}
+QueryRequest::~QueryRequest() {
+  // @@protoc_insertion_point(destructor:hqmarket.market.v1.QueryRequest)
+  SharedDtor(*this);
+}
+inline void QueryRequest::SharedDtor(MessageLite& self) {
+  QueryRequest& this_ = static_cast<QueryRequest&>(self);
+  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
+  ABSL_DCHECK(this_.GetArena() == nullptr);
+  delete this_._impl_.instrument_;
+  this_._impl_.~Impl_();
+}
+
+inline void* QueryRequest::PlacementNew_(const void*, void* mem,
+                                        ::google::protobuf::Arena* arena) {
+  return ::new (mem) QueryRequest(arena);
+}
+constexpr auto QueryRequest::InternalNewImpl_() {
+  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(QueryRequest),
+                                            alignof(QueryRequest));
+}
+PROTOBUF_CONSTINIT
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::google::protobuf::internal::ClassDataFull QueryRequest::_class_data_ = {
+    ::google::protobuf::internal::ClassData{
+        &_QueryRequest_default_instance_._instance,
+        &_table_.header,
+        nullptr,  // OnDemandRegisterArenaDtor
+        nullptr,  // IsInitialized
+        &QueryRequest::MergeImpl,
+        ::google::protobuf::Message::GetNewImpl<QueryRequest>(),
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        &QueryRequest::SharedDtor,
+        ::google::protobuf::Message::GetClearImpl<QueryRequest>(), &QueryRequest::ByteSizeLong,
+            &QueryRequest::_InternalSerialize,
+#endif  // PROTOBUF_CUSTOM_VTABLE
+        PROTOBUF_FIELD_OFFSET(QueryRequest, _impl_._cached_size_),
+        false,
+    },
+    &QueryRequest::kDescriptorMethods,
+    &descriptor_table_market_2eproto,
+    nullptr,  // tracker
+};
+const ::google::protobuf::internal::ClassData* QueryRequest::GetClassData() const {
+  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
+  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
+  return _class_data_.base();
+}
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<2, 4, 1, 0, 2> QueryRequest::_table_ = {
+  {
+    PROTOBUF_FIELD_OFFSET(QueryRequest, _impl_._has_bits_),
+    0, // no _extensions_
+    4, 24,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967280,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    4,  // num_field_entries
+    1,  // num_aux_entries
+    offsetof(decltype(_table_), aux_entries),
+    _class_data_.base(),
+    nullptr,  // post_loop_handler
+    ::_pbi::TcParser::GenericFallback,  // fallback
+    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+    ::_pbi::TcParser::GetTable<::hqmarket::market::v1::QueryRequest>(),  // to_prefetch
+    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  }, {{
+    // int64 end_time_ms = 4;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(QueryRequest, _impl_.end_time_ms_), 63>(),
+     {32, 63, 0, PROTOBUF_FIELD_OFFSET(QueryRequest, _impl_.end_time_ms_)}},
+    // .hqmarket.market.v1.Instrument instrument = 1;
+    {::_pbi::TcParser::FastMtS1,
+     {10, 0, 0, PROTOBUF_FIELD_OFFSET(QueryRequest, _impl_.instrument_)}},
+    // .hqmarket.market.v1.Channel channel = 2;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(QueryRequest, _impl_.channel_), 63>(),
+     {16, 63, 0, PROTOBUF_FIELD_OFFSET(QueryRequest, _impl_.channel_)}},
+    // int64 begin_time_ms = 3;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(QueryRequest, _impl_.begin_time_ms_), 63>(),
+     {24, 63, 0, PROTOBUF_FIELD_OFFSET(QueryRequest, _impl_.begin_time_ms_)}},
+  }}, {{
+    65535, 65535
+  }}, {{
+    // .hqmarket.market.v1.Instrument instrument = 1;
+    {PROTOBUF_FIELD_OFFSET(QueryRequest, _impl_.instrument_), _Internal::kHasBitsOffset + 0, 0,
+    (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
+    // .hqmarket.market.v1.Channel channel = 2;
+    {PROTOBUF_FIELD_OFFSET(QueryRequest, _impl_.channel_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kOpenEnum)},
+    // int64 begin_time_ms = 3;
+    {PROTOBUF_FIELD_OFFSET(QueryRequest, _impl_.begin_time_ms_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kInt64)},
+    // int64 end_time_ms = 4;
+    {PROTOBUF_FIELD_OFFSET(QueryRequest, _impl_.end_time_ms_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kInt64)},
+  }}, {{
+    {::_pbi::TcParser::GetTable<::hqmarket::market::v1::Instrument>()},
+  }}, {{
+  }},
+};
+
+PROTOBUF_NOINLINE void QueryRequest::Clear() {
+// @@protoc_insertion_point(message_clear_start:hqmarket.market.v1.QueryRequest)
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  cached_has_bits = _impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
+    ABSL_DCHECK(_impl_.instrument_ != nullptr);
+    _impl_.instrument_->Clear();
+  }
+  ::memset(&_impl_.begin_time_ms_, 0, static_cast<::size_t>(
+      reinterpret_cast<char*>(&_impl_.channel_) -
+      reinterpret_cast<char*>(&_impl_.begin_time_ms_)) + sizeof(_impl_.channel_));
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
+}
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::uint8_t* QueryRequest::_InternalSerialize(
+            const MessageLite& base, ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) {
+          const QueryRequest& this_ = static_cast<const QueryRequest&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::uint8_t* QueryRequest::_InternalSerialize(
+            ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+          const QueryRequest& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(serialize_to_array_start:hqmarket.market.v1.QueryRequest)
+          ::uint32_t cached_has_bits = 0;
+          (void)cached_has_bits;
+
+          cached_has_bits = this_._impl_._has_bits_[0];
+          // .hqmarket.market.v1.Instrument instrument = 1;
+          if (cached_has_bits & 0x00000001u) {
+            target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+                1, *this_._impl_.instrument_, this_._impl_.instrument_->GetCachedSize(), target,
+                stream);
+          }
+
+          // .hqmarket.market.v1.Channel channel = 2;
+          if (this_._internal_channel() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteEnumToArray(
+                2, this_._internal_channel(), target);
+          }
+
+          // int64 begin_time_ms = 3;
+          if (this_._internal_begin_time_ms() != 0) {
+            target = ::google::protobuf::internal::WireFormatLite::
+                WriteInt64ToArrayWithField<3>(
+                    stream, this_._internal_begin_time_ms(), target);
+          }
+
+          // int64 end_time_ms = 4;
+          if (this_._internal_end_time_ms() != 0) {
+            target = ::google::protobuf::internal::WireFormatLite::
+                WriteInt64ToArrayWithField<4>(
+                    stream, this_._internal_end_time_ms(), target);
+          }
+
+          if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
+            target =
+                ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+                    this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
+          }
+          // @@protoc_insertion_point(serialize_to_array_end:hqmarket.market.v1.QueryRequest)
+          return target;
+        }
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::size_t QueryRequest::ByteSizeLong(const MessageLite& base) {
+          const QueryRequest& this_ = static_cast<const QueryRequest&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::size_t QueryRequest::ByteSizeLong() const {
+          const QueryRequest& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(message_byte_size_start:hqmarket.market.v1.QueryRequest)
+          ::size_t total_size = 0;
+
+          ::uint32_t cached_has_bits = 0;
+          // Prevent compiler warnings about cached_has_bits being unused
+          (void)cached_has_bits;
+
+          ::_pbi::Prefetch5LinesFrom7Lines(&this_);
+           {
+            // .hqmarket.market.v1.Instrument instrument = 1;
+            cached_has_bits = this_._impl_._has_bits_[0];
+            if (cached_has_bits & 0x00000001u) {
+              total_size += 1 +
+                            ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.instrument_);
+            }
+          }
+           {
+            // int64 begin_time_ms = 3;
+            if (this_._internal_begin_time_ms() != 0) {
+              total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(
+                  this_._internal_begin_time_ms());
+            }
+            // int64 end_time_ms = 4;
+            if (this_._internal_end_time_ms() != 0) {
+              total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(
+                  this_._internal_end_time_ms());
+            }
+            // .hqmarket.market.v1.Channel channel = 2;
+            if (this_._internal_channel() != 0) {
+              total_size += 1 +
+                            ::_pbi::WireFormatLite::EnumSize(this_._internal_channel());
+            }
+          }
+          return this_.MaybeComputeUnknownFieldsSize(total_size,
+                                                     &this_._impl_._cached_size_);
+        }
+
+void QueryRequest::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
+  auto* const _this = static_cast<QueryRequest*>(&to_msg);
+  auto& from = static_cast<const QueryRequest&>(from_msg);
+  ::google::protobuf::Arena* arena = _this->GetArena();
+  // @@protoc_insertion_point(class_specific_merge_from_start:hqmarket.market.v1.QueryRequest)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = from._impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
+    ABSL_DCHECK(from._impl_.instrument_ != nullptr);
+    if (_this->_impl_.instrument_ == nullptr) {
+      _this->_impl_.instrument_ =
+          ::google::protobuf::Message::CopyConstruct<::hqmarket::market::v1::Instrument>(arena, *from._impl_.instrument_);
+    } else {
+      _this->_impl_.instrument_->MergeFrom(*from._impl_.instrument_);
+    }
+  }
+  if (from._internal_begin_time_ms() != 0) {
+    _this->_impl_.begin_time_ms_ = from._impl_.begin_time_ms_;
+  }
+  if (from._internal_end_time_ms() != 0) {
+    _this->_impl_.end_time_ms_ = from._impl_.end_time_ms_;
+  }
+  if (from._internal_channel() != 0) {
+    _this->_impl_.channel_ = from._impl_.channel_;
+  }
+  _this->_impl_._has_bits_[0] |= cached_has_bits;
+  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void QueryRequest::CopyFrom(const QueryRequest& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:hqmarket.market.v1.QueryRequest)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+
+void QueryRequest::InternalSwap(QueryRequest* PROTOBUF_RESTRICT other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::google::protobuf::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(QueryRequest, _impl_.channel_)
+      + sizeof(QueryRequest::_impl_.channel_)
+      - PROTOBUF_FIELD_OFFSET(QueryRequest, _impl_.instrument_)>(
+          reinterpret_cast<char*>(&_impl_.instrument_),
+          reinterpret_cast<char*>(&other->_impl_.instrument_));
+}
+
+::google::protobuf::Metadata QueryRequest::GetMetadata() const {
+  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
+}
+// ===================================================================
+
+class QueryResponse::_Internal {
+ public:
+  using HasBits =
+      decltype(std::declval<QueryResponse>()._impl_._has_bits_);
+  static constexpr ::int32_t kHasBitsOffset =
+      8 * PROTOBUF_FIELD_OFFSET(QueryResponse, _impl_._has_bits_);
+};
+
+QueryResponse::QueryResponse(::google::protobuf::Arena* arena)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  SharedCtor(arena);
+  // @@protoc_insertion_point(arena_constructor:hqmarket.market.v1.QueryResponse)
+}
+inline PROTOBUF_NDEBUG_INLINE QueryResponse::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
+    const Impl_& from, const ::hqmarket::market::v1::QueryResponse& from_msg)
+      : _has_bits_{from._has_bits_},
+        _cached_size_{0},
+        bars_{visibility, arena, from.bars_} {}
+
+QueryResponse::QueryResponse(
+    ::google::protobuf::Arena* arena,
+    const QueryResponse& from)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  QueryResponse* const _this = this;
+  (void)_this;
+  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
+  ::uint32_t cached_has_bits = _impl_._has_bits_[0];
+  _impl_.instrument_ = (cached_has_bits & 0x00000001u) ? ::google::protobuf::Message::CopyConstruct<::hqmarket::market::v1::Instrument>(
+                              arena, *from._impl_.instrument_)
+                        : nullptr;
+  _impl_.quote_ = (cached_has_bits & 0x00000002u) ? ::google::protobuf::Message::CopyConstruct<::hqmarket::market::v1::QuoteData>(
+                              arena, *from._impl_.quote_)
+                        : nullptr;
+  ::memcpy(reinterpret_cast<char *>(&_impl_) +
+               offsetof(Impl_, channel_),
+           reinterpret_cast<const char *>(&from._impl_) +
+               offsetof(Impl_, channel_),
+           offsetof(Impl_, found_) -
+               offsetof(Impl_, channel_) +
+               sizeof(Impl_::found_));
+
+  // @@protoc_insertion_point(copy_constructor:hqmarket.market.v1.QueryResponse)
+}
+inline PROTOBUF_NDEBUG_INLINE QueryResponse::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility,
+    ::google::protobuf::Arena* arena)
+      : _cached_size_{0},
+        bars_{visibility, arena} {}
+
+inline void QueryResponse::SharedCtor(::_pb::Arena* arena) {
+  new (&_impl_) Impl_(internal_visibility(), arena);
+  ::memset(reinterpret_cast<char *>(&_impl_) +
+               offsetof(Impl_, instrument_),
+           0,
+           offsetof(Impl_, found_) -
+               offsetof(Impl_, instrument_) +
+               sizeof(Impl_::found_));
+}
+QueryResponse::~QueryResponse() {
+  // @@protoc_insertion_point(destructor:hqmarket.market.v1.QueryResponse)
+  SharedDtor(*this);
+}
+inline void QueryResponse::SharedDtor(MessageLite& self) {
+  QueryResponse& this_ = static_cast<QueryResponse&>(self);
+  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
+  ABSL_DCHECK(this_.GetArena() == nullptr);
+  delete this_._impl_.instrument_;
+  delete this_._impl_.quote_;
+  this_._impl_.~Impl_();
+}
+
+inline void* QueryResponse::PlacementNew_(const void*, void* mem,
+                                        ::google::protobuf::Arena* arena) {
+  return ::new (mem) QueryResponse(arena);
+}
+constexpr auto QueryResponse::InternalNewImpl_() {
+  constexpr auto arena_bits = ::google::protobuf::internal::EncodePlacementArenaOffsets({
+      PROTOBUF_FIELD_OFFSET(QueryResponse, _impl_.bars_) +
+          decltype(QueryResponse::_impl_.bars_)::
+              InternalGetArenaOffset(
+                  ::google::protobuf::Message::internal_visibility()),
+  });
+  if (arena_bits.has_value()) {
+    return ::google::protobuf::internal::MessageCreator::ZeroInit(
+        sizeof(QueryResponse), alignof(QueryResponse), *arena_bits);
+  } else {
+    return ::google::protobuf::internal::MessageCreator(&QueryResponse::PlacementNew_,
+                                 sizeof(QueryResponse),
+                                 alignof(QueryResponse));
+  }
+}
+PROTOBUF_CONSTINIT
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::google::protobuf::internal::ClassDataFull QueryResponse::_class_data_ = {
+    ::google::protobuf::internal::ClassData{
+        &_QueryResponse_default_instance_._instance,
+        &_table_.header,
+        nullptr,  // OnDemandRegisterArenaDtor
+        nullptr,  // IsInitialized
+        &QueryResponse::MergeImpl,
+        ::google::protobuf::Message::GetNewImpl<QueryResponse>(),
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        &QueryResponse::SharedDtor,
+        ::google::protobuf::Message::GetClearImpl<QueryResponse>(), &QueryResponse::ByteSizeLong,
+            &QueryResponse::_InternalSerialize,
+#endif  // PROTOBUF_CUSTOM_VTABLE
+        PROTOBUF_FIELD_OFFSET(QueryResponse, _impl_._cached_size_),
+        false,
+    },
+    &QueryResponse::kDescriptorMethods,
+    &descriptor_table_market_2eproto,
+    nullptr,  // tracker
+};
+const ::google::protobuf::internal::ClassData* QueryResponse::GetClassData() const {
+  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
+  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
+  return _class_data_.base();
+}
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<3, 5, 3, 0, 2> QueryResponse::_table_ = {
+  {
+    PROTOBUF_FIELD_OFFSET(QueryResponse, _impl_._has_bits_),
+    0, // no _extensions_
+    5, 56,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967264,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    5,  // num_field_entries
+    3,  // num_aux_entries
+    offsetof(decltype(_table_), aux_entries),
+    _class_data_.base(),
+    nullptr,  // post_loop_handler
+    ::_pbi::TcParser::GenericFallback,  // fallback
+    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+    ::_pbi::TcParser::GetTable<::hqmarket::market::v1::QueryResponse>(),  // to_prefetch
+    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  }, {{
+    {::_pbi::TcParser::MiniParse, {}},
+    // .hqmarket.market.v1.Instrument instrument = 1;
+    {::_pbi::TcParser::FastMtS1,
+     {10, 0, 0, PROTOBUF_FIELD_OFFSET(QueryResponse, _impl_.instrument_)}},
+    // .hqmarket.market.v1.Channel channel = 2;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(QueryResponse, _impl_.channel_), 63>(),
+     {16, 63, 0, PROTOBUF_FIELD_OFFSET(QueryResponse, _impl_.channel_)}},
+    // .hqmarket.market.v1.QuoteData quote = 3;
+    {::_pbi::TcParser::FastMtS1,
+     {26, 1, 1, PROTOBUF_FIELD_OFFSET(QueryResponse, _impl_.quote_)}},
+    // repeated .hqmarket.market.v1.BarData bars = 4;
+    {::_pbi::TcParser::FastMtR1,
+     {34, 63, 2, PROTOBUF_FIELD_OFFSET(QueryResponse, _impl_.bars_)}},
+    // bool found = 5;
+    {::_pbi::TcParser::SingularVarintNoZag1<bool, offsetof(QueryResponse, _impl_.found_), 63>(),
+     {40, 63, 0, PROTOBUF_FIELD_OFFSET(QueryResponse, _impl_.found_)}},
+    {::_pbi::TcParser::MiniParse, {}},
+    {::_pbi::TcParser::MiniParse, {}},
+  }}, {{
+    65535, 65535
+  }}, {{
+    // .hqmarket.market.v1.Instrument instrument = 1;
+    {PROTOBUF_FIELD_OFFSET(QueryResponse, _impl_.instrument_), _Internal::kHasBitsOffset + 0, 0,
+    (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
+    // .hqmarket.market.v1.Channel channel = 2;
+    {PROTOBUF_FIELD_OFFSET(QueryResponse, _impl_.channel_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kOpenEnum)},
+    // .hqmarket.market.v1.QuoteData quote = 3;
+    {PROTOBUF_FIELD_OFFSET(QueryResponse, _impl_.quote_), _Internal::kHasBitsOffset + 1, 1,
+    (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
+    // repeated .hqmarket.market.v1.BarData bars = 4;
+    {PROTOBUF_FIELD_OFFSET(QueryResponse, _impl_.bars_), -1, 2,
+    (0 | ::_fl::kFcRepeated | ::_fl::kMessage | ::_fl::kTvTable)},
+    // bool found = 5;
+    {PROTOBUF_FIELD_OFFSET(QueryResponse, _impl_.found_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kBool)},
+  }}, {{
+    {::_pbi::TcParser::GetTable<::hqmarket::market::v1::Instrument>()},
+    {::_pbi::TcParser::GetTable<::hqmarket::market::v1::QuoteData>()},
+    {::_pbi::TcParser::GetTable<::hqmarket::market::v1::BarData>()},
+  }}, {{
+  }},
+};
+
+PROTOBUF_NOINLINE void QueryResponse::Clear() {
+// @@protoc_insertion_point(message_clear_start:hqmarket.market.v1.QueryResponse)
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.bars_.Clear();
+  cached_has_bits = _impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000003u) {
+    if (cached_has_bits & 0x00000001u) {
+      ABSL_DCHECK(_impl_.instrument_ != nullptr);
+      _impl_.instrument_->Clear();
+    }
+    if (cached_has_bits & 0x00000002u) {
+      ABSL_DCHECK(_impl_.quote_ != nullptr);
+      _impl_.quote_->Clear();
+    }
+  }
+  ::memset(&_impl_.channel_, 0, static_cast<::size_t>(
+      reinterpret_cast<char*>(&_impl_.found_) -
+      reinterpret_cast<char*>(&_impl_.channel_)) + sizeof(_impl_.found_));
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
+}
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::uint8_t* QueryResponse::_InternalSerialize(
+            const MessageLite& base, ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) {
+          const QueryResponse& this_ = static_cast<const QueryResponse&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::uint8_t* QueryResponse::_InternalSerialize(
+            ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+          const QueryResponse& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(serialize_to_array_start:hqmarket.market.v1.QueryResponse)
+          ::uint32_t cached_has_bits = 0;
+          (void)cached_has_bits;
+
+          cached_has_bits = this_._impl_._has_bits_[0];
+          // .hqmarket.market.v1.Instrument instrument = 1;
+          if (cached_has_bits & 0x00000001u) {
+            target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+                1, *this_._impl_.instrument_, this_._impl_.instrument_->GetCachedSize(), target,
+                stream);
+          }
+
+          // .hqmarket.market.v1.Channel channel = 2;
+          if (this_._internal_channel() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteEnumToArray(
+                2, this_._internal_channel(), target);
+          }
+
+          // .hqmarket.market.v1.QuoteData quote = 3;
+          if (cached_has_bits & 0x00000002u) {
+            target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+                3, *this_._impl_.quote_, this_._impl_.quote_->GetCachedSize(), target,
+                stream);
+          }
+
+          // repeated .hqmarket.market.v1.BarData bars = 4;
+          for (unsigned i = 0, n = static_cast<unsigned>(
+                                   this_._internal_bars_size());
+               i < n; i++) {
+            const auto& repfield = this_._internal_bars().Get(i);
+            target =
+                ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+                    4, repfield, repfield.GetCachedSize(),
+                    target, stream);
+          }
+
+          // bool found = 5;
+          if (this_._internal_found() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteBoolToArray(
+                5, this_._internal_found(), target);
+          }
+
+          if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
+            target =
+                ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+                    this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
+          }
+          // @@protoc_insertion_point(serialize_to_array_end:hqmarket.market.v1.QueryResponse)
+          return target;
+        }
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::size_t QueryResponse::ByteSizeLong(const MessageLite& base) {
+          const QueryResponse& this_ = static_cast<const QueryResponse&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::size_t QueryResponse::ByteSizeLong() const {
+          const QueryResponse& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(message_byte_size_start:hqmarket.market.v1.QueryResponse)
+          ::size_t total_size = 0;
+
+          ::uint32_t cached_has_bits = 0;
+          // Prevent compiler warnings about cached_has_bits being unused
+          (void)cached_has_bits;
+
+          ::_pbi::Prefetch5LinesFrom7Lines(&this_);
+           {
+            // repeated .hqmarket.market.v1.BarData bars = 4;
+            {
+              total_size += 1UL * this_._internal_bars_size();
+              for (const auto& msg : this_._internal_bars()) {
+                total_size += ::google::protobuf::internal::WireFormatLite::MessageSize(msg);
+              }
+            }
+          }
+          cached_has_bits = this_._impl_._has_bits_[0];
+          if (cached_has_bits & 0x00000003u) {
+            // .hqmarket.market.v1.Instrument instrument = 1;
+            if (cached_has_bits & 0x00000001u) {
+              total_size += 1 +
+                            ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.instrument_);
+            }
+            // .hqmarket.market.v1.QuoteData quote = 3;
+            if (cached_has_bits & 0x00000002u) {
+              total_size += 1 +
+                            ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.quote_);
+            }
+          }
+           {
+            // .hqmarket.market.v1.Channel channel = 2;
+            if (this_._internal_channel() != 0) {
+              total_size += 1 +
+                            ::_pbi::WireFormatLite::EnumSize(this_._internal_channel());
+            }
+            // bool found = 5;
+            if (this_._internal_found() != 0) {
+              total_size += 2;
+            }
+          }
+          return this_.MaybeComputeUnknownFieldsSize(total_size,
+                                                     &this_._impl_._cached_size_);
+        }
+
+void QueryResponse::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
+  auto* const _this = static_cast<QueryResponse*>(&to_msg);
+  auto& from = static_cast<const QueryResponse&>(from_msg);
+  ::google::protobuf::Arena* arena = _this->GetArena();
+  // @@protoc_insertion_point(class_specific_merge_from_start:hqmarket.market.v1.QueryResponse)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  _this->_internal_mutable_bars()->MergeFrom(
+      from._internal_bars());
+  cached_has_bits = from._impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000003u) {
+    if (cached_has_bits & 0x00000001u) {
+      ABSL_DCHECK(from._impl_.instrument_ != nullptr);
+      if (_this->_impl_.instrument_ == nullptr) {
+        _this->_impl_.instrument_ =
+            ::google::protobuf::Message::CopyConstruct<::hqmarket::market::v1::Instrument>(arena, *from._impl_.instrument_);
+      } else {
+        _this->_impl_.instrument_->MergeFrom(*from._impl_.instrument_);
+      }
+    }
+    if (cached_has_bits & 0x00000002u) {
+      ABSL_DCHECK(from._impl_.quote_ != nullptr);
+      if (_this->_impl_.quote_ == nullptr) {
+        _this->_impl_.quote_ =
+            ::google::protobuf::Message::CopyConstruct<::hqmarket::market::v1::QuoteData>(arena, *from._impl_.quote_);
+      } else {
+        _this->_impl_.quote_->MergeFrom(*from._impl_.quote_);
+      }
+    }
+  }
+  if (from._internal_channel() != 0) {
+    _this->_impl_.channel_ = from._impl_.channel_;
+  }
+  if (from._internal_found() != 0) {
+    _this->_impl_.found_ = from._impl_.found_;
+  }
+  _this->_impl_._has_bits_[0] |= cached_has_bits;
+  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void QueryResponse::CopyFrom(const QueryResponse& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:hqmarket.market.v1.QueryResponse)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+
+void QueryResponse::InternalSwap(QueryResponse* PROTOBUF_RESTRICT other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  _impl_.bars_.InternalSwap(&other->_impl_.bars_);
+  ::google::protobuf::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(QueryResponse, _impl_.found_)
+      + sizeof(QueryResponse::_impl_.found_)
+      - PROTOBUF_FIELD_OFFSET(QueryResponse, _impl_.instrument_)>(
+          reinterpret_cast<char*>(&_impl_.instrument_),
+          reinterpret_cast<char*>(&other->_impl_.instrument_));
+}
+
+::google::protobuf::Metadata QueryResponse::GetMetadata() const {
+  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
+}
+// ===================================================================
+
 class MarketEnvelope::_Internal {
  public:
   static constexpr ::int32_t kOneofCaseOffset =
@@ -6297,6 +7146,32 @@ void MarketEnvelope::set_allocated_error(::hqmarket::market::v1::ErrorData* erro
   }
   // @@protoc_insertion_point(field_set_allocated:hqmarket.market.v1.MarketEnvelope.error)
 }
+void MarketEnvelope::set_allocated_query_request(::hqmarket::market::v1::QueryRequest* query_request) {
+  ::google::protobuf::Arena* message_arena = GetArena();
+  clear_payload();
+  if (query_request) {
+    ::google::protobuf::Arena* submessage_arena = query_request->GetArena();
+    if (message_arena != submessage_arena) {
+      query_request = ::google::protobuf::internal::GetOwnedMessage(message_arena, query_request, submessage_arena);
+    }
+    set_has_query_request();
+    _impl_.payload_.query_request_ = query_request;
+  }
+  // @@protoc_insertion_point(field_set_allocated:hqmarket.market.v1.MarketEnvelope.query_request)
+}
+void MarketEnvelope::set_allocated_query_response(::hqmarket::market::v1::QueryResponse* query_response) {
+  ::google::protobuf::Arena* message_arena = GetArena();
+  clear_payload();
+  if (query_response) {
+    ::google::protobuf::Arena* submessage_arena = query_response->GetArena();
+    if (message_arena != submessage_arena) {
+      query_response = ::google::protobuf::internal::GetOwnedMessage(message_arena, query_response, submessage_arena);
+    }
+    set_has_query_response();
+    _impl_.payload_.query_response_ = query_response;
+  }
+  // @@protoc_insertion_point(field_set_allocated:hqmarket.market.v1.MarketEnvelope.query_response)
+}
 MarketEnvelope::MarketEnvelope(::google::protobuf::Arena* arena)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
     : ::google::protobuf::Message(arena, _class_data_.base()) {
@@ -6374,6 +7249,12 @@ MarketEnvelope::MarketEnvelope(
         break;
       case kError:
         _impl_.payload_.error_ = ::google::protobuf::Message::CopyConstruct<::hqmarket::market::v1::ErrorData>(arena, *from._impl_.payload_.error_);
+        break;
+      case kQueryRequest:
+        _impl_.payload_.query_request_ = ::google::protobuf::Message::CopyConstruct<::hqmarket::market::v1::QueryRequest>(arena, *from._impl_.payload_.query_request_);
+        break;
+      case kQueryResponse:
+        _impl_.payload_.query_response_ = ::google::protobuf::Message::CopyConstruct<::hqmarket::market::v1::QueryResponse>(arena, *from._impl_.payload_.query_response_);
         break;
   }
 
@@ -6517,6 +7398,22 @@ void MarketEnvelope::clear_payload() {
       }
       break;
     }
+    case kQueryRequest: {
+      if (GetArena() == nullptr) {
+        delete _impl_.payload_.query_request_;
+      } else if (::google::protobuf::internal::DebugHardenClearOneofMessageOnArena()) {
+        ::google::protobuf::internal::MaybePoisonAfterClear(_impl_.payload_.query_request_);
+      }
+      break;
+    }
+    case kQueryResponse: {
+      if (GetArena() == nullptr) {
+        delete _impl_.payload_.query_response_;
+      } else if (::google::protobuf::internal::DebugHardenClearOneofMessageOnArena()) {
+        ::google::protobuf::internal::MaybePoisonAfterClear(_impl_.payload_.query_response_);
+      }
+      break;
+    }
     case PAYLOAD_NOT_SET: {
       break;
     }
@@ -6561,16 +7458,16 @@ const ::google::protobuf::internal::ClassData* MarketEnvelope::GetClassData() co
   return _class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<3, 19, 13, 0, 2> MarketEnvelope::_table_ = {
+const ::_pbi::TcParseTable<3, 21, 15, 0, 7> MarketEnvelope::_table_ = {
   {
     0,  // no _has_bits_
     0, // no _extensions_
-    32, 56,  // max_field_number, fast_idx_mask
+    34, 56,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
     524224,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    19,  // num_field_entries
-    13,  // num_aux_entries
+    21,  // num_field_entries
+    15,  // num_aux_entries
     offsetof(decltype(_table_), aux_entries),
     _class_data_.base(),
     nullptr,  // post_loop_handler
@@ -6600,6 +7497,8 @@ const ::_pbi::TcParseTable<3, 19, 13, 0, 2> MarketEnvelope::_table_ = {
      {48, 63, 0, PROTOBUF_FIELD_OFFSET(MarketEnvelope, _impl_.server_time_ms_)}},
     {::_pbi::TcParser::MiniParse, {}},
   }}, {{
+    33, 0, 1,
+    65532, 19,
     65535, 65535
   }}, {{
     // uint32 protocol_major = 1;
@@ -6659,6 +7558,12 @@ const ::_pbi::TcParseTable<3, 19, 13, 0, 2> MarketEnvelope::_table_ = {
     // .hqmarket.market.v1.ErrorData error = 32;
     {PROTOBUF_FIELD_OFFSET(MarketEnvelope, _impl_.payload_.error_), _Internal::kOneofCaseOffset + 0, 12,
     (0 | ::_fl::kFcOneof | ::_fl::kMessage | ::_fl::kTvTable)},
+    // .hqmarket.market.v1.QueryRequest query_request = 33;
+    {PROTOBUF_FIELD_OFFSET(MarketEnvelope, _impl_.payload_.query_request_), _Internal::kOneofCaseOffset + 0, 13,
+    (0 | ::_fl::kFcOneof | ::_fl::kMessage | ::_fl::kTvTable)},
+    // .hqmarket.market.v1.QueryResponse query_response = 34;
+    {PROTOBUF_FIELD_OFFSET(MarketEnvelope, _impl_.payload_.query_response_), _Internal::kOneofCaseOffset + 0, 14,
+    (0 | ::_fl::kFcOneof | ::_fl::kMessage | ::_fl::kTvTable)},
   }}, {{
     {::_pbi::TcParser::GetTable<::hqmarket::market::v1::AuthRequest>()},
     {::_pbi::TcParser::GetTable<::hqmarket::market::v1::AuthResponse>()},
@@ -6673,6 +7578,8 @@ const ::_pbi::TcParseTable<3, 19, 13, 0, 2> MarketEnvelope::_table_ = {
     {::_pbi::TcParser::GetTable<::hqmarket::market::v1::HeartbeatData>()},
     {::_pbi::TcParser::GetTable<::hqmarket::market::v1::ProviderStatusData>()},
     {::_pbi::TcParser::GetTable<::hqmarket::market::v1::ErrorData>()},
+    {::_pbi::TcParser::GetTable<::hqmarket::market::v1::QueryRequest>()},
+    {::_pbi::TcParser::GetTable<::hqmarket::market::v1::QueryResponse>()},
   }}, {{
   }},
 };
@@ -6827,6 +7734,18 @@ PROTOBUF_NOINLINE void MarketEnvelope::Clear() {
                   stream);
               break;
             }
+            case kQueryRequest: {
+              target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+                  33, *this_._impl_.payload_.query_request_, this_._impl_.payload_.query_request_->GetCachedSize(), target,
+                  stream);
+              break;
+            }
+            case kQueryResponse: {
+              target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+                  34, *this_._impl_.payload_.query_response_, this_._impl_.payload_.query_response_->GetCachedSize(), target,
+                  stream);
+              break;
+            }
             default:
               break;
           }
@@ -6963,6 +7882,18 @@ PROTOBUF_NOINLINE void MarketEnvelope::Clear() {
             case kError: {
               total_size += 2 +
                             ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.payload_.error_);
+              break;
+            }
+            // .hqmarket.market.v1.QueryRequest query_request = 33;
+            case kQueryRequest: {
+              total_size += 2 +
+                            ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.payload_.query_request_);
+              break;
+            }
+            // .hqmarket.market.v1.QueryResponse query_response = 34;
+            case kQueryResponse: {
+              total_size += 2 +
+                            ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.payload_.query_response_);
               break;
             }
             case PAYLOAD_NOT_SET: {
@@ -7125,6 +8056,24 @@ void MarketEnvelope::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::
               ::google::protobuf::Message::CopyConstruct<::hqmarket::market::v1::ErrorData>(arena, *from._impl_.payload_.error_);
         } else {
           _this->_impl_.payload_.error_->MergeFrom(from._internal_error());
+        }
+        break;
+      }
+      case kQueryRequest: {
+        if (oneof_needs_init) {
+          _this->_impl_.payload_.query_request_ =
+              ::google::protobuf::Message::CopyConstruct<::hqmarket::market::v1::QueryRequest>(arena, *from._impl_.payload_.query_request_);
+        } else {
+          _this->_impl_.payload_.query_request_->MergeFrom(from._internal_query_request());
+        }
+        break;
+      }
+      case kQueryResponse: {
+        if (oneof_needs_init) {
+          _this->_impl_.payload_.query_response_ =
+              ::google::protobuf::Message::CopyConstruct<::hqmarket::market::v1::QueryResponse>(arena, *from._impl_.payload_.query_response_);
+        } else {
+          _this->_impl_.payload_.query_response_->MergeFrom(from._internal_query_response());
         }
         break;
       }

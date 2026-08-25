@@ -113,6 +113,51 @@ namespace service
 		{
 			return OnClientRequest(netEvent.m_request);
 		}
+
+		bool IsValidInstrument(const market::CInstrument& instrument)
+		{
+			return !instrument.m_strSymbol.empty() && (instrument.m_exchange != market::Exchange::unknown);
+		}
+
+		bool IsRealtimeChannel(market::Channel channel)
+		{
+			return (channel == market::Channel::quote) || (channel == market::Channel::depth);
+		}
+
+		void FillQuote(const market::CQuote& quote, wire::QuoteData* value)
+		{
+			value->mutable_instrument()->set_symbol(quote.m_instrument.m_strSymbol);
+			value->mutable_instrument()->set_exchange(ToWire(quote.m_instrument.m_exchange));
+			value->set_exchange_time_ms(quote.m_nExchangeTime);
+			value->set_receive_time_ms(quote.m_nReceiveTime);
+			value->set_last_price(quote.m_nLastPrice);
+			value->set_open_price(quote.m_nOpenPrice);
+			value->set_high_price(quote.m_nHighPrice);
+			value->set_low_price(quote.m_nLowPrice);
+			value->set_pre_close(quote.m_nPreClose);
+			value->set_volume(quote.m_nVolume);
+			value->set_turnover(quote.m_nTurnover);
+			value->set_price_scale(quote.m_nPriceScale);
+			value->set_source(quote.m_strSource);
+			value->set_stale(quote.m_bStale);
+		}
+
+		void FillBar(const market::CBar& bar, wire::BarData* value)
+		{
+			value->mutable_instrument()->set_symbol(bar.m_instrument.m_strSymbol);
+			value->mutable_instrument()->set_exchange(ToWire(bar.m_instrument.m_exchange));
+			value->set_channel(static_cast<wire::Channel>(static_cast<int>(bar.m_channel)));
+			value->set_begin_time_ms(bar.m_nBeginTime);
+			value->set_open_price(bar.m_nOpenPrice);
+			value->set_high_price(bar.m_nHighPrice);
+			value->set_low_price(bar.m_nLowPrice);
+			value->set_close_price(bar.m_nClosePrice);
+			value->set_volume(bar.m_nVolume);
+			value->set_turnover(bar.m_nTurnover);
+			value->set_price_scale(bar.m_nPriceScale);
+			value->set_adjustment(bar.m_strAdjustment);
+			value->set_source(bar.m_strSource);
+		}
 		if (netEvent.m_event == net::em_event::disconnected)
 		{
 			OnClientDisconnected(netEvent.m_connection_id);
@@ -204,6 +249,11 @@ namespace service
 			SendEnvelope(id, response);
 			return;
 		}
+		if (envelope.type() == wire::QUERY_REQUEST)
+		{
+			HandleQuery(id, envelope);
+			return;
+		}
 
 		bool subscribe = envelope.type() == wire::SUBSCRIBE_REQUEST;
 		bool unsubscribe = envelope.type() == wire::UNSUBSCRIBE_REQUEST;
@@ -216,18 +266,24 @@ namespace service
 		const auto& channels =
 			subscribe ? envelope.subscribe_request().channels() : envelope.unsubscribe_request().channels();
 		std::vector<market::CSubscription> requested;
+		std::vector<market::CSubscription> valid;
 		requested.reserve(static_cast<std::size_t>(instruments.size()) * static_cast<std::size_t>(channels.size()));
 		for (const wire::Instrument& instrument : instruments)
 		{
 			for (int channel : channels)
 			{
-				requested.emplace_back(market::CSubscription{
-					{instrument.symbol(), FromWire(instrument.exchange())}, FromWire(static_cast<wire::Channel>(channel))});
+				market::CSubscription value{
+					{instrument.symbol(), FromWire(instrument.exchange())}, FromWire(static_cast<wire::Channel>(channel))};
+				requested.emplace_back(value);
+				if (IsValidInstrument(value.m_instrument) && IsRealtimeChannel(value.m_channel))
+				{
+					valid.emplace_back(std::move(value));
+				}
 			}
 		}
 		std::vector<market::CSubscription> changed =
-			subscribe ? m_subscriptions.Subscribe(id, requested)
-							  : m_subscriptions.Unsubscribe(id, requested);
+			subscribe ? m_subscriptions.Subscribe(id, valid)
+							  : m_subscriptions.Unsubscribe(id, valid);
 		if (!changed.empty())
 		{
 			if (subscribe)
@@ -247,7 +303,94 @@ namespace service
 			pResult->mutable_instrument()->set_symbol(subscription.m_instrument.m_strSymbol);
 			pResult->mutable_instrument()->set_exchange(ToWire(subscription.m_instrument.m_exchange));
 			pResult->set_channel(static_cast<wire::Channel>(static_cast<int>(subscription.m_channel)));
-			pResult->set_accepted(true);
+			bool accepted = IsValidInstrument(subscription.m_instrument) && IsRealtimeChannel(subscription.m_channel);
+			pResult->set_accepted(accepted);
+			if (!accepted)
+			{
+				pResult->set_reason("invalid instrument or unsupported subscription channel");
+			}
+		}
+		SendEnvelope(id, response);
+		if (subscribe)
+		{
+			for (const market::CSubscription& subscription : valid)
+			{
+				if (subscription.m_channel != market::Channel::quote)
+				{
+					continue;
+				}
+				std::optional<market::CQuote> quote = m_cache.GetQuote(subscription.m_instrument);
+				if (quote.has_value())
+				{
+					wire::MarketEnvelope snapshot;
+					snapshot.set_protocol_major(1);
+					snapshot.set_protocol_minor(0);
+					snapshot.set_type(wire::QUOTE);
+					FillQuote(*quote, snapshot.mutable_quote());
+					SendEnvelope(id, snapshot);
+				}
+			}
+		}
+	}
+
+	void CMarketService::HandleQuery(net::_TyConnectionId id, const wire::MarketEnvelope& envelope)
+	{
+		const wire::QueryRequest& request = envelope.query_request();
+		market::CInstrument instrument{request.instrument().symbol(), FromWire(request.instrument().exchange())};
+		market::Channel channel = FromWire(request.channel());
+		wire::MarketEnvelope response;
+		response.set_protocol_major(1);
+		response.set_protocol_minor(0);
+		response.set_request_id(envelope.request_id());
+		if (!IsValidInstrument(instrument) || ((channel != market::Channel::quote) &&
+			(channel != market::Channel::bar_1m) && (channel != market::Channel::bar_1d)))
+		{
+			response.set_type(wire::ERROR);
+			response.mutable_error()->set_code(1003);
+			response.mutable_error()->set_message("invalid instrument or unsupported query channel");
+			SendEnvelope(id, response);
+			return;
+		}
+		response.set_type(wire::QUERY_RESPONSE);
+		wire::QueryResponse* result = response.mutable_query_response();
+		result->mutable_instrument()->CopyFrom(request.instrument());
+		result->set_channel(request.channel());
+		if (channel == market::Channel::quote)
+		{
+			std::optional<market::CQuote> quote = m_cache.GetQuote(instrument);
+			result->set_found(quote.has_value());
+			if (quote.has_value())
+			{
+				FillQuote(*quote, result->mutable_quote());
+			}
+		}
+		else
+		{
+			std::int64_t begin = request.begin_time_ms();
+			std::int64_t end = request.end_time_ms() > 0 ? request.end_time_ms() : NowMilliseconds();
+			if ((begin < 0) || (end < begin))
+			{
+				response.set_type(wire::ERROR);
+				response.clear_query_response();
+				response.mutable_error()->set_code(1004);
+				response.mutable_error()->set_message("invalid query time range");
+				SendEnvelope(id, response);
+				return;
+			}
+			std::vector<market::CBar> bars = m_recorder.QueryBars(instrument, channel, begin, end);
+			if (bars.empty())
+			{
+				bars = m_akshare.QueryBars(instrument, channel, begin, end);
+				if (!bars.empty())
+				{
+					m_recorder.UpsertBars(bars);
+				}
+			}
+			result->set_found(!bars.empty());
+			for (const market::CBar& bar : bars)
+			{
+				FillBar(bar, result->add_bars());
+			}
 		}
 		SendEnvelope(id, response);
 	}
@@ -271,21 +414,7 @@ namespace service
 		envelope.set_protocol_minor(0);
 		envelope.set_type(wire::QUOTE);
 		envelope.set_sequence(nSequence);
-		wire::QuoteData* pValue = envelope.mutable_quote();
-		pValue->mutable_instrument()->set_symbol(quote.m_instrument.m_strSymbol);
-		pValue->mutable_instrument()->set_exchange(ToWire(quote.m_instrument.m_exchange));
-		pValue->set_exchange_time_ms(quote.m_nExchangeTime);
-		pValue->set_receive_time_ms(quote.m_nReceiveTime);
-		pValue->set_last_price(quote.m_nLastPrice);
-		pValue->set_open_price(quote.m_nOpenPrice);
-		pValue->set_high_price(quote.m_nHighPrice);
-		pValue->set_low_price(quote.m_nLowPrice);
-		pValue->set_pre_close(quote.m_nPreClose);
-		pValue->set_volume(quote.m_nVolume);
-		pValue->set_turnover(quote.m_nTurnover);
-		pValue->set_price_scale(quote.m_nPriceScale);
-		pValue->set_source(quote.m_strSource);
-		pValue->set_stale(quote.m_bStale);
+		FillQuote(quote, envelope.mutable_quote());
 		market::CSubscription subscription{quote.m_instrument, market::Channel::quote};
 		for (net::_TyConnectionId id : AuthenticatedClients())
 		{

@@ -44,6 +44,7 @@ namespace service
 			int OnClientRequest(const std::unique_ptr<CRequest>& request);
 			void OnClientDisconnected(net::_TyConnectionId id);
 			void HandleEnvelope(net::_TyConnectionId id, const hqmarket::market::v1::MarketEnvelope& envelope);
+			void HandleQuery(net::_TyConnectionId id, const hqmarket::market::v1::MarketEnvelope& envelope);
 			void SendEnvelope(net::_TyConnectionId id, hqmarket::market::v1::MarketEnvelope& envelope);
 			void PublishQuote(const market::CQuote& quote, std::uint64_t nSequence);
 			void PublishDepth(const market::CDepth& depth, std::uint64_t nSequence);
