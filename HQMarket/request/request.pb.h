@@ -78,6 +78,7 @@ enum RequestType : int {
   QUERY_USERINFO = 2,
   UPDATE_AUTH = 3,
   UPDAT_PRODUCT = 4,
+  HQMARKET = 5,
   RequestType_INT_MIN_SENTINEL_DO_NOT_USE_ =
       std::numeric_limits<::int32_t>::min(),
   RequestType_INT_MAX_SENTINEL_DO_NOT_USE_ =
@@ -87,8 +88,8 @@ enum RequestType : int {
 bool RequestType_IsValid(int value);
 extern const uint32_t RequestType_internal_data_[];
 constexpr RequestType RequestType_MIN = static_cast<RequestType>(0);
-constexpr RequestType RequestType_MAX = static_cast<RequestType>(4);
-constexpr int RequestType_ARRAYSIZE = 4 + 1;
+constexpr RequestType RequestType_MAX = static_cast<RequestType>(5);
+constexpr int RequestType_ARRAYSIZE = 5 + 1;
 const ::google::protobuf::EnumDescriptor*
 RequestType_descriptor();
 template <typename T>
@@ -101,7 +102,7 @@ const std::string& RequestType_Name(T value) {
 template <>
 inline const std::string& RequestType_Name(RequestType value) {
   return ::google::protobuf::internal::NameOfDenseEnum<RequestType_descriptor,
-                                                 0, 4>(
+                                                 0, 5>(
       static_cast<int>(value));
 }
 inline bool RequestType_Parse(absl::string_view name, RequestType* value) {
@@ -341,10 +342,7 @@ class RequestData final : public ::google::protobuf::Message
     kExtraFieldNumber = 3,
     kRetFieldNumber = 4,
     kCmdFieldNumber = 2,
-    kPayloadFieldNumber = 5,
-    kRequestIdFieldNumber = 6,
-    kSequenceFieldNumber = 7,
-    kServerTimeMsFieldNumber = 8,
+    kIdFieldNumber = 5,
     kTypeFieldNumber = 1,
   };
   // map<string, string> extra = 3;
@@ -393,50 +391,14 @@ class RequestData final : public ::google::protobuf::Message
   std::string* _internal_mutable_cmd();
 
   public:
-  // bytes payload = 5;
-  void clear_payload() ;
-  const std::string& payload() const;
-  template <typename Arg_ = const std::string&, typename... Args_>
-  void set_payload(Arg_&& arg, Args_... args);
-  std::string* mutable_payload();
-  PROTOBUF_NODISCARD std::string* release_payload();
-  void set_allocated_payload(std::string* value);
+  // uint64 id = 5;
+  void clear_id() ;
+  ::uint64_t id() const;
+  void set_id(::uint64_t value);
 
   private:
-  const std::string& _internal_payload() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_payload(
-      const std::string& value);
-  std::string* _internal_mutable_payload();
-
-  public:
-  // uint64 request_id = 6;
-  void clear_request_id() ;
-  ::uint64_t request_id() const;
-  void set_request_id(::uint64_t value);
-
-  private:
-  ::uint64_t _internal_request_id() const;
-  void _internal_set_request_id(::uint64_t value);
-
-  public:
-  // uint64 sequence = 7;
-  void clear_sequence() ;
-  ::uint64_t sequence() const;
-  void set_sequence(::uint64_t value);
-
-  private:
-  ::uint64_t _internal_sequence() const;
-  void _internal_set_sequence(::uint64_t value);
-
-  public:
-  // int64 server_time_ms = 8;
-  void clear_server_time_ms() ;
-  ::int64_t server_time_ms() const;
-  void set_server_time_ms(::int64_t value);
-
-  private:
-  ::int64_t _internal_server_time_ms() const;
-  void _internal_set_server_time_ms(::int64_t value);
+  ::uint64_t _internal_id() const;
+  void _internal_set_id(::uint64_t value);
 
   public:
   // .request.RequestType type = 1;
@@ -454,8 +416,8 @@ class RequestData final : public ::google::protobuf::Message
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
   static const ::google::protobuf::internal::TcParseTable<
-      3, 8, 2,
-      47, 2>
+      3, 5, 2,
+      39, 2>
       _table_;
 
   friend class ::google::protobuf::MessageLite;
@@ -481,10 +443,7 @@ class RequestData final : public ::google::protobuf::Message
                       ::google::protobuf::internal::WireFormatLite::TYPE_STRING>
         ret_;
     ::google::protobuf::internal::ArenaStringPtr cmd_;
-    ::google::protobuf::internal::ArenaStringPtr payload_;
-    ::uint64_t request_id_;
-    ::uint64_t sequence_;
-    ::int64_t server_time_ms_;
+    ::uint64_t id_;
     int type_;
     ::google::protobuf::internal::CachedSize _cached_size_;
     PROTOBUF_TSAN_DECLARE_MEMBER
@@ -639,118 +598,26 @@ inline ::google::protobuf::Map<std::string, std::string>* RequestData::mutable_r
   return _internal_mutable_ret();
 }
 
-// bytes payload = 5;
-inline void RequestData::clear_payload() {
+// uint64 id = 5;
+inline void RequestData::clear_id() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.payload_.ClearToEmpty();
+  _impl_.id_ = ::uint64_t{0u};
 }
-inline const std::string& RequestData::payload() const
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  // @@protoc_insertion_point(field_get:request.RequestData.payload)
-  return _internal_payload();
+inline ::uint64_t RequestData::id() const {
+  // @@protoc_insertion_point(field_get:request.RequestData.id)
+  return _internal_id();
 }
-template <typename Arg_, typename... Args_>
-inline PROTOBUF_ALWAYS_INLINE void RequestData::set_payload(Arg_&& arg,
-                                                     Args_... args) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.payload_.SetBytes(static_cast<Arg_&&>(arg), args..., GetArena());
-  // @@protoc_insertion_point(field_set:request.RequestData.payload)
+inline void RequestData::set_id(::uint64_t value) {
+  _internal_set_id(value);
+  // @@protoc_insertion_point(field_set:request.RequestData.id)
 }
-inline std::string* RequestData::mutable_payload() ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  std::string* _s = _internal_mutable_payload();
-  // @@protoc_insertion_point(field_mutable:request.RequestData.payload)
-  return _s;
-}
-inline const std::string& RequestData::_internal_payload() const {
+inline ::uint64_t RequestData::_internal_id() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.payload_.Get();
+  return _impl_.id_;
 }
-inline void RequestData::_internal_set_payload(const std::string& value) {
+inline void RequestData::_internal_set_id(::uint64_t value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.payload_.Set(value, GetArena());
-}
-inline std::string* RequestData::_internal_mutable_payload() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  return _impl_.payload_.Mutable( GetArena());
-}
-inline std::string* RequestData::release_payload() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  // @@protoc_insertion_point(field_release:request.RequestData.payload)
-  return _impl_.payload_.Release();
-}
-inline void RequestData::set_allocated_payload(std::string* value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.payload_.SetAllocated(value, GetArena());
-  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.payload_.IsDefault()) {
-    _impl_.payload_.Set("", GetArena());
-  }
-  // @@protoc_insertion_point(field_set_allocated:request.RequestData.payload)
-}
-
-// uint64 request_id = 6;
-inline void RequestData::clear_request_id() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.request_id_ = ::uint64_t{0u};
-}
-inline ::uint64_t RequestData::request_id() const {
-  // @@protoc_insertion_point(field_get:request.RequestData.request_id)
-  return _internal_request_id();
-}
-inline void RequestData::set_request_id(::uint64_t value) {
-  _internal_set_request_id(value);
-  // @@protoc_insertion_point(field_set:request.RequestData.request_id)
-}
-inline ::uint64_t RequestData::_internal_request_id() const {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.request_id_;
-}
-inline void RequestData::_internal_set_request_id(::uint64_t value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.request_id_ = value;
-}
-
-// uint64 sequence = 7;
-inline void RequestData::clear_sequence() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.sequence_ = ::uint64_t{0u};
-}
-inline ::uint64_t RequestData::sequence() const {
-  // @@protoc_insertion_point(field_get:request.RequestData.sequence)
-  return _internal_sequence();
-}
-inline void RequestData::set_sequence(::uint64_t value) {
-  _internal_set_sequence(value);
-  // @@protoc_insertion_point(field_set:request.RequestData.sequence)
-}
-inline ::uint64_t RequestData::_internal_sequence() const {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.sequence_;
-}
-inline void RequestData::_internal_set_sequence(::uint64_t value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.sequence_ = value;
-}
-
-// int64 server_time_ms = 8;
-inline void RequestData::clear_server_time_ms() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.server_time_ms_ = ::int64_t{0};
-}
-inline ::int64_t RequestData::server_time_ms() const {
-  // @@protoc_insertion_point(field_get:request.RequestData.server_time_ms)
-  return _internal_server_time_ms();
-}
-inline void RequestData::set_server_time_ms(::int64_t value) {
-  _internal_set_server_time_ms(value);
-  // @@protoc_insertion_point(field_set:request.RequestData.server_time_ms)
-}
-inline ::int64_t RequestData::_internal_server_time_ms() const {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.server_time_ms_;
-}
-inline void RequestData::_internal_set_server_time_ms(::int64_t value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.server_time_ms_ = value;
+  _impl_.id_ = value;
 }
 
 #ifdef __GNUC__

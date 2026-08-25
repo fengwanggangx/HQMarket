@@ -1,6 +1,27 @@
 #include "request.pb.h"
 #include "request.h"
-#include "../common/mapped_value.h"
+#include <atomic>
+#include <utility>
+
+namespace
+{
+	constexpr const char* DataTypeKey = "data_type";
+	constexpr const char* DataPayloadKey = "data";
+}
+
+CData::CData(std::string type, std::string payload) : m_type(std::move(type)), m_payload(std::move(payload))
+{
+}
+
+const std::string& CData::GetType() const
+{
+	return m_type;
+}
+
+const std::string& CData::GetPayload() const
+{
+	return m_payload;
+}
 
 static request::RequestType ToProtoType(CRequest::Type type)
 {
@@ -14,6 +35,8 @@ static request::RequestType ToProtoType(CRequest::Type type)
 		return request::RequestType::UPDATE_AUTH;
 	case CRequest::Type::UPDAT_PRODUCT:
 		return request::RequestType::UPDAT_PRODUCT;
+	case CRequest::Type::HQMARKET:
+		return request::RequestType::HQMARKET;
 	case CRequest::Type::UNKNOWN:
 	default:
 		return request::RequestType::UNKNOWN;
@@ -22,18 +45,16 @@ static request::RequestType ToProtoType(CRequest::Type type)
 
 CRequest::CRequest() : m_arena(std::make_unique<google::protobuf::Arena>())
 {
+	static std::atomic_uint64_t s_id{1};
 	m_data = google::protobuf::Arena::CreateMessage<request::RequestData>(m_arena.get());
+	m_data->set_id(s_id.fetch_add(1, std::memory_order_relaxed));
 }
 
 CRequest::~CRequest() = default;
 
 bool CRequest::Serialize(std::string* output) const
 {
-	if (output == nullptr)
-	{
-		return false;
-	}
-	if ((m_data == nullptr) || (GetCmd() == "connet_build"))
+	if (nullptr == output)
 	{
 		return false;
 	}
@@ -42,11 +63,25 @@ bool CRequest::Serialize(std::string* output) const
 
 bool CRequest::Deserialize(const std::string& data)
 {
-	if (m_data == nullptr)
+	if (nullptr == m_data)
 	{
 		return false;
 	}
-	return m_data->ParseFromString(data);
+	if (!m_data->ParseFromString(data))
+	{
+		return false;
+	}
+	google::protobuf::Map<std::string, std::string>::const_iterator type = m_data->ret().find(DataTypeKey);
+	google::protobuf::Map<std::string, std::string>::const_iterator payload = m_data->ret().find(DataPayloadKey);
+	if ((m_data->ret().end() != type) && (m_data->ret().end() != payload))
+	{
+		m_marketData = std::make_unique<CData>(type->second, payload->second);
+	}
+	else
+	{
+		m_marketData.reset();
+	}
+	return true;
 }
 
 void CRequest::SetConnectionId(net::_TyConnectionId id)
@@ -61,7 +96,7 @@ net::_TyConnectionId CRequest::GetConnectionId() const
 
 void CRequest::SetType(CRequest::Type type)
 {
-	if (m_data == nullptr)
+	if (nullptr == m_data)
 	{
 		return;
 	}
@@ -70,7 +105,7 @@ void CRequest::SetType(CRequest::Type type)
 
 void CRequest::SetCmd(const std::string& strCmd)
 {
-	if (m_data == nullptr)
+	if (nullptr == m_data)
 	{
 		return;
 	}
@@ -79,7 +114,7 @@ void CRequest::SetCmd(const std::string& strCmd)
 
 void CRequest::SetExtraData(const std::string& strKey, const std::string& strVal)
 {
-	if (m_data == nullptr)
+	if (nullptr == m_data)
 	{
 		return;
 	}
@@ -88,74 +123,94 @@ void CRequest::SetExtraData(const std::string& strKey, const std::string& strVal
 
 void CRequest::SetReturnData(const std::string& strKey, const std::string& strVal)
 {
-	if (m_data == nullptr)
+	if (nullptr == m_data)
 	{
 		return;
 	}
 	(*(m_data->mutable_ret()))[strKey] = strVal;
 }
 
-void CRequest::SetPayload(const std::string& payload) { m_data->set_payload(payload); }
-void CRequest::SetRequestId(std::uint64_t id) { m_data->set_request_id(id); }
-void CRequest::SetSequence(std::uint64_t sequence) { m_data->set_sequence(sequence); }
-void CRequest::SetServerTime(std::int64_t time) { m_data->set_server_time_ms(time); }
+void CRequest::SetData(std::unique_ptr<CData> data)
+{
+	m_marketData = std::move(data);
+	if (nullptr == m_data)
+	{
+		return;
+	}
+	if (nullptr == m_marketData)
+	{
+		m_data->mutable_ret()->erase(DataTypeKey);
+		m_data->mutable_ret()->erase(DataPayloadKey);
+		return;
+	}
+	(*(m_data->mutable_ret()))[DataTypeKey] = m_marketData->GetType();
+	(*(m_data->mutable_ret()))[DataPayloadKey] = m_marketData->GetPayload();
+}
+
+const CData* CRequest::GetData() const
+{
+	return m_marketData.get();
+}
+
+std::uint64_t CRequest::GetId() const
+{
+	return (nullptr == m_data) ? 0 : m_data->id();
+}
+
+void CRequest::SetId(std::uint64_t nId)
+{
+	if (nullptr != m_data)
+	{
+		m_data->set_id(nId);
+	}
+}
 
 CRequest::Type CRequest::GetType() const
 {
-	if (m_data == nullptr)
+	if (nullptr == m_data)
 	{
 		return CRequest::Type::UNKNOWN;
 	}
 	return static_cast<CRequest::Type>(m_data->type());
 }
 
-const std::string& CRequest::GetCmd() const
+std::string CRequest::GetCmd() const
 {
-	if (m_data == nullptr)
+	if (nullptr == m_data)
 	{
-		static const std::string emptyValue;
-		return emptyValue;
+		return "";
 	}
 	return m_data->cmd();
 }
 
 std::unordered_map<std::string, std::string> CRequest::GetExtraData() const
 {
-	if (m_data == nullptr)
+	if (nullptr == m_data)
 	{
 		return {};
 	}
 	return {m_data->extra().begin(), m_data->extra().end()};
 }
 
-const std::string& CRequest::GetExtraData(const std::string& strKey) const
+std::string CRequest::GetExtraData(const std::string& strKey) const
 {
-	if (m_data == nullptr)
-	{
-		static const std::string emptyValue;
-		return emptyValue;
-	}
-	return container::FindMappedValue(m_data->extra(), strKey);
+	std::unordered_map<std::string, std::string> data = GetExtraData();
+	std::unordered_map<std::string, std::string>::const_iterator iter = data.find(strKey);
+	return data.end() == iter ? "" : iter->second;
 }
 
-const std::string& CRequest::GetReturnData(const std::string& strKey) const
+std::string CRequest::GetReturnData(const std::string& strKey) const
 {
-	if (m_data == nullptr)
-	{
-		static const std::string emptyValue;
-		return emptyValue;
-	}
-	return container::FindMappedValue(m_data->ret(), strKey);
+	std::unordered_map<std::string, std::string> data = GetReturnData();
+	std::unordered_map<std::string, std::string>::const_iterator iter = data.find(strKey);
+	return data.end() == iter ? "" : iter->second;
 }
 
 std::unordered_map<std::string, std::string> CRequest::GetReturnData() const
 {
-	if (m_data == nullptr)
+	if (nullptr == m_data)
 	{
 		return {};
 	}
 	return {m_data->ret().begin(), m_data->ret().end()};
 }
-
-const std::string& CRequest::GetPayload() const { return m_data->payload(); }
-std::uint64_t CRequest::GetRequestId() const { return m_data->request_id(); }

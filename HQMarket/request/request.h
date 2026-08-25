@@ -7,6 +7,19 @@
 #include <memory>
 #include "../network/common_net.h"
 
+class CData final
+{
+	public:
+		CData(std::string type, std::string payload);
+
+		const std::string& GetType() const;
+		const std::string& GetPayload() const;
+
+	private:
+		std::string m_type;
+		std::string m_payload;
+};
+
 namespace request
 {
 	class RequestData;
@@ -36,27 +49,25 @@ class CRequest
 			QUERY_AUTH = 1,
 			QUERY_USERINFO = 2,
 			UPDATE_AUTH = 3,
-			UPDAT_PRODUCT = 4
+			UPDAT_PRODUCT = 4,
+			HQMARKET = 5
 		};
 
 	public:
-		void SetType(CRequest::Type type);
-		void SetCmd(const std::string& strCmd);
-		void SetExtraData(const std::string& strKey, const std::string& strVal);
-		void SetReturnData(const std::string& strKey, const std::string& strVal);
-		void SetPayload(const std::string& payload);
-		void SetRequestId(std::uint64_t id);
-		void SetSequence(std::uint64_t sequence);
-		void SetServerTime(std::int64_t time);
-
+		std::uint64_t GetId() const;
+		void SetId(std::uint64_t nId);
 		CRequest::Type GetType() const;
-		const std::string& GetCmd() const;
-		const std::string& GetExtraData(const std::string& strKey) const;
-		const std::string& GetReturnData(const std::string& strKey) const;
+		void SetType(CRequest::Type type);
+		std::string GetCmd() const;
+		void SetCmd(const std::string& strCmd);
+		std::string GetExtraData(const std::string& strKey) const;
 		std::unordered_map<std::string, std::string> GetExtraData() const;
+		void SetExtraData(const std::string& strKey, const std::string& strVal);
+		std::string GetReturnData(const std::string& strKey) const;
 		std::unordered_map<std::string, std::string> GetReturnData() const;
-		const std::string& GetPayload() const;
-		std::uint64_t GetRequestId() const;
+		void SetReturnData(const std::string& strKey, const std::string& strVal);
+		void SetData(std::unique_ptr<CData> data);
+		const CData* GetData() const;
 
 	public:
 		bool Serialize(std::string* output) const;
@@ -67,6 +78,7 @@ class CRequest
 	private:
 		std::unique_ptr<google::protobuf::Arena> m_arena;
 		request::RequestData* m_data{nullptr};
+		std::unique_ptr<CData> m_marketData;
 		net::_TyConnectionId m_connection_id{-1};
 };
 

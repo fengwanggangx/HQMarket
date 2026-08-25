@@ -5,6 +5,7 @@
 #include "../request/request.h"
 #include "../common/defines.h"
 #include <chrono>
+#include <exception>
 #include <sstream>
 #include <utility>
 
@@ -19,16 +20,6 @@ namespace service
 			return std::chrono::duration_cast<std::chrono::milliseconds>(
 					   std::chrono::system_clock::now().time_since_epoch())
 				.count();
-		}
-
-		market::Exchange FromWire(wire::Exchange value)
-		{
-			return static_cast<market::Exchange>(static_cast<int>(value));
-		}
-
-		market::Channel FromWire(wire::Channel value)
-		{
-			return static_cast<market::Channel>(static_cast<int>(value));
 		}
 
 		wire::Exchange ToWire(market::Exchange value)
@@ -72,7 +63,42 @@ namespace service
 
 		bool IsRealtimeChannel(market::Channel channel)
 		{
-			return (channel == market::Channel::quote) || (channel == market::Channel::depth);
+			return (market::Channel::quote == channel) || (market::Channel::depth == channel);
+		}
+
+		market::Channel ParseChannel(const std::string& value)
+		{
+			if ("quote" == value)
+			{
+				return market::Channel::quote;
+			}
+			if ("depth" == value)
+			{
+				return market::Channel::depth;
+			}
+			if ("bar_1m" == value)
+			{
+				return market::Channel::bar_1m;
+			}
+			if ("bar_1d" == value)
+			{
+				return market::Channel::bar_1d;
+			}
+			return market::Channel::unknown;
+		}
+
+		bool ParseMilliseconds(const std::string& value, std::int64_t& result)
+		{
+			try
+			{
+				std::size_t parsed = 0;
+				result = std::stoll(value, &parsed);
+				return value.size() == parsed;
+			}
+			catch (const std::exception&)
+			{
+				return false;
+			}
 		}
 
 		void FillQuote(const market::CQuote& quote, wire::QuoteData* value)
@@ -111,24 +137,30 @@ namespace service
 		}
 
 		template <typename T>
-		bool SetPayload(CRequest& request, const T& payload)
+		bool SetData(CRequest& request, const std::string& type, const T& value, std::uint64_t requestId = 0, std::uint64_t sequence = 0)
 		{
 			std::string data;
-			if (!payload.SerializeToString(&data))
+			if (!value.SerializeToString(&data))
 			{
 				return false;
 			}
-			request.SetPayload(data);
+			request.SetType(CRequest::Type::HQMARKET);
+			request.SetReturnData("request_id", std::to_string(requestId));
+			request.SetReturnData("sequence", std::to_string(sequence));
+			request.SetReturnData("server_time_ms", std::to_string(NowMilliseconds()));
+			request.SetData(std::make_unique<CData>(type, std::move(data)));
 			return true;
 		}
 
-		void SetError(CRequest& response, int code, const std::string& message)
+		void SetError(CRequest& response, std::uint64_t requestId, int code, const std::string& message)
 		{
 			wire::ErrorData error;
 			error.set_code(code);
 			error.set_message(message);
 			response.SetCmd("error");
-			SetPayload(response, error);
+			response.SetReturnData("error_code", std::to_string(code));
+			response.SetReturnData("error_message", message);
+			SetData(response, "error", error, requestId);
 		}
 	} // namespace
 
@@ -173,16 +205,16 @@ namespace service
 		return true;
 	}
 
-	int CMarketService::OnNetEvent(const net::CNetEvent& netEvent)
+	int CMarketService::OnNetEvent(const net::CNetEvent& ev)
 	{
-		if (netEvent.m_event == net::em_event::request)
+		if (ev.m_event == net::em_event::request)
 		{
-			return OnClientRequest(netEvent.m_request);
+			return OnClientRequest(ev.m_request);
 		}
 
-		if (netEvent.m_event == net::em_event::disconnected)
+		if (ev.m_event == net::em_event::disconnected)
 		{
-			OnClientDisconnected(netEvent.m_connection_id);
+			OnClientDisconnected(ev.m_connection_id);
 		}
 		return 1;
 	}
@@ -196,7 +228,7 @@ namespace service
 
 	int CMarketService::OnClientRequest(const std::unique_ptr<CRequest>& request)
 	{
-		if ((request == nullptr) || (request->GetConnectionId() < 0))
+		if ((nullptr == request) || (request->GetConnectionId() < 0))
 		{
 			return 0;
 		}
@@ -221,91 +253,76 @@ namespace service
 	void CMarketService::HandleRequest(net::_TyConnectionId id, const CRequest& request)
 	{
 		CRequest response;
-		response.SetRequestId(request.GetRequestId());
-		const std::string& command = request.GetCmd();
-		const std::string& payload = request.GetPayload();
-		if (command == "auth")
+		std::uint64_t requestId = request.GetId();
+		std::string command = request.GetCmd();
+		if ("auth" == command)
 		{
-			wire::AuthRequest auth;
-			bool authenticated = auth.ParseFromString(payload) && !m_strToken.empty() && (auth.token() == m_strToken);
+			bool authenticated = !m_strToken.empty() && (request.GetExtraData("token") == m_strToken);
 			if (authenticated)
 			{
 				std::lock_guard<std::mutex> lock(m_mtx_sessions);
 				m_sessions.try_emplace(id, CClientSession{true});
 			}
-			wire::AuthResponse result;
-			result.set_accepted(authenticated);
-			result.set_reason(authenticated ? "ok" : "invalid token");
-			response.SetCmd("auth_response");
-			SetPayload(response, result);
+			wire::AuthResponse authResponse;
+			authResponse.set_accepted(authenticated);
+			authResponse.set_reason(authenticated ? "ok" : "invalid token");
+			response.SetCmd("auth");
+			response.SetReturnData("accepted", authenticated ? "true" : "false");
+			response.SetReturnData("reason", authenticated ? "ok" : "invalid token");
+			SetData(response, "auth_response", authResponse, requestId);
 			SendRequest(id, response);
 			return;
 		}
 		if (!IsAuthenticated(id))
 		{
-			SetError(response, 1002, "authentication required");
+			SetError(response, requestId, 1002, "authentication required");
 			SendRequest(id, response);
 			return;
 		}
-		if (command == "heartbeat")
+		if ("heartbeat" == command)
 		{
-			wire::HeartbeatData heartbeat;
-			if (!heartbeat.ParseFromString(payload))
+			std::int64_t clientTime = 0;
+			if (!ParseMilliseconds(request.GetExtraData("client_time_ms"), clientTime))
 			{
-				SetError(response, 1005, "invalid heartbeat payload");
+				SetError(response, requestId, 1005, "invalid client_time_ms");
 			}
 			else
 			{
+				wire::HeartbeatData heartbeat;
+				heartbeat.set_client_time_ms(clientTime);
 				response.SetCmd("heartbeat");
-				SetPayload(response, heartbeat);
+				SetData(response, "heartbeat", heartbeat, requestId);
 			}
 			SendRequest(id, response);
 			return;
 		}
-		if (command == "query")
+		if (("query_quote" == command) || ("query_bars" == command))
 		{
 			HandleQuery(id, request);
 			return;
 		}
 
-		bool subscribe = command == "subscribe";
-		bool unsubscribe = command == "unsubscribe";
+		bool subscribe = "subscribe" == command;
+		bool unsubscribe = "unsubscribe" == command;
 		if (!subscribe && !unsubscribe)
 		{
-			SetError(response, 1006, "unknown command");
+			SetError(response, requestId, 1006, "unknown command");
 			SendRequest(id, response);
 			return;
 		}
-		wire::SubscribeRequest subscribeRequest;
-		wire::UnsubscribeRequest unsubscribeRequest;
-		if ((subscribe && !subscribeRequest.ParseFromString(payload)) ||
-			(unsubscribe && !unsubscribeRequest.ParseFromString(payload)))
+		market::CInstrument instrument = ParseInstrument(request.GetExtraData("instrument"));
+		market::Channel channel = ParseChannel(request.GetExtraData("channel"));
+		market::CSubscription subscription{instrument, channel};
+		bool accepted = IsValidInstrument(instrument) && IsRealtimeChannel(channel);
+		if (!accepted)
 		{
-			SetError(response, 1005, "invalid subscription payload");
+			SetError(response, requestId, 1003, "invalid instrument or unsupported subscription channel");
 			SendRequest(id, response);
 			return;
 		}
-		const auto& instruments = subscribe ? subscribeRequest.instruments() : unsubscribeRequest.instruments();
-		const auto& channels = subscribe ? subscribeRequest.channels() : unsubscribeRequest.channels();
-		std::vector<market::CSubscription> requested;
-		std::vector<market::CSubscription> valid;
-		requested.reserve(static_cast<std::size_t>(instruments.size()) * static_cast<std::size_t>(channels.size()));
-		for (const wire::Instrument& instrument : instruments)
-		{
-			for (int channel : channels)
-			{
-				market::CSubscription value{
-					{instrument.symbol(), FromWire(instrument.exchange())}, FromWire(static_cast<wire::Channel>(channel))};
-				requested.emplace_back(value);
-				if (IsValidInstrument(value.m_instrument) && IsRealtimeChannel(value.m_channel))
-				{
-					valid.emplace_back(std::move(value));
-				}
-			}
-		}
+		std::vector<market::CSubscription> requested{subscription};
 		std::vector<market::CSubscription> changed =
-			subscribe ? m_subscriptions.Subscribe(id, valid)
-							  : m_subscriptions.Unsubscribe(id, valid);
+			subscribe ? m_subscriptions.Subscribe(id, requested) : m_subscriptions.Unsubscribe(id, requested);
 		if (!changed.empty())
 		{
 			if (subscribe)
@@ -319,83 +336,73 @@ namespace service
 		}
 
 		wire::SubscriptionAck ack;
-		for (const market::CSubscription& subscription : requested)
-		{
-			wire::SubscriptionResult* pResult = ack.add_results();
-			pResult->mutable_instrument()->set_symbol(subscription.m_instrument.m_strSymbol);
-			pResult->mutable_instrument()->set_exchange(ToWire(subscription.m_instrument.m_exchange));
-			pResult->set_channel(static_cast<wire::Channel>(static_cast<int>(subscription.m_channel)));
-			bool accepted = IsValidInstrument(subscription.m_instrument) && IsRealtimeChannel(subscription.m_channel);
-			pResult->set_accepted(accepted);
-			if (!accepted)
-			{
-				pResult->set_reason("invalid instrument or unsupported subscription channel");
-			}
-		}
+		wire::SubscriptionResult* pResult = ack.add_results();
+		pResult->mutable_instrument()->set_symbol(instrument.m_strSymbol);
+		pResult->mutable_instrument()->set_exchange(ToWire(instrument.m_exchange));
+		pResult->set_channel(static_cast<wire::Channel>(static_cast<int>(channel)));
+		pResult->set_accepted(true);
 		response.SetCmd("subscription_ack");
-		SetPayload(response, ack);
+		response.SetReturnData("accepted", "true");
+		SetData(response, "subscription_ack", ack, requestId);
 		SendRequest(id, response);
-		if (subscribe)
+		if (subscribe && (market::Channel::quote == channel))
 		{
-			for (const market::CSubscription& subscription : valid)
+			std::optional<market::CQuote> quote = m_cache.GetQuote(instrument);
+			if (quote.has_value())
 			{
-				if (subscription.m_channel != market::Channel::quote)
-				{
-					continue;
-				}
-				std::optional<market::CQuote> quote = m_cache.GetQuote(subscription.m_instrument);
-				if (quote.has_value())
-				{
-					wire::QuoteData snapshotPayload;
-					FillQuote(*quote, &snapshotPayload);
-					CRequest snapshot;
-					snapshot.SetCmd("quote");
-					SetPayload(snapshot, snapshotPayload);
-					SendRequest(id, snapshot);
-				}
+				wire::QuoteData quoteData;
+				FillQuote(*quote, &quoteData);
+				CRequest snapshot;
+				snapshot.SetCmd("quote");
+				SetData(snapshot, "quote", quoteData);
+				SendRequest(id, snapshot);
 			}
 		}
 	}
 
 	void CMarketService::HandleQuery(net::_TyConnectionId id, const CRequest& requestData)
 	{
-		wire::QueryRequest request;
 		CRequest response;
-		response.SetRequestId(requestData.GetRequestId());
-		if (!request.ParseFromString(requestData.GetPayload()))
-		{
-			SetError(response, 1005, "invalid query payload");
-			SendRequest(id, response);
-			return;
-		}
-		market::CInstrument instrument{request.instrument().symbol(), FromWire(request.instrument().exchange())};
-		market::Channel channel = FromWire(request.channel());
+		std::uint64_t requestId = requestData.GetId();
+		market::CInstrument instrument = ParseInstrument(requestData.GetExtraData("instrument"));
+		market::Channel channel = "query_quote" == requestData.GetCmd()
+			? market::Channel::quote : ParseChannel(requestData.GetExtraData("channel"));
 		if (!IsValidInstrument(instrument) || ((channel != market::Channel::quote) &&
 			(channel != market::Channel::bar_1m) && (channel != market::Channel::bar_1d)))
 		{
-			SetError(response, 1003, "invalid instrument or unsupported query channel");
+			SetError(response, requestId, 1003, "invalid instrument or unsupported query channel");
 			SendRequest(id, response);
 			return;
 		}
 		wire::QueryResponse result;
-		result.mutable_instrument()->CopyFrom(request.instrument());
-		result.set_channel(request.channel());
-		if (channel == market::Channel::quote)
+		wire::QueryResponse* pResult = &result;
+		pResult->mutable_instrument()->set_symbol(instrument.m_strSymbol);
+		pResult->mutable_instrument()->set_exchange(ToWire(instrument.m_exchange));
+		pResult->set_channel(static_cast<wire::Channel>(static_cast<int>(channel)));
+		if (market::Channel::quote == channel)
 		{
 			std::optional<market::CQuote> quote = m_cache.GetQuote(instrument);
-			result.set_found(quote.has_value());
+			pResult->set_found(quote.has_value());
 			if (quote.has_value())
 			{
-				FillQuote(*quote, result.mutable_quote());
+				FillQuote(*quote, pResult->mutable_quote());
 			}
 		}
 		else
 		{
-			std::int64_t begin = request.begin_time_ms();
-			std::int64_t end = request.end_time_ms() > 0 ? request.end_time_ms() : NowMilliseconds();
+			std::int64_t begin = 0;
+			std::int64_t end = 0;
+			if (!ParseMilliseconds(requestData.GetExtraData("begin_time_ms"), begin) ||
+				!ParseMilliseconds(requestData.GetExtraData("end_time_ms"), end))
+			{
+				SetError(response, requestId, 1004, "invalid query time range");
+				SendRequest(id, response);
+				return;
+			}
+			end = 0 < end ? end : NowMilliseconds();
 			if ((begin < 0) || (end < begin))
 			{
-				SetError(response, 1004, "invalid query time range");
+				SetError(response, requestId, 1004, "invalid query time range");
 				SendRequest(id, response);
 				return;
 			}
@@ -408,20 +415,19 @@ namespace service
 					m_recorder.UpsertBars(bars);
 				}
 			}
-			result.set_found(!bars.empty());
+			pResult->set_found(!bars.empty());
 			for (const market::CBar& bar : bars)
 			{
-				FillBar(bar, result.add_bars());
+				FillBar(bar, pResult->add_bars());
 			}
 		}
 		response.SetCmd("query_response");
-		SetPayload(response, result);
+		SetData(response, "query_response", result, requestId);
 		SendRequest(id, response);
 	}
 
 	void CMarketService::SendRequest(net::_TyConnectionId id, CRequest& request)
 	{
-		request.SetServerTime(NowMilliseconds());
 		std::string payload;
 		if (!request.Serialize(&payload))
 		{
@@ -433,12 +439,11 @@ namespace service
 
 	void CMarketService::PublishQuote(const market::CQuote& quote, std::uint64_t nSequence)
 	{
-		wire::QuoteData payload;
-		FillQuote(quote, &payload);
+		wire::QuoteData quoteData;
+		FillQuote(quote, &quoteData);
 		CRequest request;
 		request.SetCmd("quote");
-		request.SetSequence(nSequence);
-		SetPayload(request, payload);
+		SetData(request, "quote", quoteData, 0, nSequence);
 		market::CSubscription subscription{quote.m_instrument, market::Channel::quote};
 		for (net::_TyConnectionId id : AuthenticatedClients())
 		{
@@ -451,8 +456,8 @@ namespace service
 
 	void CMarketService::PublishDepth(const market::CDepth& depth, std::uint64_t nSequence)
 	{
-		wire::DepthData payload;
-		wire::DepthData* pValue = &payload;
+		wire::DepthData depthData;
+		wire::DepthData* pValue = &depthData;
 		pValue->mutable_instrument()->set_symbol(depth.m_instrument.m_strSymbol);
 		pValue->mutable_instrument()->set_exchange(ToWire(depth.m_instrument.m_exchange));
 		pValue->set_exchange_time_ms(depth.m_nExchangeTime);
@@ -475,8 +480,7 @@ namespace service
 		}
 		CRequest request;
 		request.SetCmd("depth");
-		request.SetSequence(nSequence);
-		SetPayload(request, payload);
+		SetData(request, "depth", depthData, 0, nSequence);
 		market::CSubscription subscription{depth.m_instrument, market::Channel::depth};
 		for (net::_TyConnectionId id : AuthenticatedClients())
 		{
