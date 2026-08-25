@@ -8,7 +8,7 @@ MooTDX 和 AKShare，并以 TCP/Protobuf 提供实时订阅，以 HTTP 提供健
 
 - TCP `9901`：`4-byte big-endian length + MarketEnvelope`。
 - HTTP `9902`：`/health`、`/metrics`、`/v1/instruments`、`/v1/quotes?instrument=600519.SSE`、`/v1/bars?instrument=600519.SSE`。
-- 协议版本：`market/v1/market.proto`，当前 `1.0`。
+- 协议版本：`quote/v1/market.proto`，当前 `1.0`。
 
 ## 运行
 
