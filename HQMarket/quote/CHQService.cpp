@@ -166,6 +166,30 @@ namespace service
 
 	CMarketService::CMarketService(net::CTcpServer* pTcpServer, CPythonRuntime* pPythonRuntime) : m_pTcpServer(pTcpServer), m_pPythonRuntime(pPythonRuntime)
 	{
+		m_handler.emplace("auth", [this](net::_TyConnectionId id, CRequest& request)
+			{
+				return HandleAuth(id, request);
+			});
+		m_handler.emplace("heartbeat", [this](net::_TyConnectionId id, CRequest& request)
+			{
+				return HandleHeartbeat(id, request);
+			});
+		m_handler.emplace("query_quote", [this](net::_TyConnectionId id, CRequest& request)
+			{
+				return HandleQuery(id, request);
+			});
+		m_handler.emplace("query_bars", [this](net::_TyConnectionId id, CRequest& request)
+			{
+				return HandleQuery(id, request);
+			});
+		m_handler.emplace("subscribe", [this](net::_TyConnectionId id, CRequest& request)
+			{
+				return HandleSubscription(id, request);
+			});
+		m_handler.emplace("unsubscribe", [this](net::_TyConnectionId id, CRequest& request)
+			{
+				return HandleSubscription(id, request);
+			});
 	}
 
 	bool CMarketService::Initialize(const std::string& strToken, const std::filesystem::path& root)
@@ -250,66 +274,77 @@ namespace service
 		}
 	}
 
-	void CMarketService::HandleRequest(net::_TyConnectionId id, const CRequest& request)
+	void CMarketService::HandleRequest(net::_TyConnectionId id, CRequest& request)
 	{
-		CRequest response;
-		std::uint64_t requestId = request.GetId();
-		std::string command = request.GetCmd();
-		if ("auth" == command)
+		std::string strCmd = request.GetCmd();
+		auto mIter = m_handler.find(strCmd);
+
+		if ((mIter != m_handler.end()) && ("auth" == strCmd))
 		{
-			bool authenticated = !m_strToken.empty() && (request.GetExtraData("token") == m_strToken);
-			if (authenticated)
-			{
-				std::lock_guard<std::mutex> lock(m_mtx_sessions);
-				m_sessions.try_emplace(id, CClientSession{true});
-			}
-			wire::AuthResponse authResponse;
-			authResponse.set_accepted(authenticated);
-			authResponse.set_reason(authenticated ? "ok" : "invalid token");
-			response.SetCmd("auth");
-			response.SetReturnData("accepted", authenticated ? "true" : "false");
-			response.SetReturnData("reason", authenticated ? "ok" : "invalid token");
-			SetData(response, "auth_response", authResponse, requestId);
-			SendRequest(id, response);
+			mIter->second(id, request);
 			return;
 		}
 		if (!IsAuthenticated(id))
 		{
-			SetError(response, requestId, 1002, "authentication required");
+			CRequest response;
+			SetError(response, request.GetId(), 1002, "authentication required");
 			SendRequest(id, response);
 			return;
 		}
-		if ("heartbeat" == command)
+		if (mIter == m_handler.end())
 		{
-			std::int64_t clientTime = 0;
-			if (!ParseMilliseconds(request.GetExtraData("client_time_ms"), clientTime))
-			{
-				SetError(response, requestId, 1005, "invalid client_time_ms");
-			}
-			else
-			{
-				wire::HeartbeatData heartbeat;
-				heartbeat.set_client_time_ms(clientTime);
-				response.SetCmd("heartbeat");
-				SetData(response, "heartbeat", heartbeat, requestId);
-			}
+			CRequest response;
+			SetError(response, request.GetId(), 1006, "unknown command");
 			SendRequest(id, response);
 			return;
 		}
-		if (("query_quote" == command) || ("query_bars" == command))
-		{
-			HandleQuery(id, request);
-			return;
-		}
+		mIter->second(id, request);
+	}
 
-		bool subscribe = "subscribe" == command;
-		bool unsubscribe = "unsubscribe" == command;
-		if (!subscribe && !unsubscribe)
+	bool CMarketService::HandleAuth(net::_TyConnectionId id, CRequest& request)
+	{
+		bool authenticated = !m_strToken.empty() && (request.GetExtraData("token") == m_strToken);
+		if (authenticated)
 		{
-			SetError(response, requestId, 1006, "unknown command");
-			SendRequest(id, response);
-			return;
+			std::lock_guard<std::mutex> lock(m_mtx_sessions);
+			m_sessions.try_emplace(id, CClientSession{true});
 		}
+		wire::AuthResponse authResponse;
+		authResponse.set_accepted(authenticated);
+		authResponse.set_reason(authenticated ? "ok" : "invalid token");
+		CRequest response;
+		response.SetCmd("auth");
+		response.SetReturnData("accepted", authenticated ? "true" : "false");
+		response.SetReturnData("reason", authenticated ? "ok" : "invalid token");
+		SetData(response, "auth_response", authResponse, request.GetId());
+		SendRequest(id, response);
+		return true;
+	}
+
+	bool CMarketService::HandleHeartbeat(net::_TyConnectionId id, CRequest& request)
+	{
+		CRequest response;
+		std::int64_t clientTime = 0;
+		if (!ParseMilliseconds(request.GetExtraData("client_time_ms"), clientTime))
+		{
+			SetError(response, request.GetId(), 1005, "invalid client_time_ms");
+		}
+		else
+		{
+			wire::HeartbeatData heartbeat;
+			heartbeat.set_client_time_ms(clientTime);
+			response.SetCmd("heartbeat");
+			SetData(response, "heartbeat", heartbeat, request.GetId());
+		}
+		SendRequest(id, response);
+		return true;
+	}
+
+	bool CMarketService::HandleSubscription(net::_TyConnectionId id, CRequest& request)
+	{
+		CRequest response;
+		std::uint64_t requestId = request.GetId();
+		bool subscribe = "subscribe" == request.GetCmd();
 		market::CInstrument instrument = ParseInstrument(request.GetExtraData("instrument"));
 		market::Channel channel = ParseChannel(request.GetExtraData("channel"));
 		market::CSubscription subscription{instrument, channel};
@@ -318,7 +353,7 @@ namespace service
 		{
 			SetError(response, requestId, 1003, "invalid instrument or unsupported subscription channel");
 			SendRequest(id, response);
-			return;
+			return false;
 		}
 		std::vector<market::CSubscription> requested{subscription};
 		std::vector<market::CSubscription> changed =
@@ -358,9 +393,10 @@ namespace service
 				SendRequest(id, snapshot);
 			}
 		}
+		return true;
 	}
 
-	void CMarketService::HandleQuery(net::_TyConnectionId id, const CRequest& requestData)
+	bool CMarketService::HandleQuery(net::_TyConnectionId id, CRequest& requestData)
 	{
 		CRequest response;
 		std::uint64_t requestId = requestData.GetId();
@@ -372,7 +408,7 @@ namespace service
 		{
 			SetError(response, requestId, 1003, "invalid instrument or unsupported query channel");
 			SendRequest(id, response);
-			return;
+			return false;
 		}
 		wire::QueryResponse result;
 		wire::QueryResponse* pResult = &result;
@@ -397,14 +433,14 @@ namespace service
 			{
 				SetError(response, requestId, 1004, "invalid query time range");
 				SendRequest(id, response);
-				return;
+				return false;
 			}
 			end = 0 < end ? end : NowMilliseconds();
 			if ((begin < 0) || (end < begin))
 			{
 				SetError(response, requestId, 1004, "invalid query time range");
 				SendRequest(id, response);
-				return;
+				return false;
 			}
 			std::vector<market::CBar> bars = m_recorder.QueryBars(instrument, channel, begin, end);
 			if (bars.empty())
@@ -424,6 +460,7 @@ namespace service
 		response.SetCmd("query_response");
 		SetData(response, "query_response", result, requestId);
 		SendRequest(id, response);
+		return true;
 	}
 
 	void CMarketService::SendRequest(net::_TyConnectionId id, CRequest& request)

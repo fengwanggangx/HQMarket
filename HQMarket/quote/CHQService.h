@@ -11,6 +11,7 @@
 #include "../python/CMooTdxProvider.h"
 #include <atomic>
 #include <filesystem>
+#include <functional>
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -43,8 +44,11 @@ namespace service
 			int OnNetEvent(const net::CNetEvent& netEvent);
 			int OnClientRequest(const std::unique_ptr<CRequest>& request);
 			void OnClientDisconnected(net::_TyConnectionId id);
-			void HandleRequest(net::_TyConnectionId id, const CRequest& request);
-			void HandleQuery(net::_TyConnectionId id, const CRequest& request);
+			void HandleRequest(net::_TyConnectionId id, CRequest& request);
+			bool HandleAuth(net::_TyConnectionId id, CRequest& request);
+			bool HandleHeartbeat(net::_TyConnectionId id, CRequest& request);
+			bool HandleQuery(net::_TyConnectionId id, CRequest& request);
+			bool HandleSubscription(net::_TyConnectionId id, CRequest& request);
 			void SendRequest(net::_TyConnectionId id, CRequest& request);
 			void PublishQuote(const market::CQuote& quote, std::uint64_t nSequence);
 			void PublishDepth(const market::CDepth& depth, std::uint64_t nSequence);
@@ -56,6 +60,7 @@ namespace service
 			provider::CAkShareProvider m_akshare;
 
 			std::string m_strToken;
+			std::unordered_map<std::string, std::function<bool(net::_TyConnectionId, CRequest&)>> m_handler;
 			mutable std::mutex m_mtx_sessions;
 			std::unordered_map<net::_TyConnectionId, CClientSession> m_sessions;
 			market::CSubscriptionManager m_subscriptions;
