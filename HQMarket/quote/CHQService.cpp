@@ -309,14 +309,13 @@ namespace service
 			std::lock_guard<std::mutex> lock(m_mtx_sessions);
 			m_sessions.try_emplace(id, CClientSession{true});
 		}
-		wire::AuthResponse authResponse;
-		authResponse.set_accepted(authenticated);
-		authResponse.set_reason(authenticated ? "ok" : "invalid token");
 		CRequest response;
+		response.SetType(CRequest::Type::HQMARKET);
 		response.SetCmd("auth");
 		response.SetReturnData("accepted", authenticated ? "true" : "false");
 		response.SetReturnData("reason", authenticated ? "ok" : "invalid token");
-		SetData(response, "auth_response", authResponse, request.GetId());
+		response.SetReturnData("request_id", std::to_string(request.GetId()));
+		response.SetReturnData("server_time_ms", std::to_string(NowMilliseconds()));
 		SendRequest(id, response);
 		return true;
 	}
@@ -331,10 +330,11 @@ namespace service
 		}
 		else
 		{
-			wire::HeartbeatData heartbeat;
-			heartbeat.set_client_time_ms(clientTime);
+			response.SetType(CRequest::Type::HQMARKET);
 			response.SetCmd("heartbeat");
-			SetData(response, "heartbeat", heartbeat, request.GetId());
+			response.SetReturnData("client_time_ms", std::to_string(clientTime));
+			response.SetReturnData("request_id", std::to_string(request.GetId()));
+			response.SetReturnData("server_time_ms", std::to_string(NowMilliseconds()));
 		}
 		SendRequest(id, response);
 		return true;

@@ -14,7 +14,6 @@ namespace
 {
 #define FOR_EACH_DATA_TYPE(Action) \
 	Action("hqmarket.market.v1.AuthRequest", hqmarket::market::v1::AuthRequest) \
-	Action("hqmarket.market.v1.AuthResponse", hqmarket::market::v1::AuthResponse) \
 	Action("hqmarket.market.v1.SubscribeRequest", hqmarket::market::v1::SubscribeRequest) \
 	Action("hqmarket.market.v1.UnsubscribeRequest", hqmarket::market::v1::UnsubscribeRequest) \
 	Action("hqmarket.market.v1.SubscriptionAck", hqmarket::market::v1::SubscriptionAck) \
@@ -23,7 +22,6 @@ namespace
 	Action("hqmarket.market.v1.TradeData", hqmarket::market::v1::TradeData) \
 	Action("hqmarket.market.v1.BarData", hqmarket::market::v1::BarData) \
 	Action("hqmarket.market.v1.MarketStatusData", hqmarket::market::v1::MarketStatusData) \
-	Action("hqmarket.market.v1.HeartbeatData", hqmarket::market::v1::HeartbeatData) \
 	Action("hqmarket.market.v1.ProviderStatusData", hqmarket::market::v1::ProviderStatusData) \
 	Action("hqmarket.market.v1.ErrorData", hqmarket::market::v1::ErrorData) \
 	Action("hqmarket.market.v1.QueryRequest", hqmarket::market::v1::QueryRequest) \
