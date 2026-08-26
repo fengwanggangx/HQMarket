@@ -10,14 +10,38 @@
 class CData final
 {
 	public:
-		CData(std::string type, std::string payload);
+		CData() = default;
+		CData(std::string type, void* pData);
+		~CData();
+		CData(const CData&) = delete;
+		CData& operator=(const CData&) = delete;
+		CData(CData&&) = delete;
+		CData& operator=(CData&&) = delete;
 
 		const std::string& GetType() const;
-		const std::string& GetPayload() const;
+		void* GetData();
+		const void* GetData() const;
+
+		template<typename _Ty>
+		_Ty* GetDataAs()
+		{
+			return (_Ty::descriptor()->full_name() == m_type) ? static_cast<_Ty*>(m_pData) : nullptr;
+		}
+
+		template<typename _Ty>
+		const _Ty* GetDataAs() const
+		{
+			return (_Ty::descriptor()->full_name() == m_type) ? static_cast<const _Ty*>(m_pData) : nullptr;
+		}
+
+		bool Serialize(std::string* output) const;
+		bool Deserialize(const std::string& type, const std::string& payload);
 
 	private:
+		void Reset();
+
 		std::string m_type;
-		std::string m_payload;
+		void* m_pData{ nullptr };
 };
 
 namespace request
@@ -56,30 +80,37 @@ class CRequest
 	public:
 		std::uint64_t GetId() const;
 		void SetId(std::uint64_t nId);
+
 		CRequest::Type GetType() const;
 		void SetType(CRequest::Type type);
+
 		std::string GetCmd() const;
 		void SetCmd(const std::string& strCmd);
+
 		std::string GetExtraData(const std::string& strKey) const;
 		std::unordered_map<std::string, std::string> GetExtraData() const;
+
 		void SetExtraData(const std::string& strKey, const std::string& strVal);
 		std::string GetReturnData(const std::string& strKey) const;
+
 		std::unordered_map<std::string, std::string> GetReturnData() const;
 		void SetReturnData(const std::string& strKey, const std::string& strVal);
+
 		void SetData(std::unique_ptr<CData> data);
 		const CData* GetData() const;
+
+		void SetConnectionId(net::_TyConnectionId id);
+		net::_TyConnectionId GetConnectionId() const;
 
 	public:
 		bool Serialize(std::string* output) const;
 		bool Deserialize(const std::string& data);
-		void SetConnectionId(net::_TyConnectionId id);
-		net::_TyConnectionId GetConnectionId() const;
 
 	private:
 		std::unique_ptr<google::protobuf::Arena> m_arena;
-		request::RequestData* m_data{nullptr};
-		std::unique_ptr<CData> m_marketData;
-		net::_TyConnectionId m_connection_id{-1};
+		request::RequestData* m_data{ nullptr };
+		std::unique_ptr<CData> m_cdata;
+		net::_TyConnectionId m_connection_id{ -1 };
 };
 
 #endif

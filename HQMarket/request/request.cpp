@@ -1,5 +1,6 @@
 #include "request.pb.h"
 #include "request.h"
+#include "../hqmarket/v1/market.pb.h"
 #include <atomic>
 #include <utility>
 
@@ -9,8 +10,49 @@ namespace
 	constexpr const char* DataPayloadKey = "data";
 }
 
-CData::CData(std::string type, std::string payload) : m_type(std::move(type)), m_payload(std::move(payload))
+namespace
 {
+#define FOR_EACH_DATA_TYPE(Action) \
+	Action("hqmarket.market.v1.AuthRequest", hqmarket::market::v1::AuthRequest) \
+	Action("hqmarket.market.v1.AuthResponse", hqmarket::market::v1::AuthResponse) \
+	Action("hqmarket.market.v1.SubscribeRequest", hqmarket::market::v1::SubscribeRequest) \
+	Action("hqmarket.market.v1.UnsubscribeRequest", hqmarket::market::v1::UnsubscribeRequest) \
+	Action("hqmarket.market.v1.SubscriptionAck", hqmarket::market::v1::SubscriptionAck) \
+	Action("hqmarket.market.v1.QuoteData", hqmarket::market::v1::QuoteData) \
+	Action("hqmarket.market.v1.DepthData", hqmarket::market::v1::DepthData) \
+	Action("hqmarket.market.v1.TradeData", hqmarket::market::v1::TradeData) \
+	Action("hqmarket.market.v1.BarData", hqmarket::market::v1::BarData) \
+	Action("hqmarket.market.v1.MarketStatusData", hqmarket::market::v1::MarketStatusData) \
+	Action("hqmarket.market.v1.HeartbeatData", hqmarket::market::v1::HeartbeatData) \
+	Action("hqmarket.market.v1.ProviderStatusData", hqmarket::market::v1::ProviderStatusData) \
+	Action("hqmarket.market.v1.ErrorData", hqmarket::market::v1::ErrorData) \
+	Action("hqmarket.market.v1.QueryRequest", hqmarket::market::v1::QueryRequest) \
+	Action("hqmarket.market.v1.QueryResponse", hqmarket::market::v1::QueryResponse)
+}
+
+CData::CData(std::string type, void* pData) : m_type(std::move(type)), m_pData(pData)
+{
+}
+
+CData::~CData()
+{
+	Reset();
+}
+
+void CData::Reset()
+{
+#define DELETE_DATA(TypeName, DataType) \
+	if (TypeName == m_type) \
+	{ \
+		delete static_cast<DataType*>(m_pData); \
+		m_pData = nullptr; \
+		m_type.clear(); \
+		return; \
+	}
+	FOR_EACH_DATA_TYPE(DELETE_DATA)
+#undef DELETE_DATA
+	m_pData = nullptr;
+	m_type.clear();
 }
 
 const std::string& CData::GetType() const
@@ -18,9 +60,50 @@ const std::string& CData::GetType() const
 	return m_type;
 }
 
-const std::string& CData::GetPayload() const
+void* CData::GetData()
 {
-	return m_payload;
+	return m_pData;
+}
+
+const void* CData::GetData() const
+{
+	return m_pData;
+}
+
+bool CData::Serialize(std::string* output) const
+{
+	if ((nullptr == output) || (nullptr == m_pData))
+	{
+		return false;
+	}
+#define SERIALIZE_DATA(TypeName, DataType) \
+	if (TypeName == m_type) \
+	{ \
+		return static_cast<const DataType*>(m_pData)->SerializeToString(output); \
+	}
+	FOR_EACH_DATA_TYPE(SERIALIZE_DATA)
+#undef SERIALIZE_DATA
+	return false;
+}
+
+bool CData::Deserialize(const std::string& type, const std::string& payload)
+{
+#define DESERIALIZE_DATA(TypeName, DataType) \
+	if (TypeName == type) \
+	{ \
+		auto data = std::make_unique<DataType>(); \
+		if (!data->ParseFromString(payload)) \
+		{ \
+			return false; \
+		} \
+		Reset(); \
+		m_type = type; \
+		m_pData = data.release(); \
+		return true; \
+	}
+	FOR_EACH_DATA_TYPE(DESERIALIZE_DATA)
+#undef DESERIALIZE_DATA
+	return false;
 }
 
 static request::RequestType ToProtoType(CRequest::Type type)
@@ -45,18 +128,29 @@ static request::RequestType ToProtoType(CRequest::Type type)
 
 CRequest::CRequest() : m_arena(std::make_unique<google::protobuf::Arena>())
 {
-	static std::atomic_uint64_t s_id{1};
 	m_data = google::protobuf::Arena::CreateMessage<request::RequestData>(m_arena.get());
-	m_data->set_id(s_id.fetch_add(1, std::memory_order_relaxed));
+
+	static std::atomic_uint64_t s_id{ 1 };
+	SetId(s_id.fetch_add(1, std::memory_order_relaxed));
 }
 
 CRequest::~CRequest() = default;
 
 bool CRequest::Serialize(std::string* output) const
 {
-	if (nullptr == output)
+	if ((nullptr == output) || (nullptr == m_data))
 	{
 		return false;
+	}
+	if (nullptr != m_cdata)
+	{
+		std::string payload;
+		if (!m_cdata->Serialize(&payload))
+		{
+			return false;
+		}
+		(*(m_data->mutable_ret()))[DataTypeKey] = m_cdata->GetType();
+		(*(m_data->mutable_ret()))[DataPayloadKey] = std::move(payload);
 	}
 	return m_data->SerializeToString(output);
 }
@@ -75,11 +169,16 @@ bool CRequest::Deserialize(const std::string& data)
 	google::protobuf::Map<std::string, std::string>::const_iterator payload = m_data->ret().find(DataPayloadKey);
 	if ((m_data->ret().end() != type) && (m_data->ret().end() != payload))
 	{
-		m_marketData = std::make_unique<CData>(type->second, payload->second);
+		auto cdata = std::make_unique<CData>();
+		if (!cdata->Deserialize(type->second, payload->second))
+		{
+			return false;
+		}
+		m_cdata = std::move(cdata);
 	}
 	else
 	{
-		m_marketData.reset();
+		m_cdata.reset();
 	}
 	return true;
 }
@@ -132,24 +231,32 @@ void CRequest::SetReturnData(const std::string& strKey, const std::string& strVa
 
 void CRequest::SetData(std::unique_ptr<CData> data)
 {
-	m_marketData = std::move(data);
+	m_cdata = std::move(data);
 	if (nullptr == m_data)
 	{
 		return;
 	}
-	if (nullptr == m_marketData)
+	if (nullptr == m_cdata)
 	{
 		m_data->mutable_ret()->erase(DataTypeKey);
 		m_data->mutable_ret()->erase(DataPayloadKey);
 		return;
 	}
-	(*(m_data->mutable_ret()))[DataTypeKey] = m_marketData->GetType();
-	(*(m_data->mutable_ret()))[DataPayloadKey] = m_marketData->GetPayload();
+	std::string payload;
+	if (!m_cdata->Serialize(&payload))
+	{
+		m_cdata.reset();
+		m_data->mutable_ret()->erase(DataTypeKey);
+		m_data->mutable_ret()->erase(DataPayloadKey);
+		return;
+	}
+	(*(m_data->mutable_ret()))[DataTypeKey] = m_cdata->GetType();
+	(*(m_data->mutable_ret()))[DataPayloadKey] = std::move(payload);
 }
 
 const CData* CRequest::GetData() const
 {
-	return m_marketData.get();
+	return m_cdata.get();
 }
 
 std::uint64_t CRequest::GetId() const
@@ -214,3 +321,5 @@ std::unordered_map<std::string, std::string> CRequest::GetReturnData() const
 	}
 	return {m_data->ret().begin(), m_data->ret().end()};
 }
+
+#undef FOR_EACH_DATA_TYPE

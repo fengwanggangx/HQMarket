@@ -14,21 +14,6 @@ namespace net
 {
 	namespace utility
 	{
-		namespace
-		{
-			std::mutex& ConnectionBuffersMutex()
-			{
-				static std::mutex mtxBuffers;
-				return mtxBuffers;
-			}
-
-			std::unordered_map<_TyConnectionId, std::vector<char>>& ConnectionBuffers()
-			{
-				static std::unordered_map<_TyConnectionId, std::vector<char>> connectionBuffers;
-				return connectionBuffers;
-			}
-		}
-
 		std::size_t BufferEventReader(struct bufferevent* pEvent, std::vector<char>& buffer)
 		{
 			buffer.clear();
@@ -40,8 +25,14 @@ namespace net
 			return n;
 		}
 
-		std::size_t RequestFromBuffer(std::vector<std::unique_ptr<CRequest>>& reqs, struct bufferevent* pEvent, std::vector<char>& buffer)
+		std::size_t RequestFromBuffer(std::vector<std::unique_ptr<CRequest>>& reqs, struct bufferevent* pEvent)
 		{
+			auto ret = CNetPool::InstancePtr()->GetRecvBuffer(pEvent);
+			if (!ret.has_value())
+			{
+				return 0;
+			}
+			std::vector<char>& buffer = *ret.value();
 			std::vector<char> received;
 			std::size_t nReceived = net::utility::BufferEventReader(pEvent, received);
 			if (nReceived == 0)
@@ -49,19 +40,15 @@ namespace net
 				return 0;
 			}
 			_TyConnectionId id = bufferevent_getfd(pEvent);
-			std::lock_guard<std::mutex> lock(ConnectionBuffersMutex());
-			std::unordered_map<_TyConnectionId, std::vector<char>>& connectionBuffers = ConnectionBuffers();
-			std::vector<char>& connectionBuffer = connectionBuffers[id];
-			connectionBuffer.insert(connectionBuffer.end(), received.begin(), received.end());
-			buffer.clear();
+			buffer.insert(buffer.end(), received.begin(), received.end());
 
 			std::size_t nReqCount = 0;
-			std::size_t nBufferLength = connectionBuffer.size();
+			std::size_t nBufferLength = buffer.size();
 			while (nBufferLength >= sizeof(uint32_t))
 			{
 				constexpr std::size_t nHeaderLength = sizeof(uint32_t);
 				uint32_t nDataLength = 0;
-				memcpy(&nDataLength, connectionBuffer.data(), nHeaderLength);
+				memcpy(&nDataLength, buffer.data(), nHeaderLength);
 				nDataLength = ntohl(nDataLength);
 
 				if (nBufferLength < (nHeaderLength + nDataLength))
@@ -69,7 +56,7 @@ namespace net
 					break;
 				}
 
-				const char* pszData = connectionBuffer.data() + nHeaderLength;
+				const char* pszData = buffer.data() + nHeaderLength;
 				std::string strData(pszData, nDataLength);
 
 				std::unique_ptr<CRequest> req = std::make_unique<CRequest>();
@@ -88,30 +75,20 @@ namespace net
 				std::size_t nDone = nHeaderLength + nDataLength;
 				if (nBufferLength > nDone)
 				{
-					memmove(connectionBuffer.data(), connectionBuffer.data() + nDone, nBufferLength - nDone);
-					connectionBuffer.resize(nBufferLength - nDone);
-					nBufferLength = connectionBuffer.size();
+					memmove(buffer.data(), buffer.data() + nDone, nBufferLength - nDone);
+					buffer.resize(nBufferLength - nDone);
+					nBufferLength = buffer.size();
 				}
 				else
 				{
-					connectionBuffer.clear();
+					buffer.clear();
 					break;
 				}
-			}
-			if (connectionBuffer.empty())
-			{
-				connectionBuffers.erase(id);
 			}
 			return nReqCount;
 		}
 
-		void ReleaseConnectionBuffer(_TyConnectionId id)
-		{
-			std::lock_guard<std::mutex> lock(ConnectionBuffersMutex());
-			ConnectionBuffers().erase(id);
-		}
-
-		bool SendRequest(CRequest* pRequest, struct bufferevent* pEvent, std::vector<char>& buffer)
+		bool SendRequest(CRequest* pRequest, struct bufferevent* pEvent)
 		{
 			if (nullptr == pEvent)
 			{
@@ -122,6 +99,13 @@ namespace net
 			{
 				return false;
 			}
+
+			auto ret = CNetPool::InstancePtr()->GetSendBuffer(pEvent);
+			if (!ret.has_value())
+			{
+				return false;
+			}
+			std::vector<char>& buffer = *ret.value();
 
 			std::string data;
 			if (pRequest->Serialize(&data))
