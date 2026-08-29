@@ -123,7 +123,7 @@
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>./include/debug/libevent;./include/debug/protobuf;./include/debug/mysql;/usr/include/python3.12;./runtime/python/include/python3.12;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./include/debug/libevent;./include/debug/protobuf;./include/debug/mysql;./include/debug/sqlite;./include/debug/python;./runtime/python/include/python3.12;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++20</CppLanguageStandard>
       <PreprocessorDefinitions>PROTOBUF_USE_DLLS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -135,7 +135,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>./include/release/libevent;./include/release/protobuf;./include/release/mysql;/usr/include/python3.12;./runtime/python/include/python3.12;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./include/release/libevent;./include/release/protobuf;./include/release/mysql;./include/release/sqlite;./include/release/python;./runtime/python/include/python3.12;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CppLanguageStandard>c++20</CppLanguageStandard>
     </ClCompile>
     <Link>

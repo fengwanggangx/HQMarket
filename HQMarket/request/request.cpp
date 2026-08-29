@@ -1,6 +1,6 @@
 #include "request.pb.h"
 #include "request.h"
-#include "../hqmarket/v1/market.pb.h"
+#include "../quote/v1/market.pb.h"
 #include <atomic>
 #include <utility>
 

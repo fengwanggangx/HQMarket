@@ -14,7 +14,6 @@ namespace net
 	{
 		std::size_t BufferEventReader(struct bufferevent* pEvent, std::vector<char>& buffer);
 		std::size_t RequestFromBuffer(std::vector<std::unique_ptr<CRequest>>& reqs, struct bufferevent* pEvent);
-		void ReleaseConnectionBuffer(_TyConnectionId id);
 		bool SendRequest(CRequest* pRequest, struct bufferevent* pEvent);
 	} // namespace utility
 } // namespace net

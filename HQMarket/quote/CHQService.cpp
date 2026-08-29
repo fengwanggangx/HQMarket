@@ -137,18 +137,16 @@ namespace service
 		}
 
 		template <typename T>
-		bool SetData(CRequest& request, const std::string& type, const T& value, std::uint64_t requestId = 0, std::uint64_t sequence = 0)
+		bool SetData(CRequest& request, const T& value, std::uint64_t requestId = 0, std::uint64_t sequence = 0)
 		{
-			std::string data;
-			if (!value.SerializeToString(&data))
-			{
-				return false;
-			}
+			std::unique_ptr<T> data = std::make_unique<T>(value);
+			std::unique_ptr<CData> requestData = std::make_unique<CData>(T::descriptor()->full_name(), data.get());
+			data.release();
 			request.SetType(CRequest::Type::HQMARKET);
 			request.SetReturnData("request_id", std::to_string(requestId));
 			request.SetReturnData("sequence", std::to_string(sequence));
 			request.SetReturnData("server_time_ms", std::to_string(NowMilliseconds()));
-			request.SetData(std::make_unique<CData>(type, std::move(data)));
+			request.SetData(std::move(requestData));
 			return true;
 		}
 
@@ -160,7 +158,7 @@ namespace service
 			response.SetCmd("error");
 			response.SetReturnData("error_code", std::to_string(code));
 			response.SetReturnData("error_message", message);
-			SetData(response, "error", error, requestId);
+			SetData(response, error, requestId);
 		}
 	} // namespace
 
@@ -262,7 +260,7 @@ namespace service
 
 	void CMarketService::OnClientDisconnected(net::_TyConnectionId id)
 	{
-		net::utility::ReleaseConnectionBuffer(id);
+		net::CNetPool::InstancePtr()->CloseAConnection(id);
 		{
 			std::lock_guard<std::mutex> lock(m_mtx_sessions);
 			m_sessions.erase(id);
@@ -378,7 +376,7 @@ namespace service
 		pResult->set_accepted(true);
 		response.SetCmd("subscription_ack");
 		response.SetReturnData("accepted", "true");
-		SetData(response, "subscription_ack", ack, requestId);
+		SetData(response, ack, requestId);
 		SendRequest(id, response);
 		if (subscribe && (market::Channel::quote == channel))
 		{
@@ -389,7 +387,7 @@ namespace service
 				FillQuote(*quote, &quoteData);
 				CRequest snapshot;
 				snapshot.SetCmd("quote");
-				SetData(snapshot, "quote", quoteData);
+				SetData(snapshot, quoteData);
 				SendRequest(id, snapshot);
 			}
 		}
@@ -458,7 +456,7 @@ namespace service
 			}
 		}
 		response.SetCmd("query_response");
-		SetData(response, "query_response", result, requestId);
+		SetData(response, result, requestId);
 		SendRequest(id, response);
 		return true;
 	}
@@ -480,7 +478,7 @@ namespace service
 		FillQuote(quote, &quoteData);
 		CRequest request;
 		request.SetCmd("quote");
-		SetData(request, "quote", quoteData, 0, nSequence);
+		SetData(request, quoteData, 0, nSequence);
 		market::CSubscription subscription{quote.m_instrument, market::Channel::quote};
 		for (net::_TyConnectionId id : AuthenticatedClients())
 		{
@@ -517,7 +515,7 @@ namespace service
 		}
 		CRequest request;
 		request.SetCmd("depth");
-		SetData(request, "depth", depthData, 0, nSequence);
+		SetData(request, depthData, 0, nSequence);
 		market::CSubscription subscription{depth.m_instrument, market::Channel::depth};
 		for (net::_TyConnectionId id : AuthenticatedClients())
 		{
