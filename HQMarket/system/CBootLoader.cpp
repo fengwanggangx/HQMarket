@@ -27,6 +27,8 @@ bool CBootLoader::Initialize()
 		return true;
 	}
 
+	m_exec = std::filesystem::current_path();
+
 	m_nErrorCode = 0;
 	m_strLastError.clear();
 	net::EnvInitialize();
@@ -44,23 +46,29 @@ bool CBootLoader::Initialize()
 		m_strLastError = "HQMarket token is required in ini/system.ini";
 		return false;
 	}
-
-	std::string strHome = ini::CINIHandler::InstanceRef().GetValue(ini::Config::System, "HQMarket", "home", std::string());
-	if (!strHome.empty())
+	
+	std::string strPyRunTime = ini::CINIHandler::InstanceRef().GetValue(ini::Config::System, "HQMarket", "py_runtime", std::string());
+	if (strPyRunTime.empty())
 	{
-		m_root = std::move(strHome);
+		m_nErrorCode = 3;
+		m_strLastError = "HQMarket py_runtime is required in ini/system.ini";
+		return false;
 	}
-	else
+
+	std::string strPyScripts = ini::CINIHandler::InstanceRef().GetValue(ini::Config::System, "HQMarket", "py_scripts", std::string());
+	if (strPyScripts.empty())
 	{
-		m_root = std::filesystem::current_path();
+		m_nErrorCode = 4;
+		m_strLastError = "HQMarket py_scripts is required in ini/system.ini";
+		return false;
 	}
 
 	m_pPython = std::make_unique<CPythonRuntime>();
-	std::filesystem::path run = m_root / "runtime" / "python";
-	std::filesystem::path script = m_root / "python";
+	std::filesystem::path run = m_exec / strPyRunTime;
+	std::filesystem::path script = m_exec / strPyScripts;
 	if (!m_pPython->Initialize(run, script))
 	{
-		m_nErrorCode = 3;
+		m_nErrorCode = 5;
 		m_strLastError = "Python initialization failed: " + m_pPython->GetLastError();
 		m_pPython.reset();
 		return false;
@@ -122,7 +130,7 @@ void CBootLoader::Finalize()
 
 const std::filesystem::path& CBootLoader::GetRoot() const
 {
-	return m_root;
+	return m_exec;
 }
 
 const std::string& CBootLoader::GetToken() const

@@ -34,7 +34,9 @@ class CBootLoader final
 		int GetErrorCode() const;
 
 	private:
-		std::filesystem::path m_root;
+		std::filesystem::path m_exec;
+		std::filesystem::path m_path_py_runtime;
+		std::filesystem::path m_path_py_scripts;
 		std::string m_strToken;
 		std::string m_strLastError;
 		int m_nErrorCode{ 0 };
