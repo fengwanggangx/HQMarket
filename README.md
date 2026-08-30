@@ -23,13 +23,15 @@ TCP 客户端认证后可通过 `CRequest.cmd` 发送 `auth`、`subscribe`、`un
 
 ## 运行
 
-HQMarket要求随服务部署的 `runtime/python` 和环境变量：
+HQMarket 要求随服务部署 `runtime/python`，并在 `ini/system.ini` 中配置访问令牌：
 
-```bash
-export HQMARKET_HOME=/opt/hqmarket
-export HQMARKET_TOKEN='replace-with-a-random-token'
-./HQMarket
+```ini
+[HQMarket]
+token=replace-with-a-random-token
+home=/opt/hqmarket
 ```
+
+`home` 可留空；程序会依次使用 `HQMARKET_HOME` 环境变量和当前工作目录作为回退。
 
 使用 `deploy/stage-python.sh` 在Linux x64发布目录中创建固定Python 3.12运行时，
 使用 `deploy/package-contract.ps1` 生成协议包。Wind不属于本仓库，本阶段不会修改。

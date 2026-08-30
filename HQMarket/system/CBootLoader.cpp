@@ -2,7 +2,10 @@
 #include "../network/CHttpServer.h"
 #include "../network/CTcpServer.h"
 #include "../python/CPythonRuntime.h"
+#include "../ini/CINIHandler.h"
+
 #include <cstdlib>
+#include <utility>
 
 namespace net
 {
@@ -34,17 +37,24 @@ bool CBootLoader::Initialize()
 		return false;
 	}
 
-	const char* pszToken = std::getenv("HQMARKET_TOKEN");
-	if ((nullptr == pszToken) || ('\0' == *pszToken))
+	m_strToken = ini::CINIHandler::InstanceRef().GetValue(ini::Config::System, "HQMarket", "token", std::string());
+	if (m_strToken.empty())
 	{
 		m_nErrorCode = 2;
-		m_strLastError = "HQMARKET_TOKEN is required";
+		m_strLastError = "HQMarket token is required in ini/system.ini";
 		return false;
 	}
-	m_strToken = pszToken;
 
-	const char* pszHome = std::getenv("HQMARKET_HOME");
-	m_root = ((nullptr != pszHome) && ('\0' != *pszHome)) ? pszHome : std::filesystem::current_path();
+	std::string strHome = ini::CINIHandler::InstanceRef().GetValue(ini::Config::System, "HQMarket", "home", std::string());
+	if (!strHome.empty())
+	{
+		m_root = std::move(strHome);
+	}
+	else
+	{
+		m_root = std::filesystem::current_path();
+	}
+
 	m_pPython = std::make_unique<CPythonRuntime>();
 	if (!m_pPython->Initialize(m_root / "runtime" / "python", m_root / "python"))
 	{

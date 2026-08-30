@@ -34,6 +34,9 @@
     <Filter Include="system">
       <UniqueIdentifier>{D31FF061-2CBA-4A6B-82E4-BAE5F0A3DA2E}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ini">
+      <UniqueIdentifier>{59634C86-2046-4BB9-BA2D-F9B49D2334CB}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="database\CDBEngine.cpp">
@@ -65,6 +68,12 @@
     </ClCompile>
     <ClCompile Include="common\utility.cpp">
       <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="ini\CINIHandler.cpp">
+      <Filter>ini</Filter>
+    </ClCompile>
+    <ClCompile Include="ini\CIniFile.cpp">
+      <Filter>ini</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="quote\CSubscriptionManager.cpp">
@@ -168,6 +177,12 @@
     <ClInclude Include="common\utility.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="ini\CINIHandler.h">
+      <Filter>ini</Filter>
+    </ClInclude>
+    <ClInclude Include="ini\CIniFile.h">
+      <Filter>ini</Filter>
+    </ClInclude>
     <ClInclude Include="quote\CSubscriptionManager.h">
       <Filter>quote</Filter>
     </ClInclude>
@@ -241,6 +256,9 @@
   <ItemGroup>
     <None Include="config\hqmarket.json">
       <Filter>config</Filter>
+    </None>
+    <None Include="ini\system.ini">
+      <Filter>ini</Filter>
     </None>
     <None Include="quote\v1\market.proto">
       <Filter>quote\v1</Filter>
