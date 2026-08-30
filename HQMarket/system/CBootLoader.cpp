@@ -56,7 +56,9 @@ bool CBootLoader::Initialize()
 	}
 
 	m_pPython = std::make_unique<CPythonRuntime>();
-	if (!m_pPython->Initialize(m_root / "runtime" / "python", m_root / "python"))
+	std::filesystem::path run = m_root / "runtime" / "python";
+	std::filesystem::path script = m_root / "python";
+	if (!m_pPython->Initialize(run, script))
 	{
 		m_nErrorCode = 3;
 		m_strLastError = "Python initialization failed: " + m_pPython->GetLastError();
