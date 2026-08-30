@@ -34,10 +34,20 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <RemoteCompileLocalCopyObjectFiles>false</RemoteCompileLocalCopyObjectFiles>
     <CopyAdditionalIncludes>true</CopyAdditionalIncludes>
+    <OutDir>$(RemoteProjectDir)/exec/debug/</OutDir>
+    <RemoteDeployDir>$(RemoteProjectDir)/exec/debug</RemoteDeployDir>
+    <RemoteTargetPath>$(RemoteProjectDir)/exec/debug/$(TargetName)$(TargetExt)</RemoteTargetPath>
+    <RemoteDebuggerCommand>$(RemoteTargetPath)</RemoteDebuggerCommand>
+    <DebuggerWorkingDirectory>$(RemoteProjectDir)/exec/debug</DebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <RemoteCompileLocalCopyObjectFiles>false</RemoteCompileLocalCopyObjectFiles>
     <CopyAdditionalIncludes>true</CopyAdditionalIncludes>
+    <OutDir>$(RemoteProjectDir)/exec/release/</OutDir>
+    <RemoteDeployDir>$(RemoteProjectDir)/exec/release</RemoteDeployDir>
+    <RemoteTargetPath>$(RemoteProjectDir)/exec/release/$(TargetName)$(TargetExt)</RemoteTargetPath>
+    <RemoteDebuggerCommand>$(RemoteTargetPath)</RemoteDebuggerCommand>
+    <DebuggerWorkingDirectory>$(RemoteProjectDir)/exec/release</DebuggerWorkingDirectory>
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="database\CDBEngine.cpp" />
@@ -125,6 +135,22 @@
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DataFilesToCopyRemotely Include="libs\release\**\*" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <RemoteDeploy Include="ini\system.ini">
+      <SourceMachine>$(RemoteTarget)</SourceMachine>
+      <TargetMachine>$(RemoteDebuggingTarget)</TargetMachine>
+      <SourcePath>$(RemoteProjectDir)/ini/system.ini</SourcePath>
+      <TargetPath>$(RemoteDeployDir)/ini/system.ini</TargetPath>
+    </RemoteDeploy>
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <RemoteDeploy Include="ini\system.ini">
+      <SourceMachine>$(RemoteTarget)</SourceMachine>
+      <TargetMachine>$(RemoteDebuggingTarget)</TargetMachine>
+      <SourcePath>$(RemoteProjectDir)/ini/system.ini</SourcePath>
+      <TargetPath>$(RemoteDeployDir)/ini/system.ini</TargetPath>
+    </RemoteDeploy>
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
