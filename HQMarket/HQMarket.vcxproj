@@ -34,20 +34,20 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <RemoteCompileLocalCopyObjectFiles>false</RemoteCompileLocalCopyObjectFiles>
     <CopyAdditionalIncludes>true</CopyAdditionalIncludes>
-    <OutDir>$(RemoteProjectDir)/exec/debug/</OutDir>
+    <OutDir>$(ProjectDir)exec\debug\</OutDir>
     <RemoteDeployDir>$(RemoteProjectDir)/exec/debug</RemoteDeployDir>
     <RemoteTargetPath>$(RemoteProjectDir)/exec/debug/$(TargetName)$(TargetExt)</RemoteTargetPath>
     <RemoteDebuggerCommand>$(RemoteTargetPath)</RemoteDebuggerCommand>
-    <DebuggerWorkingDirectory>$(RemoteProjectDir)/exec/debug</DebuggerWorkingDirectory>
+    <RemoteDebuggerWorkingDirectory>$(RemoteProjectDir)/exec/debug</RemoteDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <RemoteCompileLocalCopyObjectFiles>false</RemoteCompileLocalCopyObjectFiles>
     <CopyAdditionalIncludes>true</CopyAdditionalIncludes>
-    <OutDir>$(RemoteProjectDir)/exec/release/</OutDir>
+    <OutDir>$(ProjectDir)exec\release\</OutDir>
     <RemoteDeployDir>$(RemoteProjectDir)/exec/release</RemoteDeployDir>
     <RemoteTargetPath>$(RemoteProjectDir)/exec/release/$(TargetName)$(TargetExt)</RemoteTargetPath>
     <RemoteDebuggerCommand>$(RemoteTargetPath)</RemoteDebuggerCommand>
-    <DebuggerWorkingDirectory>$(RemoteProjectDir)/exec/release</DebuggerWorkingDirectory>
+    <RemoteDebuggerWorkingDirectory>$(RemoteProjectDir)/exec/release</RemoteDebuggerWorkingDirectory>
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="database\CDBEngine.cpp" />
