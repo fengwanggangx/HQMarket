@@ -149,7 +149,7 @@ namespace provider
 					continue;
 				}
 				market::CBar bar;
-				bar.m_instrument = security;
+				bar.m_security = security;
 				bar.m_channel = channel;
 				PyObject* date = PyDict_GetItemString(row, "date");
 				bar.m_nBeginTime = DateMilliseconds(nullptr != date ? PyUnicode_AsUTF8(date) : nullptr);

@@ -108,7 +108,7 @@ namespace
 		for (const market::CBar& bar : bars)
 		{
 			std::string sql = "INSERT INTO bar(symbol,exchange,channel,begin_time,open,high,low,close,volume,turnover,price_scale,adjustment,source) VALUES(" +
-				Quote(bar.m_instrument.m_strCode) + "," + std::to_string(static_cast<int>(bar.m_instrument.m_market)) + "," +
+				Quote(bar.m_security.m_strCode) + "," + std::to_string(static_cast<int>(bar.m_security.m_market)) + "," +
 				std::to_string(static_cast<int>(bar.m_channel)) + "," + std::to_string(bar.m_nBeginTime) + "," +
 				std::to_string(bar.m_nOpenPrice) + "," + std::to_string(bar.m_nHighPrice) + "," +
 				std::to_string(bar.m_nLowPrice) + "," + std::to_string(bar.m_nClosePrice) + "," +
@@ -155,7 +155,7 @@ namespace
 
 			result.emplace_back();
 			market::CBar& bar = result.back();
-			bar.m_instrument = instrument;
+			bar.m_security = security;
 			bar.m_channel = channel;
 			if (!utility::to_number(row[0], bar.m_nBeginTime) || !utility::to_number(row[1], bar.m_nOpenPrice) ||
 				!utility::to_number(row[2], bar.m_nHighPrice) || !utility::to_number(row[3], bar.m_nLowPrice) ||

@@ -3,7 +3,7 @@ namespace market
 {
 	std::string CSubscriptionManager::MakeKey(const CSubscription& s)
 	{
-		return s.m_instrument.String() + ":" + std::to_string(static_cast<int>(s.m_channel));
+		return s.m_security.String() + ":" + std::to_string(static_cast<int>(s.m_channel));
 	}
 	std::vector<CSubscription> CSubscriptionManager::Subscribe(net::_TyConnectionId nClientId,
 															   const std::vector<CSubscription>& subscriptions)

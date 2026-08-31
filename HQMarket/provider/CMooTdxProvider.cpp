@@ -55,7 +55,7 @@ namespace provider
 	}
 	std::string CMooTdxProvider::MakeKey(const market::CSubscription& s)
 	{
-		return s.m_instrument.String() + ":" + std::to_string(static_cast<int>(s.m_channel));
+		return s.m_security.String() + ":" + std::to_string(static_cast<int>(s.m_channel));
 	}
 	bool CMooTdxProvider::Initialize()
 	{
@@ -147,7 +147,7 @@ namespace provider
 				{
 					if ((market::Channel::quote == value.m_channel) || (market::Channel::depth == value.m_channel))
 					{
-						unique.insert_or_assign(value.m_instrument.String(), value.m_instrument);
+						unique.insert_or_assign(value.m_security.String(), value.m_security);
 					}
 				}
 				for (const auto& [key, security] : unique)
@@ -197,7 +197,7 @@ namespace provider
 				}
 				std::int64_t now = NowMs();
 				market::CQuote quote;
-				quote.m_instrument = securities[static_cast<std::size_t>(i)];
+				quote.m_security = securities[static_cast<std::size_t>(i)];
 				quote.m_nReceiveTime = now;
 				quote.m_nExchangeTime = now;
 				quote.m_nLastPrice = Fixed(row, "price");
@@ -209,7 +209,7 @@ namespace provider
 				quote.m_nTurnover = Fixed(row, "amount", 2);
 				quote.m_strSource = "mootdx";
 				market::CDepth depth;
-				depth.m_instrument = quote.m_instrument;
+				depth.m_security = quote.m_security;
 				depth.m_nReceiveTime = now;
 				depth.m_nExchangeTime = now;
 				depth.m_strSource = "mootdx";

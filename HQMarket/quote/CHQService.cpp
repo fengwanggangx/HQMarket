@@ -103,8 +103,8 @@ namespace service
 
 		void FillQuote(const market::CQuote& quote, wire::QuoteData* value)
 		{
-			value->mutable_instrument()->set_symbol(quote.m_instrument.m_strCode);
-			value->mutable_instrument()->set_exchange(ToWire(quote.m_instrument.m_market));
+			value->mutable_instrument()->set_symbol(quote.m_security.m_strCode);
+			value->mutable_instrument()->set_exchange(ToWire(quote.m_security.m_market));
 			value->set_exchange_time_ms(quote.m_nExchangeTime);
 			value->set_receive_time_ms(quote.m_nReceiveTime);
 			value->set_last_price(quote.m_nLastPrice);
@@ -121,8 +121,8 @@ namespace service
 
 		void FillBar(const market::CBar& bar, wire::BarData* value)
 		{
-			value->mutable_instrument()->set_symbol(bar.m_instrument.m_strCode);
-			value->mutable_instrument()->set_exchange(ToWire(bar.m_instrument.m_market));
+			value->mutable_instrument()->set_symbol(bar.m_security.m_strCode);
+			value->mutable_instrument()->set_exchange(ToWire(bar.m_security.m_market));
 			value->set_channel(static_cast<wire::Channel>(static_cast<int>(bar.m_channel)));
 			value->set_begin_time_ms(bar.m_nBeginTime);
 			value->set_open_price(bar.m_nOpenPrice);
@@ -189,7 +189,7 @@ namespace service
 		m_pTcpServer->RegisterHandler(std::bind_front(&CMarketService::OnNetEvent, this));
 		m_mootdx.SetQuoteHandler([this](market::CQuote&& quote)
 			{
-				market::CSecurity instrument = quote.m_instrument;
+				market::CSecurity instrument = quote.m_security;
 				std::uint64_t sequence = m_cache.Update(std::move(quote));
 				std::optional<market::CQuote> cached = m_cache.GetQuote(instrument);
 				if (cached.has_value())
@@ -460,7 +460,7 @@ namespace service
 		CRequest request;
 		request.SetCmd("quote");
 		SetData(request, quoteData, 0, nSequence);
-		market::CSubscription subscription{ quote.m_instrument, market::Channel::quote };
+		market::CSubscription subscription{ quote.m_security, market::Channel::quote };
 		for (net::_TyConnectionId id : AuthenticatedClients())
 		{
 			if (m_subscriptions.IsSubscribed(id, subscription))
@@ -474,8 +474,8 @@ namespace service
 	{
 		wire::DepthData depthData;
 		wire::DepthData* pValue = &depthData;
-		pValue->mutable_instrument()->set_symbol(depth.m_instrument.m_strCode);
-		pValue->mutable_instrument()->set_exchange(ToWire(depth.m_instrument.m_market));
+		pValue->mutable_instrument()->set_symbol(depth.m_security.m_strCode);
+		pValue->mutable_instrument()->set_exchange(ToWire(depth.m_security.m_market));
 		pValue->set_exchange_time_ms(depth.m_nExchangeTime);
 		pValue->set_receive_time_ms(depth.m_nReceiveTime);
 		pValue->set_source(depth.m_strSource);
@@ -497,7 +497,7 @@ namespace service
 		CRequest request;
 		request.SetCmd("depth");
 		SetData(request, depthData, 0, nSequence);
-		market::CSubscription subscription{ depth.m_instrument, market::Channel::depth };
+		market::CSubscription subscription{ depth.m_security, market::Channel::depth };
 		for (net::_TyConnectionId id : AuthenticatedClients())
 		{
 			if (m_subscriptions.IsSubscribed(id, subscription))
@@ -559,7 +559,7 @@ namespace service
 			return "{}";
 		}
 		std::ostringstream out;
-		out << "{\"instrument\":\"" << quote->m_instrument.String() << "\",\"exchange_time_ms\":" << quote->m_nExchangeTime
+		out << "{\"instrument\":\"" << quote->m_security.String() << "\",\"exchange_time_ms\":" << quote->m_nExchangeTime
 			<< ",\"receive_time_ms\":" << quote->m_nReceiveTime << ",\"last_price\":" << quote->m_nLastPrice
 			<< ",\"price_scale\":" << quote->m_nPriceScale << ",\"volume\":" << quote->m_nVolume
 			<< ",\"turnover\":" << quote->m_nTurnover << ",\"source\":\"" << quote->m_strSource

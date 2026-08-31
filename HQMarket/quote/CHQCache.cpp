@@ -4,14 +4,14 @@
 std::uint64_t CHQCache::Update(const market::CQuote& quote)
 {
 	std::unique_lock<std::shared_mutex> lck(m_mtx_quotes);
-	m_quotes.insert_or_assign(quote.m_instrument, quote);
+	m_quotes.insert_or_assign(quote.m_security, quote);
 	return ++m_nQuoteSequence;
 }
 
 std::uint64_t CHQCache::Update(market::CQuote&& quote)
 {
 	std::unique_lock<std::shared_mutex> lck(m_mtx_quotes);
-	m_quotes.insert_or_assign(quote.m_instrument, std::move(quote));
+	m_quotes.insert_or_assign(quote.m_security, std::move(quote));
 	return ++m_nQuoteSequence;
 }
 

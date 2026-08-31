@@ -65,7 +65,7 @@ namespace market
 	// 单个标的的最新行情快照。
 	struct CQuote
 	{
-		CSecurity m_instrument;                  // 标的信息。
+		CSecurity m_security;                  // 标的信息。
 		std::int64_t m_nExchangeTime{ 0 };     // 交易所生成行情的毫秒时间戳。
 		std::int64_t m_nReceiveTime{ 0 };      // 服务接收行情的毫秒时间戳。
 		std::int64_t m_nLastPrice{ 0 };        // 最新成交价。
@@ -83,7 +83,7 @@ namespace market
 	// 单个标的的买卖盘口深度。
 	struct CDepth
 	{
-		CSecurity m_instrument;              // 标的信息。
+		CSecurity m_security;              // 标的信息。
 		std::int64_t m_nExchangeTime{ 0 }; // 交易所生成行情的毫秒时间戳。
 		std::int64_t m_nReceiveTime{ 0 };  // 服务接收行情的毫秒时间戳。
 		std::vector<CPriceLevel> m_bids;   // 买盘档位，通常从买一开始排列。
@@ -95,7 +95,7 @@ namespace market
 	// 一个时间周期内的K线数据。
 	struct CBar
 	{
-		CSecurity m_instrument;                   // 标的信息。
+		CSecurity m_security;					 // 标的信息。
 		Channel m_channel{ Channel::unknown };   // K线周期，例如一分钟或一天。
 		std::int64_t m_nBeginTime{ 0 };          // K线周期开始的毫秒时间戳。
 		std::int64_t m_nOpenPrice{ 0 };          // 开盘价。
@@ -112,7 +112,7 @@ namespace market
 	// 客户端对某个标的、某类行情数据的订阅项。
 	struct CSubscription
 	{
-		CSecurity m_instrument;                 // 订阅的标的。
+		CSecurity m_security;                 // 订阅的标的。
 		Channel m_channel{ Channel::unknown }; // 订阅的数据通道。
 	};
 
