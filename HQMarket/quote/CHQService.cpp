@@ -164,30 +164,15 @@ namespace service
 
 	CMarketService::CMarketService(net::CTcpServer* pTcpServer, CPythonRuntime* pPythonRuntime) : m_pTcpServer(pTcpServer), m_pPythonRuntime(pPythonRuntime)
 	{
-		m_handler.emplace("auth", [this](net::_TyConnectionId id, CRequest& request)
-			{
-				return HandleAuth(id, request);
-			});
-		m_handler.emplace("heartbeat", [this](net::_TyConnectionId id, CRequest& request)
-			{
-				return HandleHeartbeat(id, request);
-			});
-		m_handler.emplace("query_quote", [this](net::_TyConnectionId id, CRequest& request)
-			{
-				return HandleQuery(id, request);
-			});
-		m_handler.emplace("query_bars", [this](net::_TyConnectionId id, CRequest& request)
-			{
-				return HandleQuery(id, request);
-			});
-		m_handler.emplace("subscribe", [this](net::_TyConnectionId id, CRequest& request)
-			{
-				return HandleSubscription(id, request);
-			});
-		m_handler.emplace("unsubscribe", [this](net::_TyConnectionId id, CRequest& request)
-			{
-				return HandleSubscription(id, request);
-			});
+		m_handler =
+		{
+			{ "auth", std::bind_front(&CMarketService::HandleAuth, this) },
+			{ "heartbeat", std::bind_front(&CMarketService::HandleHeartbeat, this) },
+			{ "query_quote", std::bind_front(&CMarketService::HandleQuery, this) },
+			{ "query_bars", std::bind_front(&CMarketService::HandleQuery, this) },
+			{ "subscribe", std::bind_front(&CMarketService::HandleSubscription, this) },
+			{ "unsubscribe", std::bind_front(&CMarketService::HandleSubscription, this) }
+		};
 	}
 
 	bool CMarketService::Initialize(const std::string& strToken, const std::filesystem::path& root)
@@ -201,10 +186,7 @@ namespace service
 			return false;
 		}
 		m_strToken = strToken;
-		m_pTcpServer->RegisterHandler([this](const net::CNetEvent& netEvent)
-			{
-				return OnNetEvent(netEvent);
-			});
+		m_pTcpServer->RegisterHandler(std::bind_front(&CMarketService::OnNetEvent, this));
 		m_mootdx.SetQuoteHandler([this](market::CQuote&& quote)
 			{
 				market::CInstrument instrument = quote.m_instrument;
@@ -354,8 +336,7 @@ namespace service
 			return false;
 		}
 		std::vector<market::CSubscription> requested{subscription};
-		std::vector<market::CSubscription> changed =
-			subscribe ? m_subscriptions.Subscribe(id, requested) : m_subscriptions.Unsubscribe(id, requested);
+		std::vector<market::CSubscription> changed = subscribe ? m_subscriptions.Subscribe(id, requested) : m_subscriptions.Unsubscribe(id, requested);
 		if (!changed.empty())
 		{
 			if (subscribe)
