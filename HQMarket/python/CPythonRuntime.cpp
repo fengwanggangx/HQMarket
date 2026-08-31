@@ -54,8 +54,7 @@ bool CPythonRuntime::Initialize(const std::filesystem::path& runtimeHome, const 
 	}
 	if (0 == PyStatus_Exception(status))
 	{
-		status =
-			PyWideStringList_Append(&config.module_search_paths, (runtimeHome / "site-packages").wstring().c_str());
+		status = PyWideStringList_Append(&config.module_search_paths, (runtimeHome / "site-packages").wstring().c_str());
 	}
 	if (0 == PyStatus_Exception(status))
 	{

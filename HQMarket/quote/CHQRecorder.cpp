@@ -54,6 +54,15 @@ namespace
 		m_db = pDBEngine->GetDBPtr(db::em_database::sqlite);
 		if (nullptr == m_db)
 		{
+			db::CConnectParam param("", 0, "", "", path.string(), "");
+			if (0 != pDBEngine->Initialize(db::em_database::sqlite, param))
+			{
+				return false;
+			}
+			m_db = pDBEngine->GetDBPtr(db::em_database::sqlite);
+		}
+		if (nullptr == m_db)
+		{
 			return false;
 		}
 
