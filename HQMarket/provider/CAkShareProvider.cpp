@@ -88,21 +88,21 @@ namespace provider
 				{
 					continue;
 				}
-				market::CInstrument instrument;
-				instrument.m_strSymbol = symbol;
-				if (instrument.m_strSymbol.starts_with('6'))
+				market::CSecurity security;
+				security.m_strCode = symbol;
+				if (security.m_strCode.starts_with('6'))
 				{
-					instrument.m_exchange = market::Exchange::sse;
+					security.m_market = market::Exchange::sse;
 				}
-				else if (instrument.m_strSymbol.starts_with('0') || instrument.m_strSymbol.starts_with('3'))
+				else if (security.m_strCode.starts_with('0') || security.m_strCode.starts_with('3'))
 				{
-					instrument.m_exchange = market::Exchange::szse;
+					security.m_market = market::Exchange::szse;
 				}
 				else
 				{
-					instrument.m_exchange = market::Exchange::bse;
+					security.m_market = market::Exchange::bse;
 				}
-				m_instruments.emplace_back(std::move(instrument));
+				m_instruments.emplace_back(std::move(security));
 			}
 		}
 		if (nullptr == values)
@@ -124,7 +124,7 @@ namespace provider
 	{
 		return false;
 	}
-	std::vector<market::CBar> CAkShareProvider::QueryBars(const market::CInstrument& instrument, market::Channel channel,
+	std::vector<market::CBar> CAkShareProvider::QueryBars(const market::CSecurity& security, market::Channel channel,
 														  std::int64_t nBeginTime, std::int64_t nEndTime)
 	{
 		std::vector<market::CBar> bars;
@@ -137,7 +137,7 @@ namespace provider
 		std::string end = DateString(nEndTime);
 		PyGILState_STATE gil = PyGILState_Ensure();
 		PyObject* result = PyObject_CallMethod(static_cast<PyObject*>(m_pProvider), "daily_bars", "ssss",
-											   instrument.m_strSymbol.c_str(), begin.c_str(), end.c_str(), "");
+											   security.m_strCode.c_str(), begin.c_str(), end.c_str(), "");
 		bool bOk = (nullptr != result) && (0 != PyList_Check(result));
 		if (bOk)
 		{
@@ -149,7 +149,7 @@ namespace provider
 					continue;
 				}
 				market::CBar bar;
-				bar.m_instrument = instrument;
+				bar.m_instrument = security;
 				bar.m_channel = channel;
 				PyObject* date = PyDict_GetItemString(row, "date");
 				bar.m_nBeginTime = DateMilliseconds(nullptr != date ? PyUnicode_AsUTF8(date) : nullptr);
@@ -183,7 +183,7 @@ namespace provider
 	void CAkShareProvider::SetDepthHandler(_TyDepthHandler)
 	{
 	}
-	std::vector<market::CInstrument> CAkShareProvider::QueryInstruments() const
+	std::vector<market::CSecurity> CAkShareProvider::QueryInstruments() const
 	{
 		std::lock_guard<std::mutex> lck(m_mtx_state);
 		return m_instruments;

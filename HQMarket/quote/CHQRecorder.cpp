@@ -108,7 +108,7 @@ namespace
 		for (const market::CBar& bar : bars)
 		{
 			std::string sql = "INSERT INTO bar(symbol,exchange,channel,begin_time,open,high,low,close,volume,turnover,price_scale,adjustment,source) VALUES(" +
-				Quote(bar.m_instrument.m_strSymbol) + "," + std::to_string(static_cast<int>(bar.m_instrument.m_exchange)) + "," +
+				Quote(bar.m_instrument.m_strCode) + "," + std::to_string(static_cast<int>(bar.m_instrument.m_market)) + "," +
 				std::to_string(static_cast<int>(bar.m_channel)) + "," + std::to_string(bar.m_nBeginTime) + "," +
 				std::to_string(bar.m_nOpenPrice) + "," + std::to_string(bar.m_nHighPrice) + "," +
 				std::to_string(bar.m_nLowPrice) + "," + std::to_string(bar.m_nClosePrice) + "," +
@@ -130,10 +130,10 @@ namespace
 		return false;
 	}
 
-	std::vector<market::CBar> CHQRecorder::QueryBars(const market::CInstrument& instrument, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime)
+	std::vector<market::CBar> CHQRecorder::QueryBars(const market::CSecurity& security, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime)
 	{
 		std::string sql = "SELECT begin_time,open,high,low,close,volume,turnover,price_scale,adjustment,source FROM bar WHERE symbol=" +
-			Quote(instrument.m_strSymbol) + " AND exchange=" + std::to_string(static_cast<int>(instrument.m_exchange)) +
+			Quote(security.m_strCode) + " AND exchange=" + std::to_string(static_cast<int>(security.m_market)) +
 			" AND channel=" + std::to_string(static_cast<int>(channel)) + " AND begin_time BETWEEN " +
 			std::to_string(nBeginTime) + " AND " + std::to_string(nEndTime) + " ORDER BY begin_time";
 

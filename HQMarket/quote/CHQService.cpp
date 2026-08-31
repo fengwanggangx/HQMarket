@@ -27,38 +27,38 @@ namespace service
 			return static_cast<wire::Exchange>(static_cast<int>(value));
 		}
 
-		market::CInstrument ParseInstrument(const std::string& value)
+		market::CSecurity ParseInstrument(const std::string& value)
 		{
-			market::CInstrument result;
+			market::CSecurity result;
 			std::size_t dot = value.rfind('.');
 			if (std::string::npos == dot)
 			{
 				return result;
 			}
-			result.m_strSymbol = value.substr(0, dot);
+			result.m_strCode = value.substr(0, dot);
 			std::string exchange = value.substr(dot + 1);
 			if ("SSE" == exchange)
 			{
-				result.m_exchange = market::Exchange::sse;
+				result.m_market = market::Exchange::sse;
 			}
 			else if ("SZSE" == exchange)
 			{
-				result.m_exchange = market::Exchange::szse;
+				result.m_market = market::Exchange::szse;
 			}
 			else if ("BSE" == exchange)
 			{
-				result.m_exchange = market::Exchange::bse;
+				result.m_market = market::Exchange::bse;
 			}
 			else if ("HKEX" == exchange)
 			{
-				result.m_exchange = market::Exchange::hkex;
+				result.m_market = market::Exchange::hkex;
 			}
 			return result;
 		}
 
-		bool IsValidInstrument(const market::CInstrument& instrument)
+		bool IsValidInstrument(const market::CSecurity& security)
 		{
-			return !instrument.m_strSymbol.empty() && (market::Exchange::unknown != instrument.m_exchange);
+			return security.IsValid();
 		}
 
 		bool IsRealtimeChannel(market::Channel channel)
@@ -103,8 +103,8 @@ namespace service
 
 		void FillQuote(const market::CQuote& quote, wire::QuoteData* value)
 		{
-			value->mutable_instrument()->set_symbol(quote.m_instrument.m_strSymbol);
-			value->mutable_instrument()->set_exchange(ToWire(quote.m_instrument.m_exchange));
+			value->mutable_instrument()->set_symbol(quote.m_instrument.m_strCode);
+			value->mutable_instrument()->set_exchange(ToWire(quote.m_instrument.m_market));
 			value->set_exchange_time_ms(quote.m_nExchangeTime);
 			value->set_receive_time_ms(quote.m_nReceiveTime);
 			value->set_last_price(quote.m_nLastPrice);
@@ -121,8 +121,8 @@ namespace service
 
 		void FillBar(const market::CBar& bar, wire::BarData* value)
 		{
-			value->mutable_instrument()->set_symbol(bar.m_instrument.m_strSymbol);
-			value->mutable_instrument()->set_exchange(ToWire(bar.m_instrument.m_exchange));
+			value->mutable_instrument()->set_symbol(bar.m_instrument.m_strCode);
+			value->mutable_instrument()->set_exchange(ToWire(bar.m_instrument.m_market));
 			value->set_channel(static_cast<wire::Channel>(static_cast<int>(bar.m_channel)));
 			value->set_begin_time_ms(bar.m_nBeginTime);
 			value->set_open_price(bar.m_nOpenPrice);
@@ -189,7 +189,7 @@ namespace service
 		m_pTcpServer->RegisterHandler(std::bind_front(&CMarketService::OnNetEvent, this));
 		m_mootdx.SetQuoteHandler([this](market::CQuote&& quote)
 			{
-				market::CInstrument instrument = quote.m_instrument;
+				market::CSecurity instrument = quote.m_instrument;
 				std::uint64_t sequence = m_cache.Update(std::move(quote));
 				std::optional<market::CQuote> cached = m_cache.GetQuote(instrument);
 				if (cached.has_value())
@@ -325,7 +325,7 @@ namespace service
 		CRequest response;
 		std::uint64_t requestId = request.GetId();
 		bool bSubscribe = "subscribe" == request.GetCmd();
-		market::CInstrument instrument = ParseInstrument(request.GetExtraData("instrument"));
+		market::CSecurity instrument = ParseInstrument(request.GetExtraData("instrument"));
 		market::Channel channel = ParseChannel(request.GetExtraData("channel"));
 		market::CSubscription subscription{ instrument, channel };
 		bool bAccepted = IsValidInstrument(instrument) && IsRealtimeChannel(channel);
@@ -351,8 +351,8 @@ namespace service
 
 		wire::SubscriptionAck ack;
 		wire::SubscriptionResult* pResult = ack.add_results();
-		pResult->mutable_instrument()->set_symbol(instrument.m_strSymbol);
-		pResult->mutable_instrument()->set_exchange(ToWire(instrument.m_exchange));
+		pResult->mutable_instrument()->set_symbol(instrument.m_strCode);
+		pResult->mutable_instrument()->set_exchange(ToWire(instrument.m_market));
 		pResult->set_channel(static_cast<wire::Channel>(static_cast<int>(channel)));
 		pResult->set_accepted(true);
 		response.SetCmd("subscription_ack");
@@ -379,7 +379,7 @@ namespace service
 	{
 		CRequest response;
 		std::uint64_t requestId = requestData.GetId();
-		market::CInstrument instrument = ParseInstrument(requestData.GetExtraData("instrument"));
+		market::CSecurity instrument = ParseInstrument(requestData.GetExtraData("instrument"));
 		market::Channel channel = "query_quote" == requestData.GetCmd()
 			? market::Channel::quote : ParseChannel(requestData.GetExtraData("channel"));
 		if (!IsValidInstrument(instrument) || ((market::Channel::quote != channel) &&
@@ -391,8 +391,8 @@ namespace service
 		}
 		wire::QueryResponse result;
 		wire::QueryResponse* pResult = &result;
-		pResult->mutable_instrument()->set_symbol(instrument.m_strSymbol);
-		pResult->mutable_instrument()->set_exchange(ToWire(instrument.m_exchange));
+		pResult->mutable_instrument()->set_symbol(instrument.m_strCode);
+		pResult->mutable_instrument()->set_exchange(ToWire(instrument.m_market));
 		pResult->set_channel(static_cast<wire::Channel>(static_cast<int>(channel)));
 		if (market::Channel::quote == channel)
 		{
@@ -474,8 +474,8 @@ namespace service
 	{
 		wire::DepthData depthData;
 		wire::DepthData* pValue = &depthData;
-		pValue->mutable_instrument()->set_symbol(depth.m_instrument.m_strSymbol);
-		pValue->mutable_instrument()->set_exchange(ToWire(depth.m_instrument.m_exchange));
+		pValue->mutable_instrument()->set_symbol(depth.m_instrument.m_strCode);
+		pValue->mutable_instrument()->set_exchange(ToWire(depth.m_instrument.m_market));
 		pValue->set_exchange_time_ms(depth.m_nExchangeTime);
 		pValue->set_receive_time_ms(depth.m_nReceiveTime);
 		pValue->set_source(depth.m_strSource);
@@ -559,7 +559,7 @@ namespace service
 			return "{}";
 		}
 		std::ostringstream out;
-		out << "{\"instrument\":\"" << quote->m_instrument.Key() << "\",\"exchange_time_ms\":" << quote->m_nExchangeTime
+		out << "{\"instrument\":\"" << quote->m_instrument.String() << "\",\"exchange_time_ms\":" << quote->m_nExchangeTime
 			<< ",\"receive_time_ms\":" << quote->m_nReceiveTime << ",\"last_price\":" << quote->m_nLastPrice
 			<< ",\"price_scale\":" << quote->m_nPriceScale << ",\"volume\":" << quote->m_nVolume
 			<< ",\"turnover\":" << quote->m_nTurnover << ",\"source\":\"" << quote->m_strSource
@@ -569,18 +569,18 @@ namespace service
 
 	std::string CMarketService::InstrumentsJson() const
 	{
-		std::vector<market::CInstrument> values = m_akshare.QueryInstruments();
+		std::vector<market::CSecurity> values = m_akshare.QueryInstruments();
 		std::ostringstream out;
 		out << '[';
 		bool bFirst = true;
-		for (const market::CInstrument& instrument : values)
+		for (const market::CSecurity& instrument : values)
 		{
 			if (!bFirst)
 			{
 				out << ',';
 			}
 			bFirst = false;
-			out << "{\"instrument\":\"" << instrument.Key() << "\"}";
+			out << "{\"instrument\":\"" << instrument.String() << "\"}";
 		}
 		out << ']';
 		return out.str();
@@ -589,7 +589,7 @@ namespace service
 	std::string CMarketService::BarsJson(const std::string& strInstrument, market::Channel channel,
 									 std::int64_t nBeginTime, std::int64_t nEndTime)
 	{
-		market::CInstrument instrument = ParseInstrument(strInstrument);
+		market::CSecurity instrument = ParseInstrument(strInstrument);
 		std::vector<market::CBar> values = m_recorder.QueryBars(instrument, channel, nBeginTime, nEndTime);
 		if (values.empty())
 		{

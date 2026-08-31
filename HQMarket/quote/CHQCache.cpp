@@ -15,10 +15,10 @@ std::uint64_t CHQCache::Update(market::CQuote&& quote)
 	return ++m_nQuoteSequence;
 }
 
-std::optional<market::CQuote> CHQCache::GetQuote(const market::CInstrument& instrument) const
+std::optional<market::CQuote> CHQCache::GetQuote(const market::CSecurity& security) const
 {
 	std::shared_lock<std::shared_mutex> lck(m_mtx_quotes);
-	std::unordered_map<market::CInstrument, market::CQuote, market::CInstrumentHash>::const_iterator mIter = m_quotes.find(instrument);
+	std::unordered_map<market::CSecurity, market::CQuote, market::CSecurityHash>::const_iterator mIter = m_quotes.find(security);
 	return m_quotes.end() == mIter ? std::nullopt : std::optional<market::CQuote>(mIter->second);
 }
 

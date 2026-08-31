@@ -55,7 +55,7 @@ namespace provider
 	}
 	std::string CMooTdxProvider::MakeKey(const market::CSubscription& s)
 	{
-		return s.m_instrument.Key() + ":" + std::to_string(static_cast<int>(s.m_channel));
+		return s.m_instrument.String() + ":" + std::to_string(static_cast<int>(s.m_channel));
 	}
 	bool CMooTdxProvider::Initialize()
 	{
@@ -113,7 +113,7 @@ namespace provider
 		}
 		return true;
 	}
-	std::vector<market::CBar> CMooTdxProvider::QueryBars(const market::CInstrument&, market::Channel, std::int64_t,
+	std::vector<market::CBar> CMooTdxProvider::QueryBars(const market::CSecurity&, market::Channel, std::int64_t,
 														 std::int64_t)
 	{
 		return {};
@@ -139,28 +139,28 @@ namespace provider
 		int waits[] = { 1, 2, 5, 10, 30 };
 		while (m_bRunning)
 		{
-			std::vector<market::CInstrument> instruments;
+			std::vector<market::CSecurity> securities;
 			{
 				std::lock_guard<std::mutex> lck(m_mtx_state);
-				std::unordered_map<std::string, market::CInstrument> unique;
+				std::unordered_map<std::string, market::CSecurity> unique;
 				for (const auto& [key, value] : m_subscriptions)
 				{
 					if ((market::Channel::quote == value.m_channel) || (market::Channel::depth == value.m_channel))
 					{
-						unique.insert_or_assign(value.m_instrument.Key(), value.m_instrument);
+						unique.insert_or_assign(value.m_instrument.String(), value.m_instrument);
 					}
 				}
-				for (const auto& [key, instrument] : unique)
+				for (const auto& [key, security] : unique)
 				{
-					instruments.push_back(instrument);
+					securities.push_back(security);
 				}
 			}
-			if (instruments.empty())
+			if (securities.empty())
 			{
 				std::this_thread::sleep_for(std::chrono::milliseconds(200));
 				continue;
 			}
-			if (Poll(instruments))
+			if (Poll(securities))
 			{
 				nFailures = 0;
 				std::this_thread::sleep_for(std::chrono::milliseconds(800));
@@ -173,14 +173,14 @@ namespace provider
 			}
 		}
 	}
-	bool CMooTdxProvider::Poll(const std::vector<market::CInstrument>& instruments)
+	bool CMooTdxProvider::Poll(const std::vector<market::CSecurity>& securities)
 	{
 		PyGILState_STATE gil = PyGILState_Ensure();
-		PyObject* list = PyList_New(static_cast<Py_ssize_t>(instruments.size()));
-		for (std::size_t i = 0; i < instruments.size(); ++i)
+		PyObject* list = PyList_New(static_cast<Py_ssize_t>(securities.size()));
+		for (std::size_t i = 0; i < securities.size(); ++i)
 		{
-			PyObject* item = Py_BuildValue("{s:s,s:s}", "symbol", instruments[i].m_strSymbol.c_str(), "exchange",
-										   ExchangeName(instruments[i].m_exchange));
+			PyObject* item = Py_BuildValue("{s:s,s:s}", "symbol", securities[i].m_strCode.c_str(), "exchange",
+										   ExchangeName(securities[i].m_market));
 			PyList_SET_ITEM(list, static_cast<Py_ssize_t>(i), item);
 		}
 		PyObject* result = PyObject_CallMethod(static_cast<PyObject*>(m_pProvider), "quotes", "O", list);
@@ -191,13 +191,13 @@ namespace provider
 			for (Py_ssize_t i = 0; i < PyList_Size(result); ++i)
 			{
 				PyObject* row = PyList_GetItem(result, i);
-				if ((0 == PyDict_Check(row)) || (instruments.size() <= static_cast<std::size_t>(i)))
+				if ((0 == PyDict_Check(row)) || (securities.size() <= static_cast<std::size_t>(i)))
 				{
 					continue;
 				}
 				std::int64_t now = NowMs();
 				market::CQuote quote;
-				quote.m_instrument = instruments[static_cast<std::size_t>(i)];
+				quote.m_instrument = securities[static_cast<std::size_t>(i)];
 				quote.m_nReceiveTime = now;
 				quote.m_nExchangeTime = now;
 				quote.m_nLastPrice = Fixed(row, "price");

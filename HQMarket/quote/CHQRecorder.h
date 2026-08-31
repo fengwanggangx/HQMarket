@@ -14,7 +14,7 @@ public:
 	bool Open(const std::filesystem::path& path);
 	void Close();
 	bool UpsertBars(const std::vector<market::CBar>& bars);
-	std::vector<market::CBar> QueryBars(const market::CInstrument& instrument, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime);
+	std::vector<market::CBar> QueryBars(const market::CSecurity& security, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime);
 	bool IsOpen() const;
 
 private:

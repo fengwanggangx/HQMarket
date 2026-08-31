@@ -36,14 +36,23 @@ namespace market
 		market_status // 市场开盘、休市或收盘等状态。
 	};
 
-	// 证券、期货或其他可交易标的的唯一身份。
-	struct CInstrument
+	struct CSecurity
 	{
-		std::string m_strSymbol;                  // 标的代码，例如600519。
-		Exchange m_exchange{ Exchange::unknown }; // 标的所属交易所。
-		std::string Key() const;                  // 返回“代码.交易所”形式的全局标识。
-		bool operator==(const CInstrument& other) const;
+		std::string m_strCode;
+		Exchange m_market{ Exchange::unknown };
+
+		CSecurity() = default;
+		CSecurity(const std::string& strCode, market::Exchange mk);
+		CSecurity(const CSecurity& arg);
+		CSecurity& operator=(const CSecurity& arg);
+		bool operator==(const CSecurity& arg) const;
+
+		bool IsValid() const;
+		std::string String() const;
 	};
+
+	std::string GetMarketString(Exchange mk);
+	std::string FmtSecurityString(const std::string& strCode, Exchange mk);
 
 	// 盘口中的一个价格档位；价格采用定点整数表示。
 	struct CPriceLevel
@@ -56,7 +65,7 @@ namespace market
 	// 单个标的的最新行情快照。
 	struct CQuote
 	{
-		CInstrument m_instrument;              // 标的信息。
+		CSecurity m_instrument;                  // 标的信息。
 		std::int64_t m_nExchangeTime{ 0 };     // 交易所生成行情的毫秒时间戳。
 		std::int64_t m_nReceiveTime{ 0 };      // 服务接收行情的毫秒时间戳。
 		std::int64_t m_nLastPrice{ 0 };        // 最新成交价。
@@ -74,7 +83,7 @@ namespace market
 	// 单个标的的买卖盘口深度。
 	struct CDepth
 	{
-		CInstrument m_instrument;           // 标的信息。
+		CSecurity m_instrument;              // 标的信息。
 		std::int64_t m_nExchangeTime{ 0 }; // 交易所生成行情的毫秒时间戳。
 		std::int64_t m_nReceiveTime{ 0 };  // 服务接收行情的毫秒时间戳。
 		std::vector<CPriceLevel> m_bids;   // 买盘档位，通常从买一开始排列。
@@ -86,7 +95,7 @@ namespace market
 	// 一个时间周期内的K线数据。
 	struct CBar
 	{
-		CInstrument m_instrument;                // 标的信息。
+		CSecurity m_instrument;                   // 标的信息。
 		Channel m_channel{ Channel::unknown };   // K线周期，例如一分钟或一天。
 		std::int64_t m_nBeginTime{ 0 };          // K线周期开始的毫秒时间戳。
 		std::int64_t m_nOpenPrice{ 0 };          // 开盘价。
@@ -103,14 +112,14 @@ namespace market
 	// 客户端对某个标的、某类行情数据的订阅项。
 	struct CSubscription
 	{
-		CInstrument m_instrument;              // 订阅的标的。
+		CSecurity m_instrument;                 // 订阅的标的。
 		Channel m_channel{ Channel::unknown }; // 订阅的数据通道。
 	};
 
-	// CInstrument的哈希计算器，用于unordered_map等哈希容器。
-	struct CInstrumentHash
+	// CSecurity的哈希计算器，用于unordered_map等哈希容器。
+	struct CSecurityHash
 	{
-		std::size_t operator()(const CInstrument& instrument) const;
+		std::size_t operator()(const CSecurity& instrument) const;
 	};
 } // namespace market
 #endif
