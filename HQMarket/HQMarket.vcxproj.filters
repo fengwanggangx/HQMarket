@@ -16,6 +16,9 @@
     <Filter Include="python">
       <UniqueIdentifier>{F5A036CE-EA6D-4077-A3D6-15D69AA75226}</UniqueIdentifier>
     </Filter>
+    <Filter Include="provider">
+      <UniqueIdentifier>{6A3BEED2-A350-47AB-A5B0-BF203C89AB90}</UniqueIdentifier>
+    </Filter>
     <Filter Include="thread">
       <UniqueIdentifier>{CA1F0A25-B4CA-40F2-8871-F76D1194789B}</UniqueIdentifier>
     </Filter>
@@ -106,11 +109,11 @@
     <ClCompile Include="network\common_net.cpp">
       <Filter>network</Filter>
     </ClCompile>
-    <ClCompile Include="python\CMooTdxProvider.cpp">
-      <Filter>python</Filter>
+    <ClCompile Include="provider\CMooTdxProvider.cpp">
+      <Filter>provider</Filter>
     </ClCompile>
-    <ClCompile Include="python\CAkShareProvider.cpp">
-      <Filter>python</Filter>
+    <ClCompile Include="provider\CAkShareProvider.cpp">
+      <Filter>provider</Filter>
     </ClCompile>
     <ClCompile Include="python\CPythonRuntime.cpp">
       <Filter>python</Filter>
@@ -219,11 +222,11 @@
     <ClInclude Include="network\common_net.h">
       <Filter>network</Filter>
     </ClInclude>
-    <ClInclude Include="python\CMooTdxProvider.h">
-      <Filter>python</Filter>
+    <ClInclude Include="provider\CMooTdxProvider.h">
+      <Filter>provider</Filter>
     </ClInclude>
-    <ClInclude Include="python\CAkShareProvider.h">
-      <Filter>python</Filter>
+    <ClInclude Include="provider\CAkShareProvider.h">
+      <Filter>provider</Filter>
     </ClInclude>
     <ClInclude Include="python\CPythonRuntime.h">
       <Filter>python</Filter>

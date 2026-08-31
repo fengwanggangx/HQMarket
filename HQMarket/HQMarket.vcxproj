@@ -77,8 +77,8 @@
     <ClCompile Include="network\CNetPool.cpp" />
     <ClCompile Include="network\CNetTools.cpp" />
     <ClCompile Include="network\common_net.cpp" />
-    <ClCompile Include="python\CMooTdxProvider.cpp" />
-    <ClCompile Include="python\CAkShareProvider.cpp" />
+    <ClCompile Include="provider\CMooTdxProvider.cpp" />
+    <ClCompile Include="provider\CAkShareProvider.cpp" />
     <ClCompile Include="python\CPythonRuntime.cpp" />
     <ClCompile Include="system\CBootLoader.cpp" />
     <ClCompile Include="quote\CHQService.cpp" />
@@ -116,8 +116,8 @@
     <ClInclude Include="network\CNetRouter.h" />
     <ClInclude Include="network\CNetTools.h" />
     <ClInclude Include="network\common_net.h" />
-    <ClInclude Include="python\CMooTdxProvider.h" />
-    <ClInclude Include="python\CAkShareProvider.h" />
+    <ClInclude Include="provider\CMooTdxProvider.h" />
+    <ClInclude Include="provider\CAkShareProvider.h" />
     <ClInclude Include="python\CPythonRuntime.h" />
     <ClInclude Include="system\CBootLoader.h" />
     <ClInclude Include="quote\CHQService.h" />
