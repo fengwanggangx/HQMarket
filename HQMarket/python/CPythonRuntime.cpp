@@ -7,7 +7,7 @@
 namespace
 {
 	std::mutex pythonRuntimeMutex;
-	bool pythonRuntimeOwned{false};
+	bool bPythonRuntimeOwned{ false };
 } // namespace
 
 CPythonRuntime::~CPythonRuntime()
@@ -17,12 +17,12 @@ CPythonRuntime::~CPythonRuntime()
 
 bool CPythonRuntime::Initialize(const std::filesystem::path& runtimeHome, const std::filesystem::path& scriptPath)
 {
-	std::lock_guard<std::mutex> lock(pythonRuntimeMutex);
+	std::lock_guard<std::mutex> lck(pythonRuntimeMutex);
 	if (m_bInitialized)
 	{
 		return true;
 	}
-	if (pythonRuntimeOwned)
+	if (bPythonRuntimeOwned)
 	{
 		m_strLastError = "Python runtime is already owned by another CPythonRuntime instance";
 		return false;
@@ -71,13 +71,13 @@ bool CPythonRuntime::Initialize(const std::filesystem::path& runtimeHome, const 
 
 	m_pMainThreadState = PyEval_SaveThread();
 	m_bInitialized = true;
-	pythonRuntimeOwned = true;
+	bPythonRuntimeOwned = true;
 	return true;
 }
 
 void CPythonRuntime::Finalize()
 {
-	std::lock_guard<std::mutex> lock(pythonRuntimeMutex);
+	std::lock_guard<std::mutex> lck(pythonRuntimeMutex);
 	if (!m_bInitialized)
 	{
 		return;
@@ -86,7 +86,7 @@ void CPythonRuntime::Finalize()
 	int finalizeResult = Py_FinalizeEx();
 	m_pMainThreadState = nullptr;
 	m_bInitialized = false;
-	pythonRuntimeOwned = false;
+	bPythonRuntimeOwned = false;
 	if (0 != finalizeResult)
 	{
 		m_strLastError = "Python finalization failed";
@@ -95,12 +95,12 @@ void CPythonRuntime::Finalize()
 
 bool CPythonRuntime::IsInitialized() const
 {
-	std::lock_guard<std::mutex> lock(pythonRuntimeMutex);
+	std::lock_guard<std::mutex> lck(pythonRuntimeMutex);
 	return m_bInitialized;
 }
 
 std::string CPythonRuntime::GetLastError() const
 {
-	std::lock_guard<std::mutex> lock(pythonRuntimeMutex);
+	std::lock_guard<std::mutex> lck(pythonRuntimeMutex);
 	return m_strLastError;
 }

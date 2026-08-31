@@ -104,7 +104,7 @@ namespace
 		{
 			return false;
 		}
-		bool bOK = true;
+		bool bOk = true;
 		for (const market::CBar& bar : bars)
 		{
 			std::string sql = "INSERT INTO bar(symbol,exchange,channel,begin_time,open,high,low,close,volume,turnover,price_scale,adjustment,source) VALUES(" +
@@ -117,12 +117,12 @@ namespace
 				") ON CONFLICT(symbol,exchange,channel,begin_time,adjustment) DO UPDATE SET open=excluded.open,high=excluded.high,low=excluded.low,close=excluded.close,volume=excluded.volume,turnover=excluded.turnover,price_scale=excluded.price_scale,source=excluded.source";
 			if (!Exec(sql))
 			{
-				bOK = false;
+				bOk = false;
 				break;
 			}
 		}
 
-		if (bOK && m_db->EndTransaction())
+		if (bOk && m_db->EndTransaction())
 		{
 			return true;
 		}

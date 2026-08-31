@@ -9,19 +9,19 @@ namespace provider
 {
 	static std::string DateString(std::int64_t nMilliseconds)
 	{
-		if (nMilliseconds <= 0)
+		if (0 >= nMilliseconds)
 		{
 			return "19900101";
 		}
 		std::int64_t now =
 			std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
 				.count();
-		if (nMilliseconds > now)
+		if (now < nMilliseconds)
 		{
 			nMilliseconds = now;
 		}
 		std::time_t value = static_cast<std::time_t>(nMilliseconds / 1000);
-		std::tm date{};
+		std::tm date{ };
 #ifdef _WIN32
 		gmtime_s(&date, &value);
 #else
@@ -33,8 +33,8 @@ namespace provider
 	}
 	static std::int64_t DateMilliseconds(const char* value)
 	{
-		std::tm date{};
-		std::istringstream input(value ? value : "");
+		std::tm date{ };
+		std::istringstream input(nullptr != value ? value : "");
 		input >> std::get_time(&date, "%Y-%m-%d");
 #ifdef _WIN32
 		return static_cast<std::int64_t>(_mkgmtime(&date)) * 1000;
@@ -45,7 +45,7 @@ namespace provider
 	static std::int64_t Fixed(PyObject* row, const char* name, int scale)
 	{
 		PyObject* value = PyDict_GetItemString(row, name);
-		return value ? static_cast<std::int64_t>(std::llround(PyFloat_AsDouble(value) * std::pow(10.0, scale))) : 0;
+		return nullptr != value ? static_cast<std::int64_t>(std::llround(PyFloat_AsDouble(value) * std::pow(10.0, scale))) : 0;
 	}
 	CAkShareProvider::~CAkShareProvider()
 	{
@@ -59,12 +59,12 @@ namespace provider
 	{
 		PyGILState_STATE gil = PyGILState_Ensure();
 		PyObject* module = PyImport_ImportModule("providers.akshare_provider");
-		PyObject* type = module ? PyObject_GetAttrString(module, "AkShareProvider") : nullptr;
-		PyObject* instance = type ? PyObject_CallNoArgs(type) : nullptr;
-		bool ok = instance != nullptr;
+		PyObject* type = nullptr != module ? PyObject_GetAttrString(module, "AkShareProvider") : nullptr;
+		PyObject* instance = nullptr != type ? PyObject_CallNoArgs(type) : nullptr;
+		bool bOk = nullptr != instance;
 		Py_XDECREF(type);
 		Py_XDECREF(module);
-		if (ok)
+		if (bOk)
 		{
 			m_pProvider = instance;
 		}
@@ -72,19 +72,19 @@ namespace provider
 		{
 			PyErr_Clear();
 		}
-		PyObject* values = ok ? PyObject_CallMethod(instance, "instruments", nullptr) : nullptr;
-		if (values && PyList_Check(values))
+		PyObject* values = bOk ? PyObject_CallMethod(instance, "instruments", nullptr) : nullptr;
+		if ((nullptr != values) && (0 != PyList_Check(values)))
 		{
 			for (Py_ssize_t i = 0; i < PyList_Size(values); ++i)
 			{
 				PyObject* row = PyList_GetItem(values, i);
 				PyObject* symbolValue = PyDict_Check(row) ? PyDict_GetItemString(row, "symbol") : nullptr;
-				if (symbolValue == nullptr)
+				if (nullptr == symbolValue)
 				{
 					continue;
 				}
 				const char* symbol = PyUnicode_AsUTF8(symbolValue);
-				if (symbol == nullptr)
+				if (nullptr == symbol)
 				{
 					continue;
 				}
@@ -105,16 +105,16 @@ namespace provider
 				m_instruments.emplace_back(std::move(instrument));
 			}
 		}
-		if (values == nullptr)
+		if (nullptr == values)
 		{
 			PyErr_Clear();
-			ok = false;
+			bOk = false;
 		}
 		Py_XDECREF(values);
 		PyGILState_Release(gil);
-		std::lock_guard<std::mutex> lock(m_mtx_state);
-		m_status = {ok, ok ? "ready" : "initialization failed"};
-		return ok;
+		std::lock_guard<std::mutex> lck(m_mtx_state);
+		m_status = { bOk, bOk ? "ready" : "initialization failed" };
+		return bOk;
 	}
 	bool CAkShareProvider::Subscribe(const std::vector<market::CSubscription>&)
 	{
@@ -128,8 +128,8 @@ namespace provider
 														  std::int64_t nBeginTime, std::int64_t nEndTime)
 	{
 		std::vector<market::CBar> bars;
-		std::unique_lock<std::mutex> providerLock(m_mtx_state);
-		if ((channel != market::Channel::bar_1d) || (m_pProvider == nullptr))
+		std::unique_lock<std::mutex> lck(m_mtx_state);
+		if ((market::Channel::bar_1d != channel) || (nullptr == m_pProvider))
 		{
 			return bars;
 		}
@@ -138,13 +138,13 @@ namespace provider
 		PyGILState_STATE gil = PyGILState_Ensure();
 		PyObject* result = PyObject_CallMethod(static_cast<PyObject*>(m_pProvider), "daily_bars", "ssss",
 											   instrument.m_strSymbol.c_str(), begin.c_str(), end.c_str(), "");
-		bool ok = result && PyList_Check(result);
-		if (ok)
+		bool bOk = (nullptr != result) && (0 != PyList_Check(result));
+		if (bOk)
 		{
 			for (Py_ssize_t i = 0; i < PyList_Size(result); ++i)
 			{
 				PyObject* row = PyList_GetItem(result, i);
-				if (!PyDict_Check(row))
+				if (0 == PyDict_Check(row))
 				{
 					continue;
 				}
@@ -152,7 +152,7 @@ namespace provider
 				bar.m_instrument = instrument;
 				bar.m_channel = channel;
 				PyObject* date = PyDict_GetItemString(row, "date");
-				bar.m_nBeginTime = DateMilliseconds(date ? PyUnicode_AsUTF8(date) : nullptr);
+				bar.m_nBeginTime = DateMilliseconds(nullptr != date ? PyUnicode_AsUTF8(date) : nullptr);
 				bar.m_nOpenPrice = Fixed(row, "open", 4);
 				bar.m_nHighPrice = Fixed(row, "high", 4);
 				bar.m_nLowPrice = Fixed(row, "low", 4);
@@ -163,18 +163,18 @@ namespace provider
 				bars.emplace_back(std::move(bar));
 			}
 		}
-		if (!ok)
+		if (!bOk)
 		{
 			PyErr_Clear();
 		}
 		Py_XDECREF(result);
 		PyGILState_Release(gil);
-		m_status = {ok, ok ? "ready" : "history request failed"};
+		m_status = { bOk, bOk ? "ready" : "history request failed" };
 		return bars;
 	}
 	market::CProviderStatus CAkShareProvider::GetStatus() const
 	{
-		std::lock_guard<std::mutex> lock(m_mtx_state);
+		std::lock_guard<std::mutex> lck(m_mtx_state);
 		return m_status;
 	}
 	void CAkShareProvider::SetQuoteHandler(_TyQuoteHandler)
@@ -185,13 +185,13 @@ namespace provider
 	}
 	std::vector<market::CInstrument> CAkShareProvider::QueryInstruments() const
 	{
-		std::lock_guard<std::mutex> lock(m_mtx_state);
+		std::lock_guard<std::mutex> lck(m_mtx_state);
 		return m_instruments;
 	}
 	void CAkShareProvider::Stop()
 	{
-		std::lock_guard<std::mutex> lock(m_mtx_state);
-		if ((m_pProvider == nullptr) || !Py_IsInitialized())
+		std::lock_guard<std::mutex> lck(m_mtx_state);
+		if ((nullptr == m_pProvider) || (0 == Py_IsInitialized()))
 		{
 			return;
 		}
@@ -199,6 +199,6 @@ namespace provider
 		Py_DECREF(static_cast<PyObject*>(m_pProvider));
 		m_pProvider = nullptr;
 		PyGILState_Release(gil);
-		m_status = {false, "stopped"};
+		m_status = { false, "stopped" };
 	}
 } // namespace provider

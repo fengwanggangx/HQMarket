@@ -27,7 +27,7 @@ namespace service
 		private:
 			struct CClientSession
 			{
-				bool m_bAuthenticated{false};
+				bool m_bAuthenticated{ false };
 			};
 
 		public:
@@ -64,7 +64,7 @@ namespace service
 			mutable std::mutex m_mtx_sessions;
 			std::unordered_map<net::_TyConnectionId, CClientSession> m_sessions;
 			market::CSubscriptionManager m_subscriptions;
-			std::atomic_uint64_t m_nDepthSequence{0};
+			std::atomic_uint64_t m_nDepthSequence{ 0 };
 
 		private:
 			CHQCache m_cache;

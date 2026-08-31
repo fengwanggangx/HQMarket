@@ -15,8 +15,7 @@ namespace provider
 			bool Initialize() override;
 			bool Subscribe(const std::vector<market::CSubscription>& subscriptions) override;
 			bool Unsubscribe(const std::vector<market::CSubscription>& subscriptions) override;
-			std::vector<market::CBar> QueryBars(const market::CInstrument&, market::Channel, std::int64_t,
-												std::int64_t) override;
+			std::vector<market::CBar> QueryBars(const market::CInstrument&, market::Channel, std::int64_t, std::int64_t) override;
 			market::CProviderStatus GetStatus() const override;
 			void SetQuoteHandler(_TyQuoteHandler handler) override;
 			void SetDepthHandler(_TyDepthHandler handler) override;
@@ -28,14 +27,14 @@ namespace provider
 			static std::string MakeKey(const market::CSubscription& subscription);
 
 		private:
-			std::atomic_bool m_bRunning{false};
+			std::atomic_bool m_bRunning{ false };
 			std::thread m_thread;
 			mutable std::mutex m_mtx_state;
 			std::unordered_map<std::string, market::CSubscription> m_subscriptions;
 			_TyQuoteHandler m_quoteHandler;
 			_TyDepthHandler m_depthHandler;
 			market::CProviderStatus m_status;
-			void* m_pProvider{nullptr};
+			void* m_pProvider{ nullptr };
 	};
 } // namespace provider
 #endif

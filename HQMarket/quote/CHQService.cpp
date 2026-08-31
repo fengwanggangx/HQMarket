@@ -31,25 +31,25 @@ namespace service
 		{
 			market::CInstrument result;
 			std::size_t dot = value.rfind('.');
-			if (dot == std::string::npos)
+			if (std::string::npos == dot)
 			{
 				return result;
 			}
 			result.m_strSymbol = value.substr(0, dot);
 			std::string exchange = value.substr(dot + 1);
-			if (exchange == "SSE")
+			if ("SSE" == exchange)
 			{
 				result.m_exchange = market::Exchange::sse;
 			}
-			else if (exchange == "SZSE")
+			else if ("SZSE" == exchange)
 			{
 				result.m_exchange = market::Exchange::szse;
 			}
-			else if (exchange == "BSE")
+			else if ("BSE" == exchange)
 			{
 				result.m_exchange = market::Exchange::bse;
 			}
-			else if (exchange == "HKEX")
+			else if ("HKEX" == exchange)
 			{
 				result.m_exchange = market::Exchange::hkex;
 			}
@@ -58,7 +58,7 @@ namespace service
 
 		bool IsValidInstrument(const market::CInstrument& instrument)
 		{
-			return !instrument.m_strSymbol.empty() && (instrument.m_exchange != market::Exchange::unknown);
+			return !instrument.m_strSymbol.empty() && (market::Exchange::unknown != instrument.m_exchange);
 		}
 
 		bool IsRealtimeChannel(market::Channel channel)
@@ -93,7 +93,7 @@ namespace service
 			{
 				std::size_t parsed = 0;
 				result = std::stoll(value, &parsed);
-				return value.size() == parsed;
+				return parsed == value.size();
 			}
 			catch (const std::exception&)
 			{
@@ -211,12 +211,12 @@ namespace service
 
 	int CMarketService::OnNetEvent(const net::CNetEvent& ev)
 	{
-		if (ev.m_event == net::em_event::request)
+		if (net::em_event::request == ev.m_event)
 		{
 			return OnClientRequest(ev.m_request);
 		}
 
-		if (ev.m_event == net::em_event::disconnected)
+		if (net::em_event::disconnected == ev.m_event)
 		{
 			OnClientDisconnected(ev.m_connection_id);
 		}
@@ -244,7 +244,7 @@ namespace service
 	{
 		net::CNetPool::InstancePtr()->CloseAConnection(id);
 		{
-			std::lock_guard<std::mutex> lock(m_mtx_sessions);
+			std::lock_guard<std::mutex> lck(m_mtx_sessions);
 			m_sessions.erase(id);
 		}
 		std::vector<market::CSubscription> removed = m_subscriptions.RemoveClient(id);
@@ -259,7 +259,7 @@ namespace service
 		std::string strCmd = request.GetCmd();
 		auto mIter = m_handler.find(strCmd);
 
-		if ((mIter != m_handler.end()) && ("auth" == strCmd))
+		if ((m_handler.end() != mIter) && ("auth" == strCmd))
 		{
 			mIter->second(id, request);
 			return;
@@ -271,7 +271,7 @@ namespace service
 			SendRequest(id, response);
 			return;
 		}
-		if (mIter == m_handler.end())
+		if (m_handler.end() == mIter)
 		{
 			CRequest response;
 			SetError(response, request.GetId(), 1006, "unknown command");
@@ -283,17 +283,17 @@ namespace service
 
 	bool CMarketService::HandleAuth(net::_TyConnectionId id, CRequest& request)
 	{
-		bool authenticated = !m_strToken.empty() && (request.GetExtraData("token") == m_strToken);
-		if (authenticated)
+		bool bAuthenticated = !m_strToken.empty() && (m_strToken == request.GetExtraData("token"));
+		if (bAuthenticated)
 		{
-			std::lock_guard<std::mutex> lock(m_mtx_sessions);
-			m_sessions.try_emplace(id, CClientSession{true});
+			std::lock_guard<std::mutex> lck(m_mtx_sessions);
+			m_sessions.try_emplace(id, CClientSession{ true });
 		}
 		CRequest response;
 		response.SetType(CRequest::Type::HQMARKET);
 		response.SetCmd("auth");
-		response.SetReturnData("accepted", authenticated ? "true" : "false");
-		response.SetReturnData("reason", authenticated ? "ok" : "invalid token");
+		response.SetReturnData("accepted", bAuthenticated ? "true" : "false");
+		response.SetReturnData("reason", bAuthenticated ? "ok" : "invalid token");
 		response.SetReturnData("request_id", std::to_string(request.GetId()));
 		response.SetReturnData("server_time_ms", std::to_string(NowMilliseconds()));
 		SendRequest(id, response);
@@ -324,22 +324,22 @@ namespace service
 	{
 		CRequest response;
 		std::uint64_t requestId = request.GetId();
-		bool subscribe = "subscribe" == request.GetCmd();
+		bool bSubscribe = "subscribe" == request.GetCmd();
 		market::CInstrument instrument = ParseInstrument(request.GetExtraData("instrument"));
 		market::Channel channel = ParseChannel(request.GetExtraData("channel"));
-		market::CSubscription subscription{instrument, channel};
-		bool accepted = IsValidInstrument(instrument) && IsRealtimeChannel(channel);
-		if (!accepted)
+		market::CSubscription subscription{ instrument, channel };
+		bool bAccepted = IsValidInstrument(instrument) && IsRealtimeChannel(channel);
+		if (!bAccepted)
 		{
 			SetError(response, requestId, 1003, "invalid instrument or unsupported subscription channel");
 			SendRequest(id, response);
 			return false;
 		}
-		std::vector<market::CSubscription> requested{subscription};
-		std::vector<market::CSubscription> changed = subscribe ? m_subscriptions.Subscribe(id, requested) : m_subscriptions.Unsubscribe(id, requested);
+		std::vector<market::CSubscription> requested{ subscription };
+		std::vector<market::CSubscription> changed = bSubscribe ? m_subscriptions.Subscribe(id, requested) : m_subscriptions.Unsubscribe(id, requested);
 		if (!changed.empty())
 		{
-			if (subscribe)
+			if (bSubscribe)
 			{
 				m_mootdx.Subscribe(changed);
 			}
@@ -359,7 +359,7 @@ namespace service
 		response.SetReturnData("accepted", "true");
 		SetData(response, ack, requestId);
 		SendRequest(id, response);
-		if (subscribe && (market::Channel::quote == channel))
+		if (bSubscribe && (market::Channel::quote == channel))
 		{
 			std::optional<market::CQuote> quote = m_cache.GetQuote(instrument);
 			if (quote.has_value())
@@ -382,8 +382,8 @@ namespace service
 		market::CInstrument instrument = ParseInstrument(requestData.GetExtraData("instrument"));
 		market::Channel channel = "query_quote" == requestData.GetCmd()
 			? market::Channel::quote : ParseChannel(requestData.GetExtraData("channel"));
-		if (!IsValidInstrument(instrument) || ((channel != market::Channel::quote) &&
-			(channel != market::Channel::bar_1m) && (channel != market::Channel::bar_1d)))
+		if (!IsValidInstrument(instrument) || ((market::Channel::quote != channel) &&
+			(market::Channel::bar_1m != channel) && (market::Channel::bar_1d != channel)))
 		{
 			SetError(response, requestId, 1003, "invalid instrument or unsupported query channel");
 			SendRequest(id, response);
@@ -415,7 +415,7 @@ namespace service
 				return false;
 			}
 			end = 0 < end ? end : NowMilliseconds();
-			if ((begin < 0) || (end < begin))
+		if ((0 > begin) || (end < begin))
 			{
 				SetError(response, requestId, 1004, "invalid query time range");
 				SendRequest(id, response);
@@ -460,7 +460,7 @@ namespace service
 		CRequest request;
 		request.SetCmd("quote");
 		SetData(request, quoteData, 0, nSequence);
-		market::CSubscription subscription{quote.m_instrument, market::Channel::quote};
+		market::CSubscription subscription{ quote.m_instrument, market::Channel::quote };
 		for (net::_TyConnectionId id : AuthenticatedClients())
 		{
 			if (m_subscriptions.IsSubscribed(id, subscription))
@@ -497,7 +497,7 @@ namespace service
 		CRequest request;
 		request.SetCmd("depth");
 		SetData(request, depthData, 0, nSequence);
-		market::CSubscription subscription{depth.m_instrument, market::Channel::depth};
+		market::CSubscription subscription{ depth.m_instrument, market::Channel::depth };
 		for (net::_TyConnectionId id : AuthenticatedClients())
 		{
 			if (m_subscriptions.IsSubscribed(id, subscription))
@@ -509,15 +509,15 @@ namespace service
 
 	bool CMarketService::IsAuthenticated(net::_TyConnectionId id) const
 	{
-		std::lock_guard<std::mutex> lock(m_mtx_sessions);
+		std::lock_guard<std::mutex> lck(m_mtx_sessions);
 		std::unordered_map<net::_TyConnectionId, CClientSession>::const_iterator session =
 			m_sessions.find(id);
-		return (session != m_sessions.end()) && session->second.m_bAuthenticated;
+		return (m_sessions.end() != session) && session->second.m_bAuthenticated;
 	}
 
 	std::vector<net::_TyConnectionId> CMarketService::AuthenticatedClients() const
 	{
-		std::lock_guard<std::mutex> lock(m_mtx_sessions);
+		std::lock_guard<std::mutex> lck(m_mtx_sessions);
 		std::vector<net::_TyConnectionId> clients;
 		clients.reserve(m_sessions.size());
 		for (const std::pair<const net::_TyConnectionId, CClientSession>& session : m_sessions)
@@ -572,14 +572,14 @@ namespace service
 		std::vector<market::CInstrument> values = m_akshare.QueryInstruments();
 		std::ostringstream out;
 		out << '[';
-		bool first = true;
+		bool bFirst = true;
 		for (const market::CInstrument& instrument : values)
 		{
-			if (!first)
+			if (!bFirst)
 			{
 				out << ',';
 			}
-			first = false;
+			bFirst = false;
 			out << "{\"instrument\":\"" << instrument.Key() << "\"}";
 		}
 		out << ']';
@@ -601,14 +601,14 @@ namespace service
 		}
 		std::ostringstream out;
 		out << '[';
-		bool first = true;
+		bool bFirst = true;
 		for (const market::CBar& bar : values)
 		{
-			if (!first)
+			if (!bFirst)
 			{
 				out << ',';
 			}
-			first = false;
+			bFirst = false;
 			out << "{\"begin_time_ms\":" << bar.m_nBeginTime << ",\"open\":" << bar.m_nOpenPrice
 				<< ",\"high\":" << bar.m_nHighPrice << ",\"low\":" << bar.m_nLowPrice << ",\"close\":" << bar.m_nClosePrice
 				<< ",\"volume\":" << bar.m_nVolume << ",\"price_scale\":" << bar.m_nPriceScale << "}";
