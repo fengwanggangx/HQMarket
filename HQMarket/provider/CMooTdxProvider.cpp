@@ -2,6 +2,7 @@
 #include <Python.h>
 #include <chrono>
 #include <cmath>
+#include <iostream>
 
 namespace provider
 {
@@ -44,6 +45,24 @@ namespace provider
 		}
 		return 0 != PyLong_Check(value) ? PyLong_AsLongLong(value) : static_cast<std::int64_t>(PyFloat_AsDouble(value));
 	}
+	static void PrintPythonError(const char* context)
+	{
+		PyObject* errorType = nullptr;
+		PyObject* errorValue = nullptr;
+		PyObject* errorTraceback = nullptr;
+		PyErr_Fetch(&errorType, &errorValue, &errorTraceback);
+		PyErr_NormalizeException(&errorType, &errorValue, &errorTraceback);
+
+		PyObject* errorText = nullptr != errorValue ? PyObject_Str(errorValue) : nullptr;
+		const char* message = nullptr != errorText ? PyUnicode_AsUTF8(errorText) : nullptr;
+		std::cerr << context << ": " << (nullptr != message ? message : "unknown Python error") << std::endl;
+
+		Py_XDECREF(errorText);
+		Py_XDECREF(errorTraceback);
+		Py_XDECREF(errorValue);
+		Py_XDECREF(errorType);
+		PyErr_Clear();
+	}
 
 	CMooTdxProvider::~CMooTdxProvider()
 	{
@@ -70,7 +89,7 @@ namespace provider
 		Py_XDECREF(module);
 		if (!bOk)
 		{
-			PyErr_Clear();
+			PrintPythonError("MooTdxProvider initialization failed");
 		}
 		else
 		{
