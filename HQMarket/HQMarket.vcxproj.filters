@@ -266,7 +266,7 @@
     <None Include="quote\v1\market.proto">
       <Filter>quote\v1</Filter>
     </None>
-    <None Include="python\requirements.lock">
+    <None Include="$(OutDir)python\scripts\requirements.lock">
       <Filter>python</Filter>
     </None>
   </ItemGroup>

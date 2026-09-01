@@ -130,7 +130,7 @@
     <None Include="config\hqmarket.json" />
     <None Include="ini\system.ini" />
     <None Include="quote\v1\market.proto" />
-    <None Include="python\requirements.lock" />
+    <None Include="$(OutDir)python\scripts\requirements.lock" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DataFilesToCopyRemotely Include="libs\debug\**\*" />
