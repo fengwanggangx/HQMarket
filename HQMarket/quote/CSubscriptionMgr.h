@@ -19,7 +19,9 @@ namespace market
 			std::vector<CChannelInfo> Subscribe(net::_TyConnectionId id, const std::vector<CChannelInfo>& channels);
 			std::vector<CChannelInfo> Unsubscribe(net::_TyConnectionId id, const std::vector<CChannelInfo>& channels);
 			std::vector<CChannelInfo> RemoveClient(net::_TyConnectionId id);
-			std::size_t SubscriptionCount() const;
+
+			std::size_t GetSubscriptionCount(net::_TyConnectionId id) const;
+			std::size_t GetSubscriptionCount(const CChannelInfo& info) const;
 			bool IsSubscribed(net::_TyConnectionId id, const CChannelInfo& info) const;
 
 		private:

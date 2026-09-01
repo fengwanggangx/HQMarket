@@ -87,6 +87,10 @@ namespace market
 
 	std::string CChannelInfo::String() const
 	{
+		if (!m_security.IsValid())
+		{
+			return {};
+		}
 		return m_security.String() + "." + std::to_string(static_cast<int>(m_channel));
 	}
 

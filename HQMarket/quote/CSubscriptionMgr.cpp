@@ -94,10 +94,23 @@ namespace market
 		return removed;
 	}
 
-	std::size_t CSubscriptionMgr::SubscriptionCount() const
+	std::size_t CSubscriptionMgr::GetSubscriptionCount(net::_TyConnectionId id) const
 	{
 		std::shared_lock<std::shared_mutex> lock(m_mtx_info);
-		return m_info_ids.size();
+		const auto mIter = m_id_infos.find(id);
+		return m_id_infos.end() == mIter ? 0 : mIter->second.size();
+	}
+
+	std::size_t CSubscriptionMgr::GetSubscriptionCount(const CChannelInfo& info) const
+	{
+		std::string key = info.String();
+		if (key.empty())
+		{
+			return 0;
+		}
+		std::shared_lock<std::shared_mutex> lock(m_mtx_info);
+		const auto mIter = m_info_ids.find(key);
+		return m_info_ids.end() == mIter ? 0 : mIter->second.size();
 	}
 
 	bool CSubscriptionMgr::IsSubscribed(net::_TyConnectionId id, const CChannelInfo& info) const
