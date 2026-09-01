@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import Iterable
 
 
@@ -10,13 +11,14 @@ def _ensure_mootdx_config() -> tuple[str, int]:
     from mootdx import config
     from mootdx.consts import HQ_HOSTS
 
+    config_path = Path(config.CONF)
     try:
-        options = json.loads(config.CONF.read_text(encoding="utf-8"))
+        options = json.loads(config_path.read_text(encoding="utf-8"))
         if not options.get("SERVER", {}).get("HQ"):
             raise ValueError("missing HQ servers")
     except (OSError, ValueError, TypeError, json.JSONDecodeError):
-        config.CONF.parent.mkdir(parents=True, exist_ok=True)
-        config.CONF.write_text(
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        config_path.write_text(
             json.dumps(config.clone(), indent=2, ensure_ascii=False),
             encoding="utf-8",
         )
