@@ -65,8 +65,9 @@
     <ClCompile Include="common\utility.cpp" />
     <ClCompile Include="ini\CINIHandler.cpp" />
     <ClCompile Include="ini\CIniFile.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="quote\CHQCache.cpp" />
+	<ClCompile Include="main.cpp" />
+	<ClCompile Include="quote\CHQBroker.cpp" />
+	<ClCompile Include="quote\CHQCache.cpp" />
     <ClCompile Include="quote\CSubscriptionManager.cpp" />
     <ClCompile Include="quote\MarketTypes.cpp" />
     <ClCompile Include="quote\v1\market.pb.cc" />
@@ -102,8 +103,9 @@
     <ClInclude Include="common\traits.h" />
     <ClInclude Include="common\utility.h" />
     <ClInclude Include="ini\CINIHandler.h" />
-    <ClInclude Include="ini\CIniFile.h" />
-    <ClInclude Include="quote\CHQCache.h" />
+	<ClInclude Include="ini\CIniFile.h" />
+	<ClInclude Include="quote\CHQBroker.h" />
+	<ClInclude Include="quote\CHQCache.h" />
     <ClInclude Include="quote\CSubscriptionManager.h" />
     <ClInclude Include="quote\IMarketProvider.h" />
     <ClInclude Include="quote\MarketTypes.h" />

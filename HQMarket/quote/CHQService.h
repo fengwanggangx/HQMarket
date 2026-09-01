@@ -1,14 +1,11 @@
 #ifndef __CMARKET_SERVICE_H__
 #define __CMARKET_SERVICE_H__
 
-#include "CHQCache.h"
-#include "CHQRecorder.h"
+#include "CHQBroker.h"
 #include "CSubscriptionManager.h"
 #include "v1/market.pb.h"
 #include "../network/CFrameCodec.h"
 #include "../network/CTcpServer.h"
-#include "../provider/CAkShareProvider.h"
-#include "../provider/CMooTdxProvider.h"
 #include <atomic>
 #include <filesystem>
 #include <functional>
@@ -56,8 +53,7 @@ namespace service
 			std::vector<net::_TyConnectionId> AuthenticatedClients() const;
 
 		private:
-			provider::CMooTdxProvider m_mootdx;
-			provider::CAkShareProvider m_akshare;
+			market::CHQBroker m_broker;
 
 			std::string m_strToken;
 			std::unordered_map<std::string, std::function<bool(net::_TyConnectionId, CRequest&)>> m_handler;
@@ -67,8 +63,6 @@ namespace service
 			std::atomic_uint64_t m_nDepthSequence{ 0 };
 
 		private:
-			CHQCache m_cache;
-			CHQRecorder m_recorder;
 			net::CTcpServer* m_pTcpServer{ nullptr };
 			CPythonRuntime* m_pPythonRuntime{ nullptr };
 	};

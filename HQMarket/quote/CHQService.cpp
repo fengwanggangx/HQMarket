@@ -181,32 +181,17 @@ namespace service
 		{
 			return false;
 		}
-		if (!m_recorder.Open(root / "data" / "hqmarket.db"))
-		{
-			return false;
-		}
 		m_strToken = strToken;
 		m_pTcpServer->RegisterHandler(std::bind_front(&CMarketService::OnNetEvent, this));
-		m_mootdx.SetQuoteHandler([this](market::CQuote&& quote)
+		m_broker.SetQuoteHandler([this](const market::CQuote& quote, std::uint64_t sequence)
 			{
-				market::CSecurity instrument = quote.m_security;
-				std::uint64_t sequence = m_cache.Update(std::move(quote));
-				std::optional<market::CQuote> cached = m_cache.GetQuote(instrument);
-				if (cached.has_value())
-				{
-					PublishQuote(*cached, sequence);
-				}
+				PublishQuote(quote, sequence);
 			});
-		m_mootdx.SetDepthHandler([this](market::CDepth&& depth)
+		m_broker.SetDepthHandler([this](market::CDepth&& depth)
 			{
 				PublishDepth(depth, ++m_nDepthSequence);
 			});
-		if (!m_mootdx.Initialize())
-		{
-			return false;
-		}
-		m_akshare.Initialize();
-		return true;
+		return m_broker.Initialize(root);
 	}
 
 	int CMarketService::OnNetEvent(const net::CNetEvent& ev)
@@ -225,9 +210,7 @@ namespace service
 
 	void CMarketService::Stop()
 	{
-		m_mootdx.Stop();
-		m_akshare.Stop();
-		m_recorder.Close();
+		m_broker.Stop();
 	}
 
 	int CMarketService::OnClientRequest(const std::unique_ptr<CRequest>& request)
@@ -250,7 +233,7 @@ namespace service
 		std::vector<market::CSubscription> removed = m_subscriptions.RemoveClient(id);
 		if (!removed.empty())
 		{
-			m_mootdx.Unsubscribe(removed);
+			m_broker.Unsubscribe(removed);
 		}
 	}
 
@@ -341,11 +324,11 @@ namespace service
 		{
 			if (bSubscribe)
 			{
-				m_mootdx.Subscribe(changed);
+				m_broker.Subscribe(changed);
 			}
 			else
 			{
-				m_mootdx.Unsubscribe(changed);
+				m_broker.Unsubscribe(changed);
 			}
 		}
 
@@ -361,7 +344,7 @@ namespace service
 		SendRequest(id, response);
 		if (bSubscribe && (market::Channel::quote == channel))
 		{
-			std::optional<market::CQuote> quote = m_cache.GetQuote(instrument);
+			std::optional<market::CQuote> quote = m_broker.QueryQuote(instrument);
 			if (quote.has_value())
 			{
 				wire::QuoteData quoteData;
@@ -396,7 +379,7 @@ namespace service
 		pResult->set_channel(static_cast<wire::Channel>(static_cast<int>(channel)));
 		if (market::Channel::quote == channel)
 		{
-			std::optional<market::CQuote> quote = m_cache.GetQuote(instrument);
+			std::optional<market::CQuote> quote = m_broker.QueryQuote(instrument);
 			pResult->set_found(quote.has_value());
 			if (quote.has_value())
 			{
@@ -415,21 +398,13 @@ namespace service
 				return false;
 			}
 			end = 0 < end ? end : NowMilliseconds();
-		if ((0 > begin) || (end < begin))
+			if ((0 > begin) || (end < begin))
 			{
 				SetError(response, requestId, 1004, "invalid query time range");
 				SendRequest(id, response);
 				return false;
 			}
-			std::vector<market::CBar> bars = m_recorder.QueryBars(instrument, channel, begin, end);
-			if (bars.empty())
-			{
-				bars = m_akshare.QueryBars(instrument, channel, begin, end);
-				if (!bars.empty())
-				{
-					m_recorder.UpsertBars(bars);
-				}
-			}
+			std::vector<market::CBar> bars = m_broker.QueryBars(instrument, channel, begin, end);
 			pResult->set_found(!bars.empty());
 			for (const market::CBar& bar : bars)
 			{
@@ -532,12 +507,12 @@ namespace service
 
 	std::string CMarketService::HealthJson() const
 	{
-		market::CProviderStatus realtime = m_mootdx.GetStatus();
-		market::CProviderStatus history = m_akshare.GetStatus();
+		market::CProviderStatus realtime = m_broker.RealtimeStatus();
+		market::CProviderStatus history = m_broker.HistoryStatus();
 		std::ostringstream out;
 		out << "{\"status\":\"" << ((realtime.m_bHealthy && history.m_bHealthy) ? "ok" : "degraded")
 			<< "\",\"python\":" << (((nullptr != m_pPythonRuntime) && m_pPythonRuntime->IsInitialized()) ? "true" : "false")
-			<< ",\"sqlite\":" << (m_recorder.IsOpen() ? "true" : "false")
+			<< ",\"sqlite\":" << (m_broker.IsRecorderOpen() ? "true" : "false")
 			<< ",\"mootdx\":" << (realtime.m_bHealthy ? "true" : "false")
 			<< ",\"akshare\":" << (history.m_bHealthy ? "true" : "false") << "}";
 		return out.str();
@@ -547,13 +522,13 @@ namespace service
 	{
 		std::ostringstream out;
 		out << "hqmarket_clients " << net::CNetPool::InstancePtr()->Count()
-			<< "\nhqmarket_quotes_cached " << m_cache.QuoteCount() << "\n";
+			<< "\nhqmarket_quotes_cached " << m_broker.QuoteCount() << "\n";
 		return out.str();
 	}
 
 	std::string CMarketService::QuoteJson(const std::string& strInstrument) const
 	{
-		std::optional<market::CQuote> quote = m_cache.GetQuote(ParseInstrument(strInstrument));
+		std::optional<market::CQuote> quote = m_broker.QueryQuote(ParseInstrument(strInstrument));
 		if (!quote.has_value())
 		{
 			return "{}";
@@ -569,7 +544,7 @@ namespace service
 
 	std::string CMarketService::InstrumentsJson() const
 	{
-		std::vector<market::CSecurity> values = m_akshare.QueryInstruments();
+		std::vector<market::CSecurity> values = m_broker.QueryInstruments();
 		std::ostringstream out;
 		out << '[';
 		bool bFirst = true;
@@ -590,15 +565,7 @@ namespace service
 									 std::int64_t nBeginTime, std::int64_t nEndTime)
 	{
 		market::CSecurity instrument = ParseInstrument(strInstrument);
-		std::vector<market::CBar> values = m_recorder.QueryBars(instrument, channel, nBeginTime, nEndTime);
-		if (values.empty())
-		{
-			values = m_akshare.QueryBars(instrument, channel, nBeginTime, nEndTime);
-			if (!values.empty())
-			{
-				m_recorder.UpsertBars(values);
-			}
-		}
+		std::vector<market::CBar> values = m_broker.QueryBars(instrument, channel, nBeginTime, nEndTime);
 		std::ostringstream out;
 		out << '[';
 		bool bFirst = true;
