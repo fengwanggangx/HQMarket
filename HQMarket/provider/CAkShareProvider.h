@@ -10,8 +10,8 @@ namespace provider
 			~CAkShareProvider() override;
 			const char* Name() const override;
 			bool Initialize() override;
-			bool Subscribe(const std::vector<market::CSubscription>&) override;
-			bool Unsubscribe(const std::vector<market::CSubscription>&) override;
+			bool Subscribe(const std::vector<market::CChannelInfo>&) override;
+			bool Unsubscribe(const std::vector<market::CChannelInfo>&) override;
 			std::vector<market::CBar> QueryBars(const market::CSecurity& security, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime) override;
 			market::CProviderStatus GetStatus() const override;
 			void SetQuoteHandler(_TyQuoteHandler) override;

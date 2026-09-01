@@ -116,11 +116,11 @@ namespace provider
 		m_status = { bOk, bOk ? "ready" : "initialization failed" };
 		return bOk;
 	}
-	bool CAkShareProvider::Subscribe(const std::vector<market::CSubscription>&)
+	bool CAkShareProvider::Subscribe(const std::vector<market::CChannelInfo>&)
 	{
 		return false;
 	}
-	bool CAkShareProvider::Unsubscribe(const std::vector<market::CSubscription>&)
+	bool CAkShareProvider::Unsubscribe(const std::vector<market::CChannelInfo>&)
 	{
 		return false;
 	}

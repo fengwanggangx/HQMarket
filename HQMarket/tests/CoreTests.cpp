@@ -1,5 +1,5 @@
 #include "../quote/CHQCache.h"
-#include "../quote/CSubscriptionManager.h"
+#include "../quote/CSubscriptionMgr.h"
 #include "../network/CFrameCodec.h"
 #include <cassert>
 #include <iostream>
@@ -12,7 +12,7 @@ int main()
 	assert(frames.empty());
 	assert(codec.Append(encoded.data() + 2, encoded.size() - 2, frames));
 	assert((frames.size() == 1) && (frames[0] == "payload"));
-	market::CSubscriptionManager subscriptions;
+	market::CSubscriptionMgr subscriptions;
 	market::CSubscription quote{{"600519", market::Exchange::sse}, market::Channel::quote};
 	assert(subscriptions.Subscribe(1, {quote}).size() == 1);
 	assert(subscriptions.Subscribe(2, {quote}).empty());

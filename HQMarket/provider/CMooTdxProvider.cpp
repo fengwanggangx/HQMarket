@@ -72,7 +72,7 @@ namespace provider
 	{
 		return "mootdx";
 	}
-	std::string CMooTdxProvider::MakeKey(const market::CSubscription& s)
+	std::string CMooTdxProvider::MakeKey(const market::CChannelInfo& s)
 	{
 		return s.m_security.String() + ":" + std::to_string(static_cast<int>(s.m_channel));
 	}
@@ -111,7 +111,7 @@ namespace provider
 		}
 		return bOk;
 	}
-	bool CMooTdxProvider::Subscribe(const std::vector<market::CSubscription>& values)
+	bool CMooTdxProvider::Subscribe(const std::vector<market::CChannelInfo>& values)
 	{
 		std::lock_guard<std::mutex> lck(m_mtx_state);
 		for (const auto& value : values)
@@ -123,7 +123,7 @@ namespace provider
 		}
 		return true;
 	}
-	bool CMooTdxProvider::Unsubscribe(const std::vector<market::CSubscription>& values)
+	bool CMooTdxProvider::Unsubscribe(const std::vector<market::CChannelInfo>& values)
 	{
 		std::lock_guard<std::mutex> lck(m_mtx_state);
 		for (const auto& value : values)

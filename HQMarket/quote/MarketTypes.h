@@ -110,10 +110,11 @@ namespace market
 	};
 
 	// 客户端对某个标的、某类行情数据的订阅项。
-	struct CSubscription
+	struct CChannelInfo
 	{
 		CSecurity m_security;                 // 订阅的标的。
-		Channel m_channel{ Channel::unknown }; // 订阅的数据通道。
+		Channel m_channel{ Channel::unknown }; // 订阅的数据通道
+		std::string String() const;
 	};
 
 	// CSecurity的哈希计算器，用于unordered_map等哈希容器。

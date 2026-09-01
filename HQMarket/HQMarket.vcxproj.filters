@@ -82,7 +82,7 @@
 	<ClCompile Include="quote\CHQBroker.cpp">
 	  <Filter>quote</Filter>
 	</ClCompile>
-    <ClCompile Include="quote\CSubscriptionManager.cpp">
+    <ClCompile Include="quote\CSubscriptionMgr.cpp">
       <Filter>quote</Filter>
     </ClCompile>
     <ClCompile Include="quote\MarketTypes.cpp">
@@ -189,7 +189,7 @@
     <ClInclude Include="ini\CIniFile.h">
       <Filter>ini</Filter>
     </ClInclude>
-	<ClInclude Include="quote\CSubscriptionManager.h">
+	<ClInclude Include="quote\CSubscriptionMgr.h">
       <Filter>quote</Filter>
 	</ClInclude>
 	<ClInclude Include="quote\CHQBroker.h">

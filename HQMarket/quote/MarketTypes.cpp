@@ -84,4 +84,10 @@ namespace market
 	{
 		return std::hash<std::string>{}(instrument.String());
 	}
+
+	std::string CChannelInfo::String() const
+	{
+		return m_security.String() + "." + std::to_string(static_cast<int>(m_channel));
+	}
+
 } // namespace market

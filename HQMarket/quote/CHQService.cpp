@@ -11,10 +11,8 @@
 
 namespace wire = hqmarket::market::v1;
 
-namespace service
+namespace
 {
-	namespace
-	{
 		std::int64_t NowMilliseconds()
 		{
 			return std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -230,7 +228,7 @@ namespace service
 			std::lock_guard<std::mutex> lck(m_mtx_sessions);
 			m_sessions.erase(id);
 		}
-		std::vector<market::CSubscription> removed = m_subscriptions.RemoveClient(id);
+		std::vector<market::CChannelInfo> removed = m_subscriptions.RemoveClient(id);
 		if (!removed.empty())
 		{
 			m_broker.Unsubscribe(removed);
@@ -310,7 +308,7 @@ namespace service
 		bool bSubscribe = "subscribe" == request.GetCmd();
 		market::CSecurity instrument = ParseInstrument(request.GetExtraData("instrument"));
 		market::Channel channel = ParseChannel(request.GetExtraData("channel"));
-		market::CSubscription subscription{ instrument, channel };
+		market::CChannelInfo subscription{ instrument, channel };
 		bool bAccepted = IsValidInstrument(instrument) && IsRealtimeChannel(channel);
 		if (!bAccepted)
 		{
@@ -318,8 +316,8 @@ namespace service
 			SendRequest(id, response);
 			return false;
 		}
-		std::vector<market::CSubscription> requested{ subscription };
-		std::vector<market::CSubscription> changed = bSubscribe ? m_subscriptions.Subscribe(id, requested) : m_subscriptions.Unsubscribe(id, requested);
+		std::vector<market::CChannelInfo> requested{ subscription };
+		std::vector<market::CChannelInfo> changed = bSubscribe ? m_subscriptions.Subscribe(id, requested) : m_subscriptions.Unsubscribe(id, requested);
 		if (!changed.empty())
 		{
 			if (bSubscribe)
@@ -435,7 +433,7 @@ namespace service
 		CRequest request;
 		request.SetCmd("quote");
 		SetData(request, quoteData, 0, nSequence);
-		market::CSubscription subscription{ quote.m_security, market::Channel::quote };
+		market::CChannelInfo subscription{ quote.m_security, market::Channel::quote };
 		for (net::_TyConnectionId id : AuthenticatedClients())
 		{
 			if (m_subscriptions.IsSubscribed(id, subscription))
@@ -472,7 +470,7 @@ namespace service
 		CRequest request;
 		request.SetCmd("depth");
 		SetData(request, depthData, 0, nSequence);
-		market::CSubscription subscription{ depth.m_security, market::Channel::depth };
+		market::CChannelInfo subscription{ depth.m_security, market::Channel::depth };
 		for (net::_TyConnectionId id : AuthenticatedClients())
 		{
 			if (m_subscriptions.IsSubscribed(id, subscription))
@@ -583,4 +581,3 @@ namespace service
 		out << ']';
 		return out.str();
 	}
-} // namespace service

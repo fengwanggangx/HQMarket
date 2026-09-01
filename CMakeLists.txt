@@ -10,7 +10,7 @@ add_executable(hqmarket_core_tests
     HQMarket/tests/CoreTests.cpp
     HQMarket/quote/MarketTypes.cpp
     HQMarket/quote/CHQCache.cpp
-    HQMarket/quote/CSubscriptionManager.cpp
+    HQMarket/quote/CSubscriptionMgr.cpp
     HQMarket/network/CFrameCodec.cpp)
 target_include_directories(hqmarket_core_tests PRIVATE HQMarket)
 add_test(NAME hqmarket_core_tests COMMAND hqmarket_core_tests)
