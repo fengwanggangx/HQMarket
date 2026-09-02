@@ -23,7 +23,6 @@ namespace
 	Action("hqmarket.market.v1.BarData", hqmarket::market::v1::BarData) \
 	Action("hqmarket.market.v1.MarketStatusData", hqmarket::market::v1::MarketStatusData) \
 	Action("hqmarket.market.v1.ProviderStatusData", hqmarket::market::v1::ProviderStatusData) \
-	Action("hqmarket.market.v1.ErrorData", hqmarket::market::v1::ErrorData) \
 	Action("hqmarket.market.v1.QueryRequest", hqmarket::market::v1::QueryRequest) \
 	Action("hqmarket.market.v1.QueryResponse", hqmarket::market::v1::QueryResponse)
 }
@@ -133,6 +132,46 @@ CRequest::CRequest() : m_arena(std::make_unique<google::protobuf::Arena>())
 }
 
 CRequest::~CRequest() = default;
+
+CRequest::CRequest(const CRequest& other) : CRequest()
+{
+	*this = other;
+}
+
+CRequest& CRequest::operator=(const CRequest& other)
+{
+	if (this == &other)
+	{
+		return *this;
+	}
+
+	auto arena = std::make_unique<google::protobuf::Arena>();
+	request::RequestData* data = google::protobuf::Arena::CreateMessage<request::RequestData>(arena.get());
+	if (nullptr != other.m_data)
+	{
+		data->CopyFrom(*other.m_data);
+	}
+
+	std::unique_ptr<CData> cdata;
+	if (nullptr != other.m_cdata)
+	{
+		std::string payload;
+		if (other.m_cdata->Serialize(&payload))
+		{
+			cdata = std::make_unique<CData>();
+			if (!cdata->Deserialize(other.m_cdata->GetType(), payload))
+			{
+				cdata.reset();
+			}
+		}
+	}
+
+	m_arena = std::move(arena);
+	m_data = data;
+	m_cdata = std::move(cdata);
+	m_connection_id = other.m_connection_id;
+	return *this;
+}
 
 bool CRequest::Serialize(std::string* output) const
 {

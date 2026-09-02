@@ -3,7 +3,7 @@
 // source: quote/v1/market.proto
 // Protobuf C++ Version: 5.29.3
 
-#include "market.pb.h"
+#include "quote/v1/market.pb.h"
 
 #include <algorithm>
 #include <type_traits>
@@ -142,34 +142,6 @@ struct InstrumentDefaultTypeInternal {
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 InstrumentDefaultTypeInternal _Instrument_default_instance_;
-
-inline constexpr ErrorData::Impl_::Impl_(
-    ::_pbi::ConstantInitialized) noexcept
-      : message_(
-            &::google::protobuf::internal::fixed_address_empty_string,
-            ::_pbi::ConstantInitialized()),
-        code_{0},
-        _cached_size_{0} {}
-
-template <typename>
-PROTOBUF_CONSTEXPR ErrorData::ErrorData(::_pbi::ConstantInitialized)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(_class_data_.base()),
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(),
-#endif  // PROTOBUF_CUSTOM_VTABLE
-      _impl_(::_pbi::ConstantInitialized()) {
-}
-struct ErrorDataDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR ErrorDataDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
-  ~ErrorDataDefaultTypeInternal() {}
-  union {
-    ErrorData _instance;
-  };
-};
-
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
-    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 ErrorDataDefaultTypeInternal _ErrorData_default_instance_;
 
 inline constexpr AuthRequest::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
@@ -726,16 +698,6 @@ const ::uint32_t
         PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::ProviderStatusData, _impl_.provider_),
         PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::ProviderStatusData, _impl_.healthy_),
         PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::ProviderStatusData, _impl_.detail_),
-        ~0u,  // no _has_bits_
-        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::ErrorData, _internal_metadata_),
-        ~0u,  // no _extensions_
-        ~0u,  // no _oneof_case_
-        ~0u,  // no _weak_field_map_
-        ~0u,  // no _inlined_string_donated_
-        ~0u,  // no _split_
-        ~0u,  // no sizeof(Split)
-        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::ErrorData, _impl_.code_),
-        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::ErrorData, _impl_.message_),
         PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::QueryRequest, _impl_._has_bits_),
         PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::QueryRequest, _internal_metadata_),
         ~0u,  // no _extensions_
@@ -787,9 +749,8 @@ static const ::_pbi::MigrationSchema
         {153, 173, -1, sizeof(::hqmarket::market::v1::BarData)},
         {185, -1, -1, sizeof(::hqmarket::market::v1::MarketStatusData)},
         {196, -1, -1, sizeof(::hqmarket::market::v1::ProviderStatusData)},
-        {207, -1, -1, sizeof(::hqmarket::market::v1::ErrorData)},
-        {217, 229, -1, sizeof(::hqmarket::market::v1::QueryRequest)},
-        {233, 246, -1, sizeof(::hqmarket::market::v1::QueryResponse)},
+        {207, 219, -1, sizeof(::hqmarket::market::v1::QueryRequest)},
+        {223, 236, -1, sizeof(::hqmarket::market::v1::QueryResponse)},
 };
 static const ::_pb::Message* const file_default_instances[] = {
     &::hqmarket::market::v1::_Instrument_default_instance_._instance,
@@ -805,7 +766,6 @@ static const ::_pb::Message* const file_default_instances[] = {
     &::hqmarket::market::v1::_BarData_default_instance_._instance,
     &::hqmarket::market::v1::_MarketStatusData_default_instance_._instance,
     &::hqmarket::market::v1::_ProviderStatusData_default_instance_._instance,
-    &::hqmarket::market::v1::_ErrorData_default_instance_._instance,
     &::hqmarket::market::v1::_QueryRequest_default_instance_._instance,
     &::hqmarket::market::v1::_QueryResponse_default_instance_._instance,
 };
@@ -858,38 +818,37 @@ const char descriptor_table_protodef_quote_2fv1_2fmarket_2eproto[] ABSL_ATTRIBUT
     "et.market.v1.Exchange\022\016\n\006status\030\002 \001(\t\022\030\n"
     "\020exchange_time_ms\030\003 \001(\003\"G\n\022ProviderStatu"
     "sData\022\020\n\010provider\030\001 \001(\t\022\017\n\007healthy\030\002 \001(\010"
-    "\022\016\n\006detail\030\003 \001(\t\"*\n\tErrorData\022\014\n\004code\030\001 "
-    "\001(\005\022\017\n\007message\030\002 \001(\t\"\234\001\n\014QueryRequest\0222\n"
-    "\ninstrument\030\001 \001(\0132\036.hqmarket.market.v1.I"
-    "nstrument\022,\n\007channel\030\002 \001(\0162\033.hqmarket.ma"
-    "rket.v1.Channel\022\025\n\rbegin_time_ms\030\003 \001(\003\022\023"
-    "\n\013end_time_ms\030\004 \001(\003\"\331\001\n\rQueryResponse\0222\n"
-    "\ninstrument\030\001 \001(\0132\036.hqmarket.market.v1.I"
-    "nstrument\022,\n\007channel\030\002 \001(\0162\033.hqmarket.ma"
-    "rket.v1.Channel\022,\n\005quote\030\003 \001(\0132\035.hqmarke"
-    "t.market.v1.QuoteData\022)\n\004bars\030\004 \003(\0132\033.hq"
-    "market.market.v1.BarData\022\r\n\005found\030\005 \001(\010*"
-    "\247\001\n\010Exchange\022\030\n\024EXCHANGE_UNSPECIFIED\020\000\022\007"
-    "\n\003SSE\020\001\022\010\n\004SZSE\020\002\022\007\n\003BSE\020\003\022\010\n\004HKEX\020\004\022\t\n\005"
-    "CFFEX\020\005\022\010\n\004SHFE\020\006\022\007\n\003DCE\020\007\022\010\n\004CZCE\020\010\022\007\n\003"
-    "INE\020\t\022\010\n\004GFEX\020\n\022\n\n\006NASDAQ\020\013\022\010\n\004NYSE\020\014\022\n\n"
-    "\006CRYPTO\020\r*\236\001\n\007Channel\022\027\n\023CHANNEL_UNSPECI"
-    "FIED\020\000\022\021\n\rCHANNEL_QUOTE\020\001\022\021\n\rCHANNEL_DEP"
-    "TH\020\002\022\021\n\rCHANNEL_TRADE\020\003\022\022\n\016CHANNEL_BAR_1"
-    "M\020\004\022\022\n\016CHANNEL_BAR_1D\020\005\022\031\n\025CHANNEL_MARKE"
-    "T_STATUS\020\006b\006proto3"
+    "\022\016\n\006detail\030\003 \001(\t\"\234\001\n\014QueryRequest\0222\n\nins"
+    "trument\030\001 \001(\0132\036.hqmarket.market.v1.Instr"
+    "ument\022,\n\007channel\030\002 \001(\0162\033.hqmarket.market"
+    ".v1.Channel\022\025\n\rbegin_time_ms\030\003 \001(\003\022\023\n\013en"
+    "d_time_ms\030\004 \001(\003\"\331\001\n\rQueryResponse\0222\n\nins"
+    "trument\030\001 \001(\0132\036.hqmarket.market.v1.Instr"
+    "ument\022,\n\007channel\030\002 \001(\0162\033.hqmarket.market"
+    ".v1.Channel\022,\n\005quote\030\003 \001(\0132\035.hqmarket.ma"
+    "rket.v1.QuoteData\022)\n\004bars\030\004 \003(\0132\033.hqmark"
+    "et.market.v1.BarData\022\r\n\005found\030\005 \001(\010*\247\001\n\010"
+    "Exchange\022\030\n\024EXCHANGE_UNSPECIFIED\020\000\022\007\n\003SS"
+    "E\020\001\022\010\n\004SZSE\020\002\022\007\n\003BSE\020\003\022\010\n\004HKEX\020\004\022\t\n\005CFFE"
+    "X\020\005\022\010\n\004SHFE\020\006\022\007\n\003DCE\020\007\022\010\n\004CZCE\020\010\022\007\n\003INE\020"
+    "\t\022\010\n\004GFEX\020\n\022\n\n\006NASDAQ\020\013\022\010\n\004NYSE\020\014\022\n\n\006CRY"
+    "PTO\020\r*\236\001\n\007Channel\022\027\n\023CHANNEL_UNSPECIFIED"
+    "\020\000\022\021\n\rCHANNEL_QUOTE\020\001\022\021\n\rCHANNEL_DEPTH\020\002"
+    "\022\021\n\rCHANNEL_TRADE\020\003\022\022\n\016CHANNEL_BAR_1M\020\004\022"
+    "\022\n\016CHANNEL_BAR_1D\020\005\022\031\n\025CHANNEL_MARKET_ST"
+    "ATUS\020\006b\006proto3"
 };
 static ::absl::once_flag descriptor_table_quote_2fv1_2fmarket_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_quote_2fv1_2fmarket_2eproto = {
     false,
     false,
-    2658,
+    2614,
     descriptor_table_protodef_quote_2fv1_2fmarket_2eproto,
     "quote/v1/market.proto",
     &descriptor_table_quote_2fv1_2fmarket_2eproto_once,
     nullptr,
     0,
-    16,
+    15,
     schemas,
     file_default_instances,
     TableStruct_quote_2fv1_2fmarket_2eproto::offsets,
@@ -5324,263 +5283,6 @@ void ProviderStatusData::InternalSwap(ProviderStatusData* PROTOBUF_RESTRICT othe
 }
 
 ::google::protobuf::Metadata ProviderStatusData::GetMetadata() const {
-  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
-}
-// ===================================================================
-
-class ErrorData::_Internal {
- public:
-};
-
-ErrorData::ErrorData(::google::protobuf::Arena* arena)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, _class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  SharedCtor(arena);
-  // @@protoc_insertion_point(arena_constructor:hqmarket.market.v1.ErrorData)
-}
-inline PROTOBUF_NDEBUG_INLINE ErrorData::Impl_::Impl_(
-    ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
-    const Impl_& from, const ::hqmarket::market::v1::ErrorData& from_msg)
-      : message_(arena, from.message_),
-        _cached_size_{0} {}
-
-ErrorData::ErrorData(
-    ::google::protobuf::Arena* arena,
-    const ErrorData& from)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, _class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  ErrorData* const _this = this;
-  (void)_this;
-  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
-      from._internal_metadata_);
-  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
-  _impl_.code_ = from._impl_.code_;
-
-  // @@protoc_insertion_point(copy_constructor:hqmarket.market.v1.ErrorData)
-}
-inline PROTOBUF_NDEBUG_INLINE ErrorData::Impl_::Impl_(
-    ::google::protobuf::internal::InternalVisibility visibility,
-    ::google::protobuf::Arena* arena)
-      : message_(arena),
-        _cached_size_{0} {}
-
-inline void ErrorData::SharedCtor(::_pb::Arena* arena) {
-  new (&_impl_) Impl_(internal_visibility(), arena);
-  _impl_.code_ = {};
-}
-ErrorData::~ErrorData() {
-  // @@protoc_insertion_point(destructor:hqmarket.market.v1.ErrorData)
-  SharedDtor(*this);
-}
-inline void ErrorData::SharedDtor(MessageLite& self) {
-  ErrorData& this_ = static_cast<ErrorData&>(self);
-  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
-  ABSL_DCHECK(this_.GetArena() == nullptr);
-  this_._impl_.message_.Destroy();
-  this_._impl_.~Impl_();
-}
-
-inline void* ErrorData::PlacementNew_(const void*, void* mem,
-                                        ::google::protobuf::Arena* arena) {
-  return ::new (mem) ErrorData(arena);
-}
-constexpr auto ErrorData::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::CopyInit(sizeof(ErrorData),
-                                            alignof(ErrorData));
-}
-PROTOBUF_CONSTINIT
-PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::google::protobuf::internal::ClassDataFull ErrorData::_class_data_ = {
-    ::google::protobuf::internal::ClassData{
-        &_ErrorData_default_instance_._instance,
-        &_table_.header,
-        nullptr,  // OnDemandRegisterArenaDtor
-        nullptr,  // IsInitialized
-        &ErrorData::MergeImpl,
-        ::google::protobuf::Message::GetNewImpl<ErrorData>(),
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        &ErrorData::SharedDtor,
-        ::google::protobuf::Message::GetClearImpl<ErrorData>(), &ErrorData::ByteSizeLong,
-            &ErrorData::_InternalSerialize,
-#endif  // PROTOBUF_CUSTOM_VTABLE
-        PROTOBUF_FIELD_OFFSET(ErrorData, _impl_._cached_size_),
-        false,
-    },
-    &ErrorData::kDescriptorMethods,
-    &descriptor_table_quote_2fv1_2fmarket_2eproto,
-    nullptr,  // tracker
-};
-const ::google::protobuf::internal::ClassData* ErrorData::GetClassData() const {
-  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
-  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
-  return _class_data_.base();
-}
-PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<1, 2, 0, 44, 2> ErrorData::_table_ = {
-  {
-    0,  // no _has_bits_
-    0, // no _extensions_
-    2, 8,  // max_field_number, fast_idx_mask
-    offsetof(decltype(_table_), field_lookup_table),
-    4294967292,  // skipmap
-    offsetof(decltype(_table_), field_entries),
-    2,  // num_field_entries
-    0,  // num_aux_entries
-    offsetof(decltype(_table_), field_names),  // no aux_entries
-    _class_data_.base(),
-    nullptr,  // post_loop_handler
-    ::_pbi::TcParser::GenericFallback,  // fallback
-    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
-    ::_pbi::TcParser::GetTable<::hqmarket::market::v1::ErrorData>(),  // to_prefetch
-    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
-  }, {{
-    // string message = 2;
-    {::_pbi::TcParser::FastUS1,
-     {18, 63, 0, PROTOBUF_FIELD_OFFSET(ErrorData, _impl_.message_)}},
-    // int32 code = 1;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(ErrorData, _impl_.code_), 63>(),
-     {8, 63, 0, PROTOBUF_FIELD_OFFSET(ErrorData, _impl_.code_)}},
-  }}, {{
-    65535, 65535
-  }}, {{
-    // int32 code = 1;
-    {PROTOBUF_FIELD_OFFSET(ErrorData, _impl_.code_), 0, 0,
-    (0 | ::_fl::kFcSingular | ::_fl::kInt32)},
-    // string message = 2;
-    {PROTOBUF_FIELD_OFFSET(ErrorData, _impl_.message_), 0, 0,
-    (0 | ::_fl::kFcSingular | ::_fl::kUtf8String | ::_fl::kRepAString)},
-  }},
-  // no aux_entries
-  {{
-    "\34\0\7\0\0\0\0\0"
-    "hqmarket.market.v1.ErrorData"
-    "message"
-  }},
-};
-
-PROTOBUF_NOINLINE void ErrorData::Clear() {
-// @@protoc_insertion_point(message_clear_start:hqmarket.market.v1.ErrorData)
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  ::uint32_t cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  _impl_.message_.ClearToEmpty();
-  _impl_.code_ = 0;
-  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
-}
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        ::uint8_t* ErrorData::_InternalSerialize(
-            const MessageLite& base, ::uint8_t* target,
-            ::google::protobuf::io::EpsCopyOutputStream* stream) {
-          const ErrorData& this_ = static_cast<const ErrorData&>(base);
-#else   // PROTOBUF_CUSTOM_VTABLE
-        ::uint8_t* ErrorData::_InternalSerialize(
-            ::uint8_t* target,
-            ::google::protobuf::io::EpsCopyOutputStream* stream) const {
-          const ErrorData& this_ = *this;
-#endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(serialize_to_array_start:hqmarket.market.v1.ErrorData)
-          ::uint32_t cached_has_bits = 0;
-          (void)cached_has_bits;
-
-          // int32 code = 1;
-          if (this_._internal_code() != 0) {
-            target = ::google::protobuf::internal::WireFormatLite::
-                WriteInt32ToArrayWithField<1>(
-                    stream, this_._internal_code(), target);
-          }
-
-          // string message = 2;
-          if (!this_._internal_message().empty()) {
-            const std::string& _s = this_._internal_message();
-            ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-                _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "hqmarket.market.v1.ErrorData.message");
-            target = stream->WriteStringMaybeAliased(2, _s, target);
-          }
-
-          if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
-            target =
-                ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
-                    this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
-          }
-          // @@protoc_insertion_point(serialize_to_array_end:hqmarket.market.v1.ErrorData)
-          return target;
-        }
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        ::size_t ErrorData::ByteSizeLong(const MessageLite& base) {
-          const ErrorData& this_ = static_cast<const ErrorData&>(base);
-#else   // PROTOBUF_CUSTOM_VTABLE
-        ::size_t ErrorData::ByteSizeLong() const {
-          const ErrorData& this_ = *this;
-#endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(message_byte_size_start:hqmarket.market.v1.ErrorData)
-          ::size_t total_size = 0;
-
-          ::uint32_t cached_has_bits = 0;
-          // Prevent compiler warnings about cached_has_bits being unused
-          (void)cached_has_bits;
-
-          ::_pbi::Prefetch5LinesFrom7Lines(&this_);
-           {
-            // string message = 2;
-            if (!this_._internal_message().empty()) {
-              total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
-                                              this_._internal_message());
-            }
-            // int32 code = 1;
-            if (this_._internal_code() != 0) {
-              total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
-                  this_._internal_code());
-            }
-          }
-          return this_.MaybeComputeUnknownFieldsSize(total_size,
-                                                     &this_._impl_._cached_size_);
-        }
-
-void ErrorData::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
-  auto* const _this = static_cast<ErrorData*>(&to_msg);
-  auto& from = static_cast<const ErrorData&>(from_msg);
-  // @@protoc_insertion_point(class_specific_merge_from_start:hqmarket.market.v1.ErrorData)
-  ABSL_DCHECK_NE(&from, _this);
-  ::uint32_t cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  if (!from._internal_message().empty()) {
-    _this->_internal_set_message(from._internal_message());
-  }
-  if (from._internal_code() != 0) {
-    _this->_impl_.code_ = from._impl_.code_;
-  }
-  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
-}
-
-void ErrorData::CopyFrom(const ErrorData& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:hqmarket.market.v1.ErrorData)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-
-void ErrorData::InternalSwap(ErrorData* PROTOBUF_RESTRICT other) {
-  using std::swap;
-  auto* arena = GetArena();
-  ABSL_DCHECK_EQ(arena, other->GetArena());
-  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.message_, &other->_impl_.message_, arena);
-        swap(_impl_.code_, other->_impl_.code_);
-}
-
-::google::protobuf::Metadata ErrorData::GetMetadata() const {
   return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
 }
 // ===================================================================

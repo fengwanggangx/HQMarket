@@ -64,9 +64,6 @@ extern BarDataDefaultTypeInternal _BarData_default_instance_;
 class DepthData;
 struct DepthDataDefaultTypeInternal;
 extern DepthDataDefaultTypeInternal _DepthData_default_instance_;
-class ErrorData;
-struct ErrorDataDefaultTypeInternal;
-extern ErrorDataDefaultTypeInternal _ErrorData_default_instance_;
 class Instrument;
 struct InstrumentDefaultTypeInternal;
 extern InstrumentDefaultTypeInternal _Instrument_default_instance_;
@@ -1063,214 +1060,6 @@ class Instrument final : public ::google::protobuf::Message
                           const Instrument& from_msg);
     ::google::protobuf::internal::ArenaStringPtr symbol_;
     int exchange_;
-    ::google::protobuf::internal::CachedSize _cached_size_;
-    PROTOBUF_TSAN_DECLARE_MEMBER
-  };
-  union { Impl_ _impl_; };
-  friend struct ::TableStruct_quote_2fv1_2fmarket_2eproto;
-};
-// -------------------------------------------------------------------
-
-class ErrorData final : public ::google::protobuf::Message
-/* @@protoc_insertion_point(class_definition:hqmarket.market.v1.ErrorData) */ {
- public:
-  inline ErrorData() : ErrorData(nullptr) {}
-  ~ErrorData() PROTOBUF_FINAL;
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-  void operator delete(ErrorData* msg, std::destroying_delete_t) {
-    SharedDtor(*msg);
-    ::google::protobuf::internal::SizedDelete(msg, sizeof(ErrorData));
-  }
-#endif
-
-  template <typename = void>
-  explicit PROTOBUF_CONSTEXPR ErrorData(
-      ::google::protobuf::internal::ConstantInitialized);
-
-  inline ErrorData(const ErrorData& from) : ErrorData(nullptr, from) {}
-  inline ErrorData(ErrorData&& from) noexcept
-      : ErrorData(nullptr, std::move(from)) {}
-  inline ErrorData& operator=(const ErrorData& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  inline ErrorData& operator=(ErrorData&& from) noexcept {
-    if (this == &from) return *this;
-    if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
-      InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance);
-  }
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields()
-      ABSL_ATTRIBUTE_LIFETIME_BOUND {
-    return _internal_metadata_.mutable_unknown_fields<::google::protobuf::UnknownFieldSet>();
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor() {
-    return GetDescriptor();
-  }
-  static const ::google::protobuf::Descriptor* GetDescriptor() {
-    return default_instance().GetMetadata().descriptor;
-  }
-  static const ::google::protobuf::Reflection* GetReflection() {
-    return default_instance().GetMetadata().reflection;
-  }
-  static const ErrorData& default_instance() {
-    return *internal_default_instance();
-  }
-  static inline const ErrorData* internal_default_instance() {
-    return reinterpret_cast<const ErrorData*>(
-        &_ErrorData_default_instance_);
-  }
-  static constexpr int kIndexInFileMessages = 13;
-  friend void swap(ErrorData& a, ErrorData& b) { a.Swap(&b); }
-  inline void Swap(ErrorData* other) {
-    if (other == this) return;
-    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
-      InternalSwap(other);
-    } else {
-      ::google::protobuf::internal::GenericSwap(this, other);
-    }
-  }
-  void UnsafeArenaSwap(ErrorData* other) {
-    if (other == this) return;
-    ABSL_DCHECK(GetArena() == other->GetArena());
-    InternalSwap(other);
-  }
-
-  // implements Message ----------------------------------------------
-
-  ErrorData* New(::google::protobuf::Arena* arena = nullptr) const {
-    return ::google::protobuf::Message::DefaultConstruct<ErrorData>(arena);
-  }
-  using ::google::protobuf::Message::CopyFrom;
-  void CopyFrom(const ErrorData& from);
-  using ::google::protobuf::Message::MergeFrom;
-  void MergeFrom(const ErrorData& from) { ErrorData::MergeImpl(*this, from); }
-
-  private:
-  static void MergeImpl(
-      ::google::protobuf::MessageLite& to_msg,
-      const ::google::protobuf::MessageLite& from_msg);
-
-  public:
-  bool IsInitialized() const {
-    return true;
-  }
-  ABSL_ATTRIBUTE_REINITIALIZES void Clear() PROTOBUF_FINAL;
-  #if defined(PROTOBUF_CUSTOM_VTABLE)
-  private:
-  static ::size_t ByteSizeLong(const ::google::protobuf::MessageLite& msg);
-  static ::uint8_t* _InternalSerialize(
-      const MessageLite& msg, ::uint8_t* target,
-      ::google::protobuf::io::EpsCopyOutputStream* stream);
-
-  public:
-  ::size_t ByteSizeLong() const { return ByteSizeLong(*this); }
-  ::uint8_t* _InternalSerialize(
-      ::uint8_t* target,
-      ::google::protobuf::io::EpsCopyOutputStream* stream) const {
-    return _InternalSerialize(*this, target, stream);
-  }
-  #else   // PROTOBUF_CUSTOM_VTABLE
-  ::size_t ByteSizeLong() const final;
-  ::uint8_t* _InternalSerialize(
-      ::uint8_t* target,
-      ::google::protobuf::io::EpsCopyOutputStream* stream) const final;
-  #endif  // PROTOBUF_CUSTOM_VTABLE
-  int GetCachedSize() const { return _impl_._cached_size_.Get(); }
-
-  private:
-  void SharedCtor(::google::protobuf::Arena* arena);
-  static void SharedDtor(MessageLite& self);
-  void InternalSwap(ErrorData* other);
- private:
-  template <typename T>
-  friend ::absl::string_view(
-      ::google::protobuf::internal::GetAnyMessageName)();
-  static ::absl::string_view FullMessageName() { return "hqmarket.market.v1.ErrorData"; }
-
- protected:
-  explicit ErrorData(::google::protobuf::Arena* arena);
-  ErrorData(::google::protobuf::Arena* arena, const ErrorData& from);
-  ErrorData(::google::protobuf::Arena* arena, ErrorData&& from) noexcept
-      : ErrorData(arena) {
-    *this = ::std::move(from);
-  }
-  const ::google::protobuf::internal::ClassData* GetClassData() const PROTOBUF_FINAL;
-  static void* PlacementNew_(const void*, void* mem,
-                             ::google::protobuf::Arena* arena);
-  static constexpr auto InternalNewImpl_();
-  static const ::google::protobuf::internal::ClassDataFull _class_data_;
-
- public:
-  ::google::protobuf::Metadata GetMetadata() const;
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-  enum : int {
-    kMessageFieldNumber = 2,
-    kCodeFieldNumber = 1,
-  };
-  // string message = 2;
-  void clear_message() ;
-  const std::string& message() const;
-  template <typename Arg_ = const std::string&, typename... Args_>
-  void set_message(Arg_&& arg, Args_... args);
-  std::string* mutable_message();
-  PROTOBUF_NODISCARD std::string* release_message();
-  void set_allocated_message(std::string* value);
-
-  private:
-  const std::string& _internal_message() const;
-  inline PROTOBUF_ALWAYS_INLINE void _internal_set_message(
-      const std::string& value);
-  std::string* _internal_mutable_message();
-
-  public:
-  // int32 code = 1;
-  void clear_code() ;
-  ::int32_t code() const;
-  void set_code(::int32_t value);
-
-  private:
-  ::int32_t _internal_code() const;
-  void _internal_set_code(::int32_t value);
-
-  public:
-  // @@protoc_insertion_point(class_scope:hqmarket.market.v1.ErrorData)
- private:
-  class _Internal;
-  friend class ::google::protobuf::internal::TcParser;
-  static const ::google::protobuf::internal::TcParseTable<
-      1, 2, 0,
-      44, 2>
-      _table_;
-
-  friend class ::google::protobuf::MessageLite;
-  friend class ::google::protobuf::Arena;
-  template <typename T>
-  friend class ::google::protobuf::Arena::InternalHelper;
-  using InternalArenaConstructable_ = void;
-  using DestructorSkippable_ = void;
-  struct Impl_ {
-    inline explicit constexpr Impl_(
-        ::google::protobuf::internal::ConstantInitialized) noexcept;
-    inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
-                          ::google::protobuf::Arena* arena);
-    inline explicit Impl_(::google::protobuf::internal::InternalVisibility visibility,
-                          ::google::protobuf::Arena* arena, const Impl_& from,
-                          const ErrorData& from_msg);
-    ::google::protobuf::internal::ArenaStringPtr message_;
-    ::int32_t code_;
     ::google::protobuf::internal::CachedSize _cached_size_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
@@ -2836,7 +2625,7 @@ class QueryRequest final : public ::google::protobuf::Message
     return reinterpret_cast<const QueryRequest*>(
         &_QueryRequest_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 14;
+  static constexpr int kIndexInFileMessages = 13;
   friend void swap(QueryRequest& a, QueryRequest& b) { a.Swap(&b); }
   inline void Swap(QueryRequest* other) {
     if (other == this) return;
@@ -3893,7 +3682,7 @@ class QueryResponse final : public ::google::protobuf::Message
     return reinterpret_cast<const QueryResponse*>(
         &_QueryResponse_default_instance_);
   }
-  static constexpr int kIndexInFileMessages = 15;
+  static constexpr int kIndexInFileMessages = 14;
   friend void swap(QueryResponse& a, QueryResponse& b) { a.Swap(&b); }
   inline void Swap(QueryResponse* other) {
     if (other == this) return;
@@ -6334,80 +6123,6 @@ inline void ProviderStatusData::set_allocated_detail(std::string* value) {
     _impl_.detail_.Set("", GetArena());
   }
   // @@protoc_insertion_point(field_set_allocated:hqmarket.market.v1.ProviderStatusData.detail)
-}
-
-// -------------------------------------------------------------------
-
-// ErrorData
-
-// int32 code = 1;
-inline void ErrorData::clear_code() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.code_ = 0;
-}
-inline ::int32_t ErrorData::code() const {
-  // @@protoc_insertion_point(field_get:hqmarket.market.v1.ErrorData.code)
-  return _internal_code();
-}
-inline void ErrorData::set_code(::int32_t value) {
-  _internal_set_code(value);
-  // @@protoc_insertion_point(field_set:hqmarket.market.v1.ErrorData.code)
-}
-inline ::int32_t ErrorData::_internal_code() const {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.code_;
-}
-inline void ErrorData::_internal_set_code(::int32_t value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.code_ = value;
-}
-
-// string message = 2;
-inline void ErrorData::clear_message() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.message_.ClearToEmpty();
-}
-inline const std::string& ErrorData::message() const
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  // @@protoc_insertion_point(field_get:hqmarket.market.v1.ErrorData.message)
-  return _internal_message();
-}
-template <typename Arg_, typename... Args_>
-inline PROTOBUF_ALWAYS_INLINE void ErrorData::set_message(Arg_&& arg,
-                                                     Args_... args) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.message_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
-  // @@protoc_insertion_point(field_set:hqmarket.market.v1.ErrorData.message)
-}
-inline std::string* ErrorData::mutable_message() ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  std::string* _s = _internal_mutable_message();
-  // @@protoc_insertion_point(field_mutable:hqmarket.market.v1.ErrorData.message)
-  return _s;
-}
-inline const std::string& ErrorData::_internal_message() const {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.message_.Get();
-}
-inline void ErrorData::_internal_set_message(const std::string& value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.message_.Set(value, GetArena());
-}
-inline std::string* ErrorData::_internal_mutable_message() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  return _impl_.message_.Mutable( GetArena());
-}
-inline std::string* ErrorData::release_message() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  // @@protoc_insertion_point(field_release:hqmarket.market.v1.ErrorData.message)
-  return _impl_.message_.Release();
-}
-inline void ErrorData::set_allocated_message(std::string* value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.message_.SetAllocated(value, GetArena());
-  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.message_.IsDefault()) {
-    _impl_.message_.Set("", GetArena());
-  }
-  // @@protoc_insertion_point(field_set_allocated:hqmarket.market.v1.ErrorData.message)
 }
 
 // -------------------------------------------------------------------

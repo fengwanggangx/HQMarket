@@ -148,15 +148,11 @@ namespace
 			return true;
 		}
 
-		void SetError(CRequest& response, std::uint64_t requestId, int code, const std::string& message)
+		void SetError(CRequest& response, const CRequest& request, int code, const std::string& message)
 		{
-			wire::ErrorData error;
-			error.set_code(code);
-			error.set_message(message);
-			response.SetCmd("error");
+			response = request;
 			response.SetReturnData("error_code", std::to_string(code));
 			response.SetReturnData("error_message", message);
-			SetData(response, error, requestId);
 		}
 	} // namespace
 
@@ -248,14 +244,14 @@ namespace
 		if (!IsAuthenticated(id))
 		{
 			CRequest response;
-			SetError(response, request.GetId(), 1002, "authentication required");
+			SetError(response, request, 1002, "authentication required");
 			SendRequest(id, response);
 			return;
 		}
 		if (m_handler.end() == mIter)
 		{
 			CRequest response;
-			SetError(response, request.GetId(), 1006, "unknown command");
+			SetError(response, request, 1006, "unknown command");
 			SendRequest(id, response);
 			return;
 		}
@@ -287,7 +283,7 @@ namespace
 		std::int64_t clientTime = 0;
 		if (!ParseMilliseconds(request.GetExtraData("client_time_ms"), clientTime))
 		{
-			SetError(response, request.GetId(), 1005, "invalid client_time_ms");
+			SetError(response, request, 1005, "invalid client_time_ms");
 		}
 		else
 		{
@@ -312,7 +308,7 @@ namespace
 		bool bAccepted = IsValidInstrument(instrument) && IsRealtimeChannel(channel);
 		if (!bAccepted)
 		{
-			SetError(response, requestId, 1003, "invalid instrument or unsupported subscription channel");
+			SetError(response, request, 1003, "invalid instrument or unsupported subscription channel");
 			SendRequest(id, response);
 			return false;
 		}
@@ -366,7 +362,7 @@ namespace
 		if (!IsValidInstrument(instrument) || ((market::Channel::quote != channel) &&
 			(market::Channel::bar_1m != channel) && (market::Channel::bar_1d != channel)))
 		{
-			SetError(response, requestId, 1003, "invalid instrument or unsupported query channel");
+			SetError(response, requestData, 1003, "invalid instrument or unsupported query channel");
 			SendRequest(id, response);
 			return false;
 		}
@@ -391,14 +387,14 @@ namespace
 			if (!ParseMilliseconds(requestData.GetExtraData("begin_time_ms"), begin) ||
 				!ParseMilliseconds(requestData.GetExtraData("end_time_ms"), end))
 			{
-				SetError(response, requestId, 1004, "invalid query time range");
+				SetError(response, requestData, 1004, "invalid query time range");
 				SendRequest(id, response);
 				return false;
 			}
 			end = 0 < end ? end : NowMilliseconds();
 			if ((0 > begin) || (end < begin))
 			{
-				SetError(response, requestId, 1004, "invalid query time range");
+				SetError(response, requestData, 1004, "invalid query time range");
 				SendRequest(id, response);
 				return false;
 			}
