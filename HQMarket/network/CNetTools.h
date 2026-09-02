@@ -13,8 +13,8 @@ namespace net
 	std::size_t BufferEventReader(struct bufferevent* pEvent, std::vector<char>& buffer);
 	std::size_t RequestFromBuffer(std::vector<std::unique_ptr<CRequest>>& reqs, struct bufferevent* pEvent);
 
-	void SendRequest(net::_TyConnectionId id, const CRequest& request);
-	void SendRequest(struct bufferevent* pEvent, const CRequest& request);
+	bool SendRequest(net::_TyConnectionId id, const CRequest& request);
+	bool SendRequest(struct bufferevent* pEvent, const CRequest& request);
 
 	void SetError(CRequest& request, int code, const std::string& message);
 	void SetError(CRequest& response, const CRequest& request, int code, const std::string& message);

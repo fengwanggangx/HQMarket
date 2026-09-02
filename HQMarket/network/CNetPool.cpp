@@ -80,6 +80,24 @@ namespace net
 		return true;
 	}
 
+	struct bufferevent* CNetPool::RegisterAConnection(struct bufferevent* pEvent)
+	{
+		if (nullptr == pEvent)
+		{
+			return nullptr;
+		}
+		_TyConnectionId id = bufferevent_getfd(pEvent);
+
+		sockaddr_storage addr{};
+		ev_socklen_t nLen = sizeof(addr);
+		if (0 != getpeername(id, reinterpret_cast<sockaddr*>(&addr), &nLen))
+		{
+			return nullptr;
+		}
+
+		return RegisterAConnection(id, pEvent, &addr);
+	}
+
 	struct bufferevent* CNetPool::RegisterAConnection(_TyConnectionId id, struct bufferevent* pEvent, struct sockaddr_storage* pAddr)
 	{
 		if ((nullptr == pAddr) || (nullptr == pEvent))

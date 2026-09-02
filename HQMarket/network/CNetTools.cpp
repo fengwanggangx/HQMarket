@@ -1,4 +1,3 @@
-#include "CNetTools.h"
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -10,6 +9,7 @@
 #include <mutex>
 #include <unordered_map>
 #include "CNetPool.h"
+#include "CNetTools.h"
 #include "CFrameCodec.h"
 
 namespace net
@@ -89,18 +89,19 @@ namespace net
 		return nReqCount;
 	}
 
-	void SendRequest(net::_TyConnectionId id, const CRequest& request)
+	bool SendRequest(net::_TyConnectionId id, const CRequest& request)
 	{
 		std::string strPayload;
 		if (!request.Serialize(&strPayload))
 		{
-			return;
+			return false;
 		}
 		std::string frame = net::CFrameCodec::Encode(strPayload);
-		net::CNetPool::InstancePtr()->Send(id, frame.data(), frame.size());
+		bool bRet = net::CNetPool::InstancePtr()->Send(id, frame.data(), frame.size());
+		return bRet;
 	}
 
-	void SendRequest(struct bufferevent* pEvent, const CRequest& request)
+	bool SendRequest(struct bufferevent* pEvent, const CRequest& request)
 	{
 		_TyConnectionId id = bufferevent_getfd(pEvent);
 		return SendRequest(id, request);
