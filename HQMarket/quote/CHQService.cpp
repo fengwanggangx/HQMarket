@@ -143,32 +143,6 @@ namespace
 			return true;
 		}
 
-		void SetError(CRequest& response, const CRequest& request, int code, const std::string& message)
-		{
-			response = request;
-			response.SetReturnData("error_code", std::to_string(code));
-			response.SetReturnData("error_message", message);
-		}
-
-		void SendRequest(net::_TyConnectionId id, CRequest& request)
-		{
-			std::string payload;
-			if (!request.Serialize(&payload))
-			{
-				return;
-			}
-			std::string frame = net::CFrameCodec::Encode(payload);
-			net::CNetPool::InstancePtr()->SendData2Client(id, frame.data(), frame.size());
-		}
-
-		void SendError(net::_TyConnectionId id, const CRequest& request, int code, const std::string& message)
-		{
-			CRequest response = request;
-			response.SetReturnData("error_code", std::to_string(code));
-			response.SetReturnData("error_message", message);
-			SendRequest(id, response);
-		}
-
 	} // namespace
 
 	CMarketService::CMarketService(net::CTcpServer* pTcpServer, CPythonRuntime* pPythonRuntime) : m_pTcpServer(pTcpServer), m_pPythonRuntime(pPythonRuntime)
@@ -258,12 +232,12 @@ namespace
 		}
 		if (!IsAuthenticated(id))
 		{
-			SendError(id, request, 1002, "authentication required");
+			net::SendError(id, request, 1002, "authentication required");
 			return;
 		}
 		if (m_handler.end() == mIter)
 		{
-			SendError(id, request, 1006, "unknown command");
+			net::SendError(id, request, 1006, "unknown command");
 			return;
 		}
 		mIter->second(id, request);
@@ -284,7 +258,7 @@ namespace
 		response.SetReturnData("reason", bAuthenticated ? "ok" : "invalid token");
 		response.SetReturnData("request_id", std::to_string(request.GetId()));
 		response.SetReturnData("server_time_ms", std::to_string(NowMilliseconds()));
-		SendRequest(id, response);
+		net::SendRequest(id, response);
 		return true;
 	}
 
@@ -293,7 +267,7 @@ namespace
 		std::int64_t clientTime = 0;
 		if (!ParseMilliseconds(request.GetExtraData("client_time_ms"), clientTime))
 		{
-			SendError(id, request, 1005, "invalid client_time_ms");
+			net::SendError(id, request, 1005, "invalid client_time_ms");
 			return false;
 		}
 		CRequest response;
@@ -302,7 +276,7 @@ namespace
 		response.SetReturnData("client_time_ms", std::to_string(clientTime));
 		response.SetReturnData("request_id", std::to_string(request.GetId()));
 		response.SetReturnData("server_time_ms", std::to_string(NowMilliseconds()));
-		SendRequest(id, response);
+		net::SendRequest(id, response);
 		return true;
 	}
 
@@ -311,7 +285,7 @@ namespace
 		std::string strCmd = request.GetCmd();
 		if (("subscribe" != strCmd) || ("unsubscribe" != strCmd))
 		{
-			SendError(id, request, 1001, "invalid cmd");
+			net::SendError(id, request, 1001, "invalid cmd");
 			return false;
 		}
 
@@ -325,7 +299,7 @@ namespace
 		bool bAccepted = security.IsValid() && IsRealtimeChannel(channel);
 		if (!bAccepted)
 		{
-			SendError(id, request, 1003, "invalid security or unsupported subscription channel");
+			net::SendError(id, request, 1003, "invalid security or unsupported subscription channel");
 			return false;
 		}
 
@@ -355,7 +329,7 @@ namespace
 		response.SetCmd("subscription_ack");
 		response.SetReturnData("accepted", "true");
 		SetData(response, ack, requestId);
-		SendRequest(id, response);
+		net::SendRequest(id, response);
 		if (bSubscribe && (market::Channel::quote == channel))
 		{
 			std::optional<market::CQuote> quote = m_broker.QueryQuote(security);
@@ -366,7 +340,7 @@ namespace
 				CRequest snapshot;
 				snapshot.SetCmd("quote");
 				SetData(snapshot, quoteData);
-				SendRequest(id, snapshot);
+				net::SendRequest(id, snapshot);
 			}
 		}
 		return true;
@@ -381,7 +355,7 @@ namespace
 		market::Channel channel = "query_quote" == strCmd ? market::Channel::quote : ParseChannel(requestData.GetExtraData("channel"));
 		if (!security.IsValid() || ((market::Channel::quote != channel) && (market::Channel::bar_1m != channel) && (market::Channel::bar_1d != channel)))
 		{
-			SendError(id, requestData, 1003, "invalid security or unsupported query channel");
+			net::SendError(id, requestData, 1003, "invalid security or unsupported query channel");
 			return false;
 		}
 		wire::QueryResponse result;
@@ -406,15 +380,15 @@ namespace
 			std::int64_t end = 0;
 			if (!ParseMilliseconds(requestData.GetExtraData("begin_time_ms"), begin) || !ParseMilliseconds(requestData.GetExtraData("end_time_ms"), end))
 			{
-				SetError(response, requestData, 1004, "invalid query time range");
-				SendRequest(id, response);
+				net::SetError(response, requestData, 1004, "invalid query time range");
+				net::SendRequest(id, response);
 				return false;
 			}
 			end = 0 < end ? end : NowMilliseconds();
 			if ((0 > begin) || (end < begin))
 			{
-				SetError(response, requestData, 1004, "invalid query time range");
-				SendRequest(id, response);
+				net::SetError(response, requestData, 1004, "invalid query time range");
+				net::SendRequest(id, response);
 				return false;
 			}
 			std::vector<market::CBar> bars = m_broker.QueryBars(security, channel, begin, end);
@@ -426,19 +400,8 @@ namespace
 		}
 		response.SetCmd("query_response");
 		SetData(response, result, requestId);
-		SendRequest(id, response);
+		net::SendRequest(id, response);
 		return true;
-	}
-
-	void CMarketService::SendRequest(net::_TyConnectionId id, CRequest& request)
-	{
-		std::string payload;
-		if (!request.Serialize(&payload))
-		{
-			return;
-		}
-		std::string frame = net::CFrameCodec::Encode(payload);
-		net::CNetPool::InstancePtr()->SendData2Client(id, frame.data(), frame.size());
 	}
 
 	void CMarketService::PublishQuote(const market::CQuote& quote, std::uint64_t nSequence)
@@ -453,7 +416,7 @@ namespace
 		{
 			if (m_subscriptions.IsSubscribed(id, subscription))
 			{
-				SendRequest(id, request);
+				net::SendRequest(id, request);
 			}
 		}
 	}
@@ -490,7 +453,7 @@ namespace
 		{
 			if (m_subscriptions.IsSubscribed(id, subscription))
 			{
-				SendRequest(id, request);
+				net::SendRequest(id, request);
 			}
 		}
 	}

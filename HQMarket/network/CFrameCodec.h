@@ -6,6 +6,13 @@
 #include <vector>
 namespace net
 {
+	/*
+┌─────────────┬────────────────┐
+ 4字节长度字段 │ payload        
+ 辅助协议信息  │ 真正的业务消息
+└─────────────┴────────────────┘
+	*/
+
 	class CFrameCodec final
 	{
 		public:

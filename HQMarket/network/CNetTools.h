@@ -10,11 +10,14 @@ struct bufferevent;
 class CRequest;
 namespace net
 {
-	namespace utility
-	{
-		std::size_t BufferEventReader(struct bufferevent* pEvent, std::vector<char>& buffer);
-		std::size_t RequestFromBuffer(std::vector<std::unique_ptr<CRequest>>& reqs, struct bufferevent* pEvent);
-		bool SendRequest(CRequest* pRequest, struct bufferevent* pEvent);
-	} // namespace utility
-} // namespace net
+	std::size_t BufferEventReader(struct bufferevent* pEvent, std::vector<char>& buffer);
+	std::size_t RequestFromBuffer(std::vector<std::unique_ptr<CRequest>>& reqs, struct bufferevent* pEvent);
+
+	void SendRequest(net::_TyConnectionId id, const CRequest& request);
+	void SendRequest(struct bufferevent* pEvent, const CRequest& request);
+
+	void SetError(CRequest& request, int code, const std::string& message);
+	void SetError(CRequest& response, const CRequest& request, int code, const std::string& message);
+	void SendError(net::_TyConnectionId id, const CRequest& request, int code, const std::string& message);
+}
 #endif

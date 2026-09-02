@@ -239,7 +239,7 @@ namespace net
 		return GetSendBuffer(id);
 	}
 
-	bool CNetPool::SendData2Client(_TyConnectionId id, const char* data, size_t nLength)
+	bool CNetPool::Send(_TyConnectionId id, const char* data, size_t nLength)
 	{
 		if ((nullptr == data) || (0 == nLength))
 		{
