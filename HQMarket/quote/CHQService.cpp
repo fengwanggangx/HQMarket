@@ -54,31 +54,26 @@ namespace
 			return result;
 		}
 
-		bool IsValidInstrument(const market::CSecurity& security)
-		{
-			return security.IsValid();
-		}
-
 		bool IsRealtimeChannel(market::Channel channel)
 		{
 			return (market::Channel::quote == channel) || (market::Channel::depth == channel);
 		}
 
-		market::Channel ParseChannel(const std::string& value)
+		market::Channel ParseChannel(const std::string& v)
 		{
-			if ("quote" == value)
+			if ("quote" == v)
 			{
 				return market::Channel::quote;
 			}
-			if ("depth" == value)
+			if ("depth" == v)
 			{
 				return market::Channel::depth;
 			}
-			if ("bar_1m" == value)
+			if ("bar_1m" == v)
 			{
 				return market::Channel::bar_1m;
 			}
-			if ("bar_1d" == value)
+			if ("bar_1d" == v)
 			{
 				return market::Channel::bar_1d;
 			}
@@ -154,6 +149,26 @@ namespace
 			response.SetReturnData("error_code", std::to_string(code));
 			response.SetReturnData("error_message", message);
 		}
+
+		void SendRequest(net::_TyConnectionId id, CRequest& request)
+		{
+			std::string payload;
+			if (!request.Serialize(&payload))
+			{
+				return;
+			}
+			std::string frame = net::CFrameCodec::Encode(payload);
+			net::CNetPool::InstancePtr()->SendData2Client(id, frame.data(), frame.size());
+		}
+
+		void SendError(net::_TyConnectionId id, const CRequest& request, int code, const std::string& message)
+		{
+			CRequest response = request;
+			response.SetReturnData("error_code", std::to_string(code));
+			response.SetReturnData("error_message", message);
+			SendRequest(id, response);
+		}
+
 	} // namespace
 
 	CMarketService::CMarketService(net::CTcpServer* pTcpServer, CPythonRuntime* pPythonRuntime) : m_pTcpServer(pTcpServer), m_pPythonRuntime(pPythonRuntime)
@@ -243,16 +258,12 @@ namespace
 		}
 		if (!IsAuthenticated(id))
 		{
-			CRequest response;
-			SetError(response, request, 1002, "authentication required");
-			SendRequest(id, response);
+			SendError(id, request, 1002, "authentication required");
 			return;
 		}
 		if (m_handler.end() == mIter)
 		{
-			CRequest response;
-			SetError(response, request, 1006, "unknown command");
-			SendRequest(id, response);
+			SendError(id, request, 1006, "unknown command");
 			return;
 		}
 		mIter->second(id, request);
@@ -279,39 +290,46 @@ namespace
 
 	bool CMarketService::HandleHeartbeat(net::_TyConnectionId id, CRequest& request)
 	{
-		CRequest response;
 		std::int64_t clientTime = 0;
 		if (!ParseMilliseconds(request.GetExtraData("client_time_ms"), clientTime))
 		{
-			SetError(response, request, 1005, "invalid client_time_ms");
+			SendError(id, request, 1005, "invalid client_time_ms");
+			return false;
 		}
-		else
-		{
-			response.SetType(CRequest::Type::HQMARKET);
-			response.SetCmd("heartbeat");
-			response.SetReturnData("client_time_ms", std::to_string(clientTime));
-			response.SetReturnData("request_id", std::to_string(request.GetId()));
-			response.SetReturnData("server_time_ms", std::to_string(NowMilliseconds()));
-		}
+		CRequest response;
+		response.SetType(CRequest::Type::HQMARKET);
+		response.SetCmd("heartbeat");
+		response.SetReturnData("client_time_ms", std::to_string(clientTime));
+		response.SetReturnData("request_id", std::to_string(request.GetId()));
+		response.SetReturnData("server_time_ms", std::to_string(NowMilliseconds()));
 		SendRequest(id, response);
 		return true;
 	}
 
 	bool CMarketService::HandleSubscription(net::_TyConnectionId id, CRequest& request)
 	{
-		CRequest response;
-		std::uint64_t requestId = request.GetId();
-		bool bSubscribe = "subscribe" == request.GetCmd();
-		market::CSecurity instrument = ParseInstrument(request.GetExtraData("instrument"));
-		market::Channel channel = ParseChannel(request.GetExtraData("channel"));
-		market::CChannelInfo subscription{ instrument, channel };
-		bool bAccepted = IsValidInstrument(instrument) && IsRealtimeChannel(channel);
-		if (!bAccepted)
+		std::string strCmd = request.GetCmd();
+		if (("subscribe" != strCmd) || ("unsubscribe" != strCmd))
 		{
-			SetError(response, request, 1003, "invalid instrument or unsupported subscription channel");
-			SendRequest(id, response);
+			SendError(id, request, 1001, "invalid cmd");
 			return false;
 		}
+
+		bool bSubscribe = "subscribe" == strCmd;
+
+		std::uint64_t requestId = request.GetId();
+
+		market::CSecurity security = ParseInstrument(request.GetExtraData("security"));
+		market::Channel channel = ParseChannel(request.GetExtraData("channel"));
+
+		bool bAccepted = security.IsValid() && IsRealtimeChannel(channel);
+		if (!bAccepted)
+		{
+			SendError(id, request, 1003, "invalid security or unsupported subscription channel");
+			return false;
+		}
+
+		market::CChannelInfo subscription{security, channel};
 		std::vector<market::CChannelInfo> requested{ subscription };
 		std::vector<market::CChannelInfo> changed = bSubscribe ? m_subscriptions.Subscribe(id, requested) : m_subscriptions.Unsubscribe(id, requested);
 		if (!changed.empty())
@@ -328,17 +346,19 @@ namespace
 
 		wire::SubscriptionAck ack;
 		wire::SubscriptionResult* pResult = ack.add_results();
-		pResult->mutable_instrument()->set_symbol(instrument.m_strCode);
-		pResult->mutable_instrument()->set_exchange(ToWire(instrument.m_market));
+		pResult->mutable_instrument()->set_symbol(security.m_strCode);
+		pResult->mutable_instrument()->set_exchange(ToWire(security.m_market));
 		pResult->set_channel(static_cast<wire::Channel>(static_cast<int>(channel)));
 		pResult->set_accepted(true);
+
+		CRequest response;
 		response.SetCmd("subscription_ack");
 		response.SetReturnData("accepted", "true");
 		SetData(response, ack, requestId);
 		SendRequest(id, response);
 		if (bSubscribe && (market::Channel::quote == channel))
 		{
-			std::optional<market::CQuote> quote = m_broker.QueryQuote(instrument);
+			std::optional<market::CQuote> quote = m_broker.QueryQuote(security);
 			if (quote.has_value())
 			{
 				wire::QuoteData quoteData;
@@ -354,26 +374,26 @@ namespace
 
 	bool CMarketService::HandleQuery(net::_TyConnectionId id, CRequest& requestData)
 	{
-		CRequest response;
 		std::uint64_t requestId = requestData.GetId();
-		market::CSecurity instrument = ParseInstrument(requestData.GetExtraData("instrument"));
-		market::Channel channel = "query_quote" == requestData.GetCmd()
-			? market::Channel::quote : ParseChannel(requestData.GetExtraData("channel"));
-		if (!IsValidInstrument(instrument) || ((market::Channel::quote != channel) &&
-			(market::Channel::bar_1m != channel) && (market::Channel::bar_1d != channel)))
+		std::string strCmd = requestData.GetCmd();
+
+		market::CSecurity security = ParseInstrument(requestData.GetExtraData("security"));
+		market::Channel channel = "query_quote" == strCmd ? market::Channel::quote : ParseChannel(requestData.GetExtraData("channel"));
+		if (!security.IsValid() || ((market::Channel::quote != channel) && (market::Channel::bar_1m != channel) && (market::Channel::bar_1d != channel)))
 		{
-			SetError(response, requestData, 1003, "invalid instrument or unsupported query channel");
-			SendRequest(id, response);
+			SendError(id, requestData, 1003, "invalid security or unsupported query channel");
 			return false;
 		}
 		wire::QueryResponse result;
 		wire::QueryResponse* pResult = &result;
-		pResult->mutable_instrument()->set_symbol(instrument.m_strCode);
-		pResult->mutable_instrument()->set_exchange(ToWire(instrument.m_market));
+		pResult->mutable_instrument()->set_symbol(security.m_strCode);
+		pResult->mutable_instrument()->set_exchange(ToWire(security.m_market));
 		pResult->set_channel(static_cast<wire::Channel>(static_cast<int>(channel)));
+
+		CRequest response;
 		if (market::Channel::quote == channel)
 		{
-			std::optional<market::CQuote> quote = m_broker.QueryQuote(instrument);
+			std::optional<market::CQuote> quote = m_broker.QueryQuote(security);
 			pResult->set_found(quote.has_value());
 			if (quote.has_value())
 			{
@@ -384,8 +404,7 @@ namespace
 		{
 			std::int64_t begin = 0;
 			std::int64_t end = 0;
-			if (!ParseMilliseconds(requestData.GetExtraData("begin_time_ms"), begin) ||
-				!ParseMilliseconds(requestData.GetExtraData("end_time_ms"), end))
+			if (!ParseMilliseconds(requestData.GetExtraData("begin_time_ms"), begin) || !ParseMilliseconds(requestData.GetExtraData("end_time_ms"), end))
 			{
 				SetError(response, requestData, 1004, "invalid query time range");
 				SendRequest(id, response);
@@ -398,7 +417,7 @@ namespace
 				SendRequest(id, response);
 				return false;
 			}
-			std::vector<market::CBar> bars = m_broker.QueryBars(instrument, channel, begin, end);
+			std::vector<market::CBar> bars = m_broker.QueryBars(security, channel, begin, end);
 			pResult->set_found(!bars.empty());
 			for (const market::CBar& bar : bars)
 			{
@@ -528,7 +547,7 @@ namespace
 			return "{}";
 		}
 		std::ostringstream out;
-		out << "{\"instrument\":\"" << quote->m_security.String() << "\",\"exchange_time_ms\":" << quote->m_nExchangeTime
+		out << "{\"security\":\"" << quote->m_security.String() << "\",\"exchange_time_ms\":" << quote->m_nExchangeTime
 			<< ",\"receive_time_ms\":" << quote->m_nReceiveTime << ",\"last_price\":" << quote->m_nLastPrice
 			<< ",\"price_scale\":" << quote->m_nPriceScale << ",\"volume\":" << quote->m_nVolume
 			<< ",\"turnover\":" << quote->m_nTurnover << ",\"source\":\"" << quote->m_strSource
@@ -542,14 +561,14 @@ namespace
 		std::ostringstream out;
 		out << '[';
 		bool bFirst = true;
-		for (const market::CSecurity& instrument : values)
+		for (const market::CSecurity& security : values)
 		{
 			if (!bFirst)
 			{
 				out << ',';
 			}
 			bFirst = false;
-			out << "{\"instrument\":\"" << instrument.String() << "\"}";
+			out << "{\"security\":\"" << security.String() << "\"}";
 		}
 		out << ']';
 		return out.str();
@@ -558,8 +577,8 @@ namespace
 	std::string CMarketService::BarsJson(const std::string& strInstrument, market::Channel channel,
 									 std::int64_t nBeginTime, std::int64_t nEndTime)
 	{
-		market::CSecurity instrument = ParseInstrument(strInstrument);
-		std::vector<market::CBar> values = m_broker.QueryBars(instrument, channel, nBeginTime, nEndTime);
+		market::CSecurity security = ParseInstrument(strInstrument);
+		std::vector<market::CBar> values = m_broker.QueryBars(security, channel, nBeginTime, nEndTime);
 		std::ostringstream out;
 		out << '[';
 		bool bFirst = true;

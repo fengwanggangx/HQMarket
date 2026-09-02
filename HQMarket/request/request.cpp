@@ -133,33 +133,33 @@ CRequest::CRequest() : m_arena(std::make_unique<google::protobuf::Arena>())
 
 CRequest::~CRequest() = default;
 
-CRequest::CRequest(const CRequest& other) : CRequest()
+CRequest::CRequest(const CRequest& arg) : CRequest()
 {
-	*this = other;
+	*this = arg;
 }
 
-CRequest& CRequest::operator=(const CRequest& other)
+CRequest& CRequest::operator=(const CRequest& arg)
 {
-	if (this == &other)
+	if (this == &arg)
 	{
 		return *this;
 	}
 
 	auto arena = std::make_unique<google::protobuf::Arena>();
 	request::RequestData* data = google::protobuf::Arena::CreateMessage<request::RequestData>(arena.get());
-	if (nullptr != other.m_data)
+	if (nullptr != arg.m_data)
 	{
-		data->CopyFrom(*other.m_data);
+		data->CopyFrom(*arg.m_data);
 	}
 
 	std::unique_ptr<CData> cdata;
-	if (nullptr != other.m_cdata)
+	if (nullptr != arg.m_cdata)
 	{
 		std::string payload;
-		if (other.m_cdata->Serialize(&payload))
+		if (arg.m_cdata->Serialize(&payload))
 		{
 			cdata = std::make_unique<CData>();
-			if (!cdata->Deserialize(other.m_cdata->GetType(), payload))
+			if (!cdata->Deserialize(arg.m_cdata->GetType(), payload))
 			{
 				cdata.reset();
 			}
@@ -169,7 +169,7 @@ CRequest& CRequest::operator=(const CRequest& other)
 	m_arena = std::move(arena);
 	m_data = data;
 	m_cdata = std::move(cdata);
-	m_connection_id = other.m_connection_id;
+	m_connection_id = arg.m_connection_id;
 	return *this;
 }
 

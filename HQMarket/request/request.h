@@ -62,8 +62,8 @@ class CRequest
 	public:
 		CRequest();
 		~CRequest();
-		CRequest(const CRequest& other);
-		CRequest& operator=(const CRequest& other);
+		CRequest(const CRequest& arg);
+		CRequest& operator=(const CRequest& arg);
 		CRequest(CRequest&&) = delete;
 		CRequest& operator=(CRequest&&) = delete;
 

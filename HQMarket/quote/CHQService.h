@@ -44,7 +44,7 @@ class CMarketService final
 			bool HandleHeartbeat(net::_TyConnectionId id, CRequest& request);
 			bool HandleQuery(net::_TyConnectionId id, CRequest& request);
 			bool HandleSubscription(net::_TyConnectionId id, CRequest& request);
-			void SendRequest(net::_TyConnectionId id, CRequest& request);
+
 			void PublishQuote(const market::CQuote& quote, std::uint64_t nSequence);
 			void PublishDepth(const market::CDepth& depth, std::uint64_t nSequence);
 			bool IsAuthenticated(net::_TyConnectionId id) const;
