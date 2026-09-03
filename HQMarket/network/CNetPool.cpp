@@ -235,7 +235,7 @@ namespace net
 			{
 				return ret;
 			}
-			frames = mIter->second->m_frames.GetFrames(data, nLength);
+			frames = mIter->second->m_frames.Decode(data, nLength);
 		}
 		if (!frames.has_value())
 		{
@@ -254,7 +254,7 @@ namespace net
 		}
 
 		std::shared_lock<std::shared_mutex> lock(m_shared_mtx_pool);
-		auto mIter = m_pool.find(id);
+		const auto mIter = m_pool.find(id);
 		if (mIter == m_pool.end())
 		{
 			return false;
@@ -276,6 +276,23 @@ namespace net
 		}
 
 		return evbuffer_add(pBuffer, data, nLength) == 0;
+	}
+
+	bool CNetPool::SendRequest(net::_TyConnectionId id, const CRequest& request)
+	{
+		std::string strPayload;
+		if (!request.Serialize(&strPayload))
+		{
+			return false;
+		}
+		std::string frame = net::CFrameBuffer::Encode(strPayload);
+		std::shared_lock<std::shared_mutex> lock(m_shared_mtx_pool);
+		const auto mIter = m_pool.find(id);
+		if (mIter == m_pool.end())
+		{
+			return false;
+		}
+		return Send(mIter->second->m_pEvent, frame, frame.size());
 	}
 
 	std::size_t CNetPool::Count() const

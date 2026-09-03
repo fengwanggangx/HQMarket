@@ -84,13 +84,7 @@ namespace net
 
 	bool SendRequest(net::_TyConnectionId id, const CRequest& request)
 	{
-		std::string strPayload;
-		if (!request.Serialize(&strPayload))
-		{
-			return false;
-		}
-		std::string frame = net::CFrameBuffer::Encode(strPayload);
-		bool bRet = net::CNetPool::InstancePtr()->Send(id, frame.data(), frame.size());
+		bool bRet = net::CNetPool::InstancePtr()->SendRequest(id, request);
 		return bRet;
 	}
 

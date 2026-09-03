@@ -6,7 +6,7 @@ namespace net
 	{
 		m_recv_buffer.reserve(4096);
 	}
-	std::optional<std::vector<std::string>> CFrameBuffer::GetFrames(const void* pData, std::size_t nLength)
+	std::optional<std::vector<std::string>> CFrameBuffer::Decode(const void* pData, std::size_t nLength)
 	{
 		if (m_bError || ((nullptr == pData) && (nLength != 0)))
 		{

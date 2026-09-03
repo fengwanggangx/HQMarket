@@ -23,7 +23,7 @@ namespace net
 			void Reset();
 			bool HasError() const;
 			static std::string Encode(const std::string& strPayload);
-			std::optional<std::vector<std::string>> GetFrames(const void* pData, std::size_t nLength);
+			std::optional<std::vector<std::string>> Decode(const void* pData, std::size_t nLength);
 
 		private:
 			const std::size_t m_nMaxFrameSize{ 8 * 1024 * 1024 };
