@@ -4,7 +4,7 @@
 #include "CHQBroker.h"
 #include "CSubscriptionMgr.h"
 #include "v1/market.pb.h"
-#include "../network/CFrameCodec.h"
+#include "../network/CFrameBuffer.h"
 #include "../network/CTcpServer.h"
 #include <atomic>
 #include <filesystem>

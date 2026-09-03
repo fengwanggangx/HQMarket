@@ -6,16 +6,11 @@
 #include <string.h>
 #include <utility>
 #include <vector>
+#include "CFrameBuffer.h"
 namespace net
 {
 	struct CNetInfo
 	{
-		CNetInfo()
-		{
-			m_buffer_recv.reserve(2048);
-			m_buffer_send.reserve(2048);
-		}
-
 		_TyConnectionId m_fd{ -1 };
 
 		int m_nPort{ -1 };
@@ -23,8 +18,7 @@ namespace net
 		struct sockaddr_storage m_addr { 0 };
 		struct bufferevent* m_pEvent{ nullptr };
 		
-		std::vector<char> m_buffer_recv;
-		std::vector<char> m_buffer_send;
+		CFrameBuffer m_frames;
 
 		void Empty()
 		{
@@ -39,8 +33,7 @@ namespace net
 			m_strAddress.clear();
 			memset(&m_addr, 0, sizeof(m_addr));
 			
-			m_buffer_recv.clear();
-			m_buffer_send.clear();
+			m_frames.Reset();
 		}
 
 		~CNetInfo()
@@ -223,38 +216,33 @@ namespace net
 		return id;
 	}
 
-	std::optional<std::vector<char>*> CNetPool::GetRecvBuffer(_TyConnectionId id)
+	std::pair<RecvFrameResult, std::vector<std::string>> CNetPool::GetRecvFrames(_TyConnectionId id, struct bufferevent* pEvent, const char* data, std::size_t nLength)
 	{
-		std::unique_lock<std::shared_mutex> lock(m_shared_mtx_pool);
-		const auto mIter = m_pool.find(id);
-		if (mIter == m_pool.end())
+		std::pair<RecvFrameResult, std::vector<std::string>> ret = { RecvFrameResult::ConnectionNotFound, {} };
+
+		if ((nullptr == pEvent) || ((nullptr == data) && (nLength != 0)))
 		{
-			return std::nullopt;
+			return ret;
 		}
-		return &mIter->second->m_buffer_recv;
-	}
 
-	std::optional<std::vector<char>*> CNetPool::GetRecvBuffer(struct bufferevent* pEvent)
-	{
-		_TyConnectionId id = bufferevent_getfd(pEvent);
-		return GetRecvBuffer(id);
-	}
+		std::optional<std::vector<std::string>> frames{ std::nullopt };
 
-	std::optional<std::vector<char>*> CNetPool::GetSendBuffer(_TyConnectionId id)
-	{
-		std::unique_lock<std::shared_mutex> lock(m_shared_mtx_pool);
-		const auto mIter = m_pool.find(id);
-		if (mIter == m_pool.end())
 		{
-			return std::nullopt;
+			std::unique_lock<std::shared_mutex> lock(m_shared_mtx_pool);
+			const auto mIter = m_pool.find(id);
+			if ((mIter == m_pool.end()) || (mIter->second->m_pEvent != pEvent))
+			{
+				return ret;
+			}
+			frames = iter->second->m_frames.GetFrames(data, nLength);
 		}
-		return &mIter->second->m_buffer_send;
-	}
+		if (!frames.has_value())
+		{
+			ret.first = RecvFrameResult::ProtocolError;
+			return ret;
+		}
 
-	std::optional<std::vector<char>*> CNetPool::GetSendBuffer(struct bufferevent* pEvent)
-	{
-		_TyConnectionId id = bufferevent_getfd(pEvent);
-		return GetSendBuffer(id);
+		return { RecvFrameResult::Ok, std::move(*frames) };
 	}
 
 	bool CNetPool::Send(_TyConnectionId id, const char* data, size_t nLength)
@@ -270,11 +258,16 @@ namespace net
 		{
 			return false;
 		}
-		struct bufferevent* pEvent = mIter->second->m_pEvent;
-		if (nullptr == pEvent)
+		return Send(mIter->second->m_pEvent, data, nLength);
+	}
+
+	bool CNetPool::Send(struct bufferevent* pEvent, const char* data, size_t nLength)
+	{
+		if ((nullptr == pEvent) || (nullptr == data) || (0 == nLength))
 		{
 			return false;
 		}
+
 		struct evbuffer* pBuffer = bufferevent_get_output(pEvent);
 		if (nullptr == pBuffer)
 		{

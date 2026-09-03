@@ -5,8 +5,9 @@
 #include <mutex>
 #include <shared_mutex>
 #include <memory>
-#include <optional>
 #include <vector>
+#include <string>
+#include <utility>
 #include "../common/ISingleton.h"
 #include "CNet.h"
 #include "event2/bufferevent.h"
@@ -14,21 +15,26 @@
 
 namespace net
 {
+	enum class RecvFrameResult
+	{
+		Ok,
+		ConnectionNotFound,
+		ProtocolError
+	};
+
 	struct CNetInfo;
 	class CNetPool final : public ISingleton<CNetPool>
 	{
 			DECLARE_SINGLE_DFAULT(CNetPool)
 
 		public:
-			std::optional<std::vector<char>*> GetRecvBuffer(_TyConnectionId id);
-			std::optional<std::vector<char>*> GetSendBuffer(_TyConnectionId id);
-			std::optional<std::vector<char>*> GetRecvBuffer(struct bufferevent* pEvent);
-			std::optional<std::vector<char>*> GetSendBuffer(struct bufferevent* pEvent);
+			std::pair<RecvFrameResult, std::vector<std::string>> GetRecvFrames(_TyConnectionId id, struct bufferevent* pEvent, const char* data, std::size_t nLength);
 
 			net::_TyConnectionId CloseAConnection(_TyConnectionId id);
 			net::_TyConnectionId CloseAConnection(struct bufferevent* pEvent);
 
 			bool Send(_TyConnectionId id, const char* data, size_t nLength);
+	
 			std::size_t Count() const;
 			struct bufferevent* RegisterConnect(_TyConnectionId id, struct event_base* pNet, struct sockaddr* pAddr, int nLength, bufferevent_data_cb readcb, bufferevent_data_cb writecb, bufferevent_event_cb eventcb, void* cbarg);
 			struct bufferevent* RegisterAConnection(_TyConnectionId id, struct bufferevent* pEvent, struct sockaddr_storage* pAddr);
@@ -36,6 +42,8 @@ namespace net
 		private:
 			bool CloseAConnection(CNetInfo& info);
 			bool RegisterAConnection(_TyConnectionId id, struct bufferevent* pEvent, struct sockaddr* pAddr);
+
+			bool Send(struct bufferevent* pEvent, const char* data, size_t nLength);
 
 		private:
 			mutable std::shared_mutex m_shared_mtx_pool;

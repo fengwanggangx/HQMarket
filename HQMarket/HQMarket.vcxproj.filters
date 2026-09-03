@@ -78,10 +78,10 @@
     <ClCompile Include="ini\CIniFile.cpp">
       <Filter>ini</Filter>
     </ClCompile>
-	<ClCompile Include="main.cpp" />
-	<ClCompile Include="quote\CHQBroker.cpp">
-	  <Filter>quote</Filter>
-	</ClCompile>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="quote\CHQBroker.cpp">
+      <Filter>quote</Filter>
+    </ClCompile>
     <ClCompile Include="quote\CSubscriptionMgr.cpp">
       <Filter>quote</Filter>
     </ClCompile>
@@ -91,7 +91,7 @@
     <ClCompile Include="quote\v1\market.pb.cc">
       <Filter>quote\v1</Filter>
     </ClCompile>
-    <ClCompile Include="network\CFrameCodec.cpp">
+    <ClCompile Include="network\CFrameBuffer.cpp">
       <Filter>network</Filter>
     </ClCompile>
     <ClCompile Include="network\CHttpServer.cpp">
@@ -189,12 +189,12 @@
     <ClInclude Include="ini\CIniFile.h">
       <Filter>ini</Filter>
     </ClInclude>
-	<ClInclude Include="quote\CSubscriptionMgr.h">
+    <ClInclude Include="quote\CSubscriptionMgr.h">
       <Filter>quote</Filter>
-	</ClInclude>
-	<ClInclude Include="quote\CHQBroker.h">
-	  <Filter>quote</Filter>
-	</ClInclude>
+    </ClInclude>
+    <ClInclude Include="quote\CHQBroker.h">
+      <Filter>quote</Filter>
+    </ClInclude>
     <ClInclude Include="quote\IMarketProvider.h">
       <Filter>quote</Filter>
     </ClInclude>
@@ -204,7 +204,7 @@
     <ClInclude Include="quote\v1\market.pb.h">
       <Filter>quote\v1</Filter>
     </ClInclude>
-    <ClInclude Include="network\CFrameCodec.h">
+    <ClInclude Include="network\CFrameBuffer.h">
       <Filter>network</Filter>
     </ClInclude>
     <ClInclude Include="network\CHttpServer.h">
