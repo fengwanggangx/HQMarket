@@ -234,7 +234,7 @@ namespace net
 			{
 				return ret;
 			}
-			frames = iter->second->m_frames.GetFrames(data, nLength);
+			frames = mIter->second->m_frames.GetFrames(data, nLength);
 		}
 		if (!frames.has_value())
 		{
