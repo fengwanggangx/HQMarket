@@ -73,11 +73,11 @@ namespace net
 		return true;
 	}
 
-	struct bufferevent* CNetPool::RegisterAConnection(struct bufferevent* pEvent)
+	_TyConnectionId CNetPool::RegisterAConnection(struct bufferevent* pEvent)
 	{
 		if (nullptr == pEvent)
 		{
-			return nullptr;
+			return -1;
 		}
 		_TyConnectionId id = bufferevent_getfd(pEvent);
 
@@ -85,10 +85,11 @@ namespace net
 		ev_socklen_t nLen = sizeof(addr);
 		if (0 != getpeername(id, reinterpret_cast<sockaddr*>(&addr), &nLen))
 		{
-			return nullptr;
+			return -1;
 		}
 
-		return RegisterAConnection(id, pEvent, &addr);
+		RegisterAConnection(id, pEvent, &addr);
+		return id;
 	}
 
 	struct bufferevent* CNetPool::RegisterAConnection(_TyConnectionId id, struct bufferevent* pEvent, struct sockaddr_storage* pAddr)
