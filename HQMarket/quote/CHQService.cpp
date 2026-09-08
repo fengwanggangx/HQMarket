@@ -158,13 +158,14 @@ namespace
 		};
 	}
 
-	bool CMarketService::Initialize(const std::string& strToken, const std::filesystem::path& root)
+	bool CMarketService::Initialize(const std::string& strToken, const std::string& strPassword, const std::filesystem::path& root)
 	{
-		if ((nullptr == m_pTcpServer) || (nullptr == m_pPythonRuntime) || !m_pPythonRuntime->IsInitialized() || strToken.empty())
+		if ((nullptr == m_pTcpServer) || (nullptr == m_pPythonRuntime) || !m_pPythonRuntime->IsInitialized() || strToken.empty() || strPassword.empty())
 		{
 			return false;
 		}
 		m_strToken = strToken;
+		m_strPassword = strPassword;
 		m_pTcpServer->RegisterHandler(std::bind_front(&CMarketService::OnNetEvent, this));
 		m_broker.SetQuoteHandler([this](const market::CQuote& quote, std::uint64_t sequence)
 			{
@@ -245,7 +246,8 @@ namespace
 
 	bool CMarketService::HandleAuth(net::_TyConnectionId id, CRequest& request)
 	{
-		bool bAuthenticated = !m_strToken.empty() && (m_strToken == request.GetExtraData("token"));
+		bool bAuthenticated = !m_strToken.empty() && !m_strPassword.empty()
+			&& (m_strToken == request.GetExtraData("token")) && (m_strPassword == request.GetExtraData("password"));
 		if (bAuthenticated)
 		{
 			std::lock_guard<std::mutex> lck(m_mtx_sessions);
@@ -283,7 +285,7 @@ namespace
 	bool CMarketService::HandleSubscription(net::_TyConnectionId id, CRequest& request)
 	{
 		std::string strCmd = request.GetCmd();
-		if (("subscribe" != strCmd) || ("unsubscribe" != strCmd))
+		if (("subscribe" != strCmd) && ("unsubscribe" != strCmd))
 		{
 			net::SendError(id, request, 1001, "invalid cmd");
 			return false;

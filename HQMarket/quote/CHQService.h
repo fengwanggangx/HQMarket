@@ -27,7 +27,7 @@ class CMarketService final
 
 	public:
 			explicit CMarketService(net::CTcpServer* pTcpServer, CPythonRuntime* pPythonRuntime);
-			bool Initialize(const std::string& strToken, const std::filesystem::path& root);
+			bool Initialize(const std::string& strToken, const std::string& strPassword, const std::filesystem::path& root);
 			void Stop();
 			std::string HealthJson() const;
 			std::string MetricsText() const;
@@ -52,6 +52,7 @@ class CMarketService final
 
 	private:
 			std::string m_strToken;
+			std::string m_strPassword;
 			std::unordered_map<std::string, std::function<bool(net::_TyConnectionId, CRequest&)>> m_handler;
 
 			mutable std::mutex m_mtx_sessions;

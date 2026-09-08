@@ -27,6 +27,7 @@ class CBootLoader final
 		void Finalize();
 		const std::filesystem::path& GetRoot() const;
 		const std::string& GetToken() const;
+		const std::string& GetPassword() const;
 		CPythonRuntime& GetPythonRuntime();
 		net::CTcpServer& GetTcpServer();
 		net::CHttpServer& GetHttpServer();
@@ -38,6 +39,7 @@ class CBootLoader final
 		std::filesystem::path m_path_py_runtime;
 		std::filesystem::path m_path_py_scripts;
 		std::string m_strToken;
+		std::string m_strPassword;
 		std::string m_strLastError;
 		int m_nErrorCode{ 0 };
 		bool m_bInitialized{ false };
