@@ -182,7 +182,7 @@ namespace
 	{
 		if (net::em_event::request == ev.m_event)
 		{
-			return OnClientRequest(ev.m_request);
+			return OnClientRequest(ev.m_request->GetConnectionId(), *ev.m_request);
 		}
 
 		if (net::em_event::disconnected == ev.m_event)
@@ -195,16 +195,6 @@ namespace
 	void CMarketService::Stop()
 	{
 		m_broker.Stop();
-	}
-
-	int CMarketService::OnClientRequest(const std::unique_ptr<CRequest>& request)
-	{
-		if ((nullptr == request) || (request->GetConnectionId() < 0))
-		{
-			return 0;
-		}
-		HandleRequest(request->GetConnectionId(), *request);
-		return 1;
 	}
 
 	void CMarketService::OnClientDisconnected(net::_TyConnectionId id)
@@ -221,7 +211,7 @@ namespace
 		}
 	}
 
-	void CMarketService::HandleRequest(net::_TyConnectionId id, CRequest& request)
+	void CMarketService::OnClientRequest(net::_TyConnectionId id, CRequest& request)
 	{
 		std::string strCmd = request.GetCmd();
 		auto mIter = m_handler.find(strCmd);

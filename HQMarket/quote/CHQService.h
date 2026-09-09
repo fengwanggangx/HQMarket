@@ -37,9 +37,10 @@ class CMarketService final
 
 	private:
 			int OnNetEvent(const net::CNetEvent& netEvent);
-			int OnClientRequest(const std::unique_ptr<CRequest>& request);
+			void OnClientRequest(net::_TyConnectionId id, CRequest& request);
 			void OnClientDisconnected(net::_TyConnectionId id);
-			void HandleRequest(net::_TyConnectionId id, CRequest& request);
+
+	private:
 			bool HandleAuth(net::_TyConnectionId id, CRequest& request);
 			bool HandleHeartbeat(net::_TyConnectionId id, CRequest& request);
 			bool HandleQuery(net::_TyConnectionId id, CRequest& request);
