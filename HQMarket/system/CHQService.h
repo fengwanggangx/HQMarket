@@ -37,14 +37,14 @@ class CMarketService final
 
 	private:
 			int OnNetEvent(const net::CNetEvent& netEvent);
-			void OnClientRequest(net::_TyConnectionId id, CRequest& request);
+			void OnClientRequest(net::_TyConnectionId id, const CRequest& request);
 			void OnClientDisconnected(net::_TyConnectionId id);
 
 	private:
-			bool HandleAuth(net::_TyConnectionId id, CRequest& request);
-			bool HandleHeartbeat(net::_TyConnectionId id, CRequest& request);
-			bool HandleQuery(net::_TyConnectionId id, CRequest& request);
-			bool HandleSubscription(net::_TyConnectionId id, CRequest& request);
+			bool HandleAuth(net::_TyConnectionId id, const CRequest& request);
+			bool HandleHeartbeat(net::_TyConnectionId id, const CRequest& request);
+			bool HandleQuery(net::_TyConnectionId id, const CRequest& request);
+			bool HandleSubscription(net::_TyConnectionId id, const CRequest& request);
 
 			void PublishQuote(const market::CQuote& quote, std::uint64_t nSequence);
 			void PublishDepth(const market::CDepth& depth, std::uint64_t nSequence);
@@ -54,10 +54,10 @@ class CMarketService final
 	private:
 			std::string m_strToken;
 			std::string m_strPassword;
-			std::unordered_map<std::string, std::function<bool(net::_TyConnectionId, CRequest&)>> m_handler;
+			std::unordered_map<std::string, std::function<bool(net::_TyConnectionId, const CRequest&)>> m_handler;
 
 			mutable std::mutex m_mtx_sessions;
-			std::unordered_map<net::_TyConnectionId, CClientSession> m_sessions;
+			std::unordered_set<net::_TyConnectionId> m_auth_clients;
 
 			CSubscriptionMgr m_subscriptions;
 			std::atomic_uint64_t m_nDepthSequence{ 0 };

@@ -182,10 +182,9 @@ namespace
 	{
 		if (net::em_event::request == ev.m_event)
 		{
-			return OnClientRequest(ev.m_request->GetConnectionId(), *ev.m_request);
+			OnClientRequest(ev.m_request->GetConnectionId(), *ev.m_request);
 		}
-
-		if (net::em_event::disconnected == ev.m_event)
+		else if (net::em_event::disconnected == ev.m_event)
 		{
 			OnClientDisconnected(ev.m_connection_id);
 		}
@@ -202,7 +201,7 @@ namespace
 		net::CNetPool::InstancePtr()->CloseAConnection(id);
 		{
 			std::lock_guard<std::mutex> lck(m_mtx_sessions);
-			m_sessions.erase(id);
+			m_auth_clients.erase(id);
 		}
 		std::vector<market::CChannelInfo> removed = m_subscriptions.RemoveClient(id);
 		if (!removed.empty())
@@ -211,37 +210,39 @@ namespace
 		}
 	}
 
-	void CMarketService::OnClientRequest(net::_TyConnectionId id, CRequest& request)
+	void CMarketService::OnClientRequest(net::_TyConnectionId id, const CRequest& request)
 	{
 		std::string strCmd = request.GetCmd();
-		auto mIter = m_handler.find(strCmd);
-
-		if ((m_handler.end() != mIter) && ("auth" == strCmd))
-		{
-			mIter->second(id, request);
-			return;
-		}
-		if (!IsAuthenticated(id))
-		{
-			net::SendError(id, request, 1002, "authentication required");
-			return;
-		}
+		const auto mIter = m_handler.find(strCmd);
 		if (m_handler.end() == mIter)
 		{
 			net::SendError(id, request, 1006, "unknown command");
 			return;
 		}
+		
+		if ("auth" == strCmd)
+		{
+			mIter->second(id, request);
+			return;
+		}
+
+		if (!IsAuthenticated(id))
+		{
+			net::SendError(id, request, 1002, "authentication required");
+			return;
+		}
+
 		mIter->second(id, request);
 	}
 
-	bool CMarketService::HandleAuth(net::_TyConnectionId id, CRequest& request)
+	bool CMarketService::HandleAuth(net::_TyConnectionId id, const CRequest& request)
 	{
 		bool bAuthenticated = !m_strToken.empty() && !m_strPassword.empty()
 			&& (m_strToken == request.GetExtraData("token")) && (m_strPassword == request.GetExtraData("password"));
 		if (bAuthenticated)
 		{
 			std::lock_guard<std::mutex> lck(m_mtx_sessions);
-			m_sessions.try_emplace(id, CClientSession{ true });
+			m_auth_clients.try_emplace(id);
 		}
 		CRequest response;
 		response.SetType(CRequest::Type::HQMARKET);
@@ -254,7 +255,7 @@ namespace
 		return true;
 	}
 
-	bool CMarketService::HandleHeartbeat(net::_TyConnectionId id, CRequest& request)
+	bool CMarketService::HandleHeartbeat(net::_TyConnectionId id, const CRequest& request)
 	{
 		std::int64_t clientTime = 0;
 		if (!ParseMilliseconds(request.GetExtraData("client_time_ms"), clientTime))
@@ -272,7 +273,7 @@ namespace
 		return true;
 	}
 
-	bool CMarketService::HandleSubscription(net::_TyConnectionId id, CRequest& request)
+	bool CMarketService::HandleSubscription(net::_TyConnectionId id, const CRequest& request)
 	{
 		std::string strCmd = request.GetCmd();
 		if (("subscribe" != strCmd) && ("unsubscribe" != strCmd))
@@ -338,7 +339,7 @@ namespace
 		return true;
 	}
 
-	bool CMarketService::HandleQuery(net::_TyConnectionId id, CRequest& requestData)
+	bool CMarketService::HandleQuery(net::_TyConnectionId id, const CRequest& requestData)
 	{
 		std::uint64_t requestId = requestData.GetId();
 		std::string strCmd = requestData.GetCmd();
@@ -453,23 +454,23 @@ namespace
 	bool CMarketService::IsAuthenticated(net::_TyConnectionId id) const
 	{
 		std::lock_guard<std::mutex> lck(m_mtx_sessions);
-		std::unordered_map<net::_TyConnectionId, CClientSession>::const_iterator session =
-			m_sessions.find(id);
-		return (m_sessions.end() != session) && session->second.m_bAuthenticated;
+		const auto mIter = m_auth_clients.find(id);
+		return (m_auth_clients.end() != mIter);
 	}
 
 	std::vector<net::_TyConnectionId> CMarketService::AuthenticatedClients() const
 	{
-		std::lock_guard<std::mutex> lck(m_mtx_sessions);
 		std::vector<net::_TyConnectionId> clients;
-		clients.reserve(m_sessions.size());
-		for (const std::pair<const net::_TyConnectionId, CClientSession>& session : m_sessions)
+		clients.reserve(m_auth_clients.size());
+
 		{
-			if (session.second.m_bAuthenticated)
+			std::lock_guard<std::mutex> lck(m_mtx_sessions);
+			for (const auto& v : m_auth_clients)
 			{
-				clients.emplace_back(session.first);
+				clients.emplace_back(v);
 			}
 		}
+
 		return clients;
 	}
 
