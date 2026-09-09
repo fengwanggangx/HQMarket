@@ -130,7 +130,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="config\hqmarket.json" />
-    <None Include="ini\system.ini" />
     <None Include="quote\v1\market.proto" />
     <None Include="$(OutDir)python\scripts\requirements.lock" />
   </ItemGroup>
