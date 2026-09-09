@@ -1,10 +1,14 @@
 #include "CHQService.h"
+#include "../common/utility.h"
+#include "../database/CDBEngine.h"
+#include "../database/IDataBase.h"
 #include "../python/CPythonRuntime.h"
 #include "../network/CNetPool.h"
 #include "../network/CNetTools.h"
 #include "../request/request.h"
 #include "../common/defines.h"
 #include <chrono>
+#include <cctype>
 #include <exception>
 #include <sstream>
 #include <utility>
@@ -13,6 +17,35 @@ namespace wire = hqmarket::market::v1;
 
 namespace
 {
+		constexpr int InvalidRequest = 1001;
+		constexpr int InvalidCredentials = 1002;
+		constexpr int StorageUnavailable = 1004;
+		constexpr std::size_t MinAccountLength = 3;
+		constexpr std::size_t MaxAccountLength = 64;
+		constexpr std::size_t MinPasswordLength = 8;
+		constexpr std::size_t MaxPasswordLength = 128;
+
+		bool IsAccountValid(const std::string& strAccount)
+		{
+			if ((MinAccountLength > strAccount.size()) || (MaxAccountLength < strAccount.size()))
+			{
+				return false;
+			}
+			for (unsigned char character : strAccount)
+			{
+				if ((0 == std::isalnum(character)) && ('_' != character) && ('-' != character) && ('.' != character) && ('@' != character))
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
+		bool IsPasswordValid(const std::string& strPassword)
+		{
+			return (MinPasswordLength <= strPassword.size()) && (MaxPasswordLength >= strPassword.size());
+		}
+
 		std::int64_t NowMilliseconds()
 		{
 			return std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -237,22 +270,101 @@ namespace
 
 	bool CMarketService::HandleAuth(net::_TyConnectionId id, const CRequest& request)
 	{
-		bool bAuthenticated = !m_strToken.empty() && !m_strPassword.empty()
-			&& (m_strToken == request.GetExtraData("token")) && (m_strPassword == request.GetExtraData("password"));
-		if (bAuthenticated)
+		std::string strToken = request.GetExtraData("token");
+		if (!strToken.empty())
+		{
+			return HandleReAuth(id, request);
+		}
+
+		if ("auth" == request.GetCmd())
+		{
+			if (Login(id, request, strToken))
+			{
+				std::lock_guard<std::mutex> lck(m_mtx_sessions);
+				m_auth_clients.emplace(id);
+				m_client_tokens.emplace(strToken);
+			}
+			return true;
+		}
+		net::SendError(id, request, InvalidRequest, "unsupported authentication request");
+		return false;
+	}
+
+	bool CMarketService::HandleReAuth(net::_TyConnectionId id, const CRequest& request)
+	{
+		std::string strToken = request.GetExtraData("token");
+		bool bAccepted = false;
 		{
 			std::lock_guard<std::mutex> lck(m_mtx_sessions);
-			m_auth_clients.try_emplace(id);
+			bAccepted = m_client_tokens.end() != m_client_tokens.find(strToken);
+			if (bAccepted)
+			{
+				m_auth_clients.emplace(id);
+			}
 		}
+		if (bAccepted)
+		{
+			SendAuthResponse(id, request, 0, "认证成功");
+			return true;
+		}
+		SendAuthResponse(id, request, InvalidCredentials, "登录状态已失效");
+		return false;
+	}
+
+	bool CMarketService::Login(net::_TyConnectionId id, const CRequest& request, std::string& strToken)
+	{
+		std::string strAccount = request.GetExtraData("user");
+		std::string strPassword = request.GetExtraData("password");
+		if (!IsAccountValid(strAccount) || !IsPasswordValid(strPassword))
+		{
+			SendAuthResponse(id, request, InvalidCredentials, "账号或密码错误");
+			return false;
+		}
+
+		db::_TyDBPtr db = CDBEngine::InstanceRef().GetDBPtr(db::em_database::mysql);
+		if (nullptr == db)
+		{
+			SendAuthResponse(id, request, StorageUnavailable, "用户数据库暂不可用");
+			return false;
+		}
+
+		std::string strSql = "SELECT user_id, account FROM table_user WHERE account=" + utility::Utf8Literal(strAccount) + " AND password_hash=UNHEX(SHA2(CONCAT(password_salt,UNHEX('" + utility::ToHex(strPassword) + "')),256)) AND status=1 LIMIT 1";
+		const db::_TyTableInfo& table = db->ExecQuery(strSql);
+		if (table.second.empty())
+		{
+			SendAuthResponse(id, request, InvalidCredentials, "账号或密码错误");
+			return false;
+		}
+
 		CRequest response;
-		response.SetType(CRequest::Type::HQMARKET);
-		response.SetCmd("auth");
-		response.SetReturnData("accepted", bAuthenticated ? "true" : "false");
-		response.SetReturnData("reason", bAuthenticated ? "ok" : "invalid token");
-		response.SetReturnData("request_id", std::to_string(request.GetId()));
-		response.SetReturnData("server_time_ms", std::to_string(NowMilliseconds()));
+		response.SetId(request.GetId());
+		response.SetType(request.GetType());
+		response.SetCmd(request.GetCmd());
+		response.SetReturnData("status", "ok");
+		response.SetReturnData("user_id", table.second.front().at(0));
+		response.SetReturnData("account", table.second.front().at(1));
+		strToken = utility::MakeSaltHex();
+		response.SetReturnData("token", strToken);
 		net::SendRequest(id, response);
 		return true;
+	}
+
+	void CMarketService::SendAuthResponse(net::_TyConnectionId id, const CRequest& request, int nErrorCode, const std::string& strMessage) const
+	{
+		CRequest response;
+		response.SetId(request.GetId());
+		response.SetType(request.GetType());
+		response.SetCmd(request.GetCmd());
+		if (0 != nErrorCode)
+		{
+			net::SetError(response, nErrorCode, strMessage);
+		}
+		else
+		{
+			response.SetReturnData("status", "ok");
+			response.SetReturnData("message", strMessage);
+		}
+		net::SendRequest(id, response);
 	}
 
 	bool CMarketService::HandleHeartbeat(net::_TyConnectionId id, const CRequest& request)

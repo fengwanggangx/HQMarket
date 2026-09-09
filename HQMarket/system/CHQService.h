@@ -12,6 +12,7 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 class CRequest;
@@ -42,6 +43,8 @@ class CMarketService final
 
 	private:
 			bool HandleAuth(net::_TyConnectionId id, const CRequest& request);
+			bool HandleReAuth(net::_TyConnectionId id, const CRequest& request);
+			bool Login(net::_TyConnectionId id, const CRequest& request, std::string& strToken);
 			bool HandleHeartbeat(net::_TyConnectionId id, const CRequest& request);
 			bool HandleQuery(net::_TyConnectionId id, const CRequest& request);
 			bool HandleSubscription(net::_TyConnectionId id, const CRequest& request);
@@ -50,6 +53,7 @@ class CMarketService final
 			void PublishDepth(const market::CDepth& depth, std::uint64_t nSequence);
 			bool IsAuthenticated(net::_TyConnectionId id) const;
 			std::vector<net::_TyConnectionId> AuthenticatedClients() const;
+			void SendAuthResponse(net::_TyConnectionId id, const CRequest& request, int nErrorCode, const std::string& strMessage) const;
 
 	private:
 			std::string m_strToken;
@@ -58,6 +62,7 @@ class CMarketService final
 
 			mutable std::mutex m_mtx_sessions;
 			std::unordered_set<net::_TyConnectionId> m_auth_clients;
+			std::unordered_set<std::string> m_client_tokens;
 
 			CSubscriptionMgr m_subscriptions;
 			std::atomic_uint64_t m_nDepthSequence{ 0 };
