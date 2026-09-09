@@ -82,8 +82,8 @@
     <ClCompile Include="quote\CHQBroker.cpp">
       <Filter>quote</Filter>
     </ClCompile>
-    <ClCompile Include="quote\CSubscriptionMgr.cpp">
-      <Filter>quote</Filter>
+    <ClCompile Include="system\CSubscriptionMgr.cpp">
+      <Filter>system</Filter>
     </ClCompile>
     <ClCompile Include="quote\MarketTypes.cpp">
       <Filter>quote</Filter>
@@ -124,8 +124,8 @@
     <ClCompile Include="system\CBootLoader.cpp">
       <Filter>system</Filter>
     </ClCompile>
-    <ClCompile Include="quote\CHQService.cpp">
-      <Filter>quote</Filter>
+    <ClCompile Include="system\CHQService.cpp">
+      <Filter>system</Filter>
     </ClCompile>
     <ClCompile Include="thread\CThreadPool.cpp">
       <Filter>thread</Filter>
@@ -189,8 +189,8 @@
     <ClInclude Include="ini\CIniFile.h">
       <Filter>ini</Filter>
     </ClInclude>
-    <ClInclude Include="quote\CSubscriptionMgr.h">
-      <Filter>quote</Filter>
+    <ClInclude Include="system\CSubscriptionMgr.h">
+      <Filter>system</Filter>
     </ClInclude>
     <ClInclude Include="quote\CHQBroker.h">
       <Filter>quote</Filter>
@@ -240,8 +240,8 @@
     <ClInclude Include="system\CBootLoader.h">
       <Filter>system</Filter>
     </ClInclude>
-    <ClInclude Include="quote\CHQService.h">
-      <Filter>quote</Filter>
+    <ClInclude Include="system\CHQService.h">
+      <Filter>system</Filter>
     </ClInclude>
     <ClInclude Include="thread\CThreadPool.h">
       <Filter>thread</Filter>

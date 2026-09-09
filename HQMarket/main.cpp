@@ -1,7 +1,7 @@
 #include "request/request.h"
 #include "basic/CDistributor.h"
 #include "network/CHttpServer.h"
-#include "quote/CHQService.h"
+#include "system/CHQService.h"
 #include "system/CBootLoader.h"
 #include <cstdint>
 #include <iostream>

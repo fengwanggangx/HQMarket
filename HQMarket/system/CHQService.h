@@ -1,9 +1,9 @@
 #ifndef __CMARKET_SERVICE_H__
 #define __CMARKET_SERVICE_H__
 
-#include "CHQBroker.h"
+#include "../quote/CHQBroker.h"
 #include "CSubscriptionMgr.h"
-#include "v1/market.pb.h"
+#include "../quote/v1/market.pb.h"
 #include "../network/CFrameBuffer.h"
 #include "../network/CTcpServer.h"
 #include <atomic>
@@ -59,7 +59,7 @@ class CMarketService final
 			mutable std::mutex m_mtx_sessions;
 			std::unordered_map<net::_TyConnectionId, CClientSession> m_sessions;
 
-			market::CSubscriptionMgr m_subscriptions;
+			CSubscriptionMgr m_subscriptions;
 			std::atomic_uint64_t m_nDepthSequence{ 0 };
 
 	private:

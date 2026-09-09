@@ -68,7 +68,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="quote\CHQBroker.cpp" />
     <ClCompile Include="quote\CHQCache.cpp" />
-    <ClCompile Include="quote\CSubscriptionMgr.cpp" />
+    <ClCompile Include="system\CSubscriptionMgr.cpp" />
     <ClCompile Include="quote\MarketTypes.cpp" />
     <ClCompile Include="quote\v1\market.pb.cc" />
     <ClCompile Include="network\CFrameBuffer.cpp" />
@@ -82,7 +82,7 @@
     <ClCompile Include="provider\CAkShareProvider.cpp" />
     <ClCompile Include="python\CPythonRuntime.cpp" />
     <ClCompile Include="system\CBootLoader.cpp" />
-    <ClCompile Include="quote\CHQService.cpp" />
+    <ClCompile Include="system\CHQService.cpp" />
     <ClCompile Include="quote\CHQRecorder.cpp" />
     <ClCompile Include="thread\CThreadPool.cpp" />
   </ItemGroup>
@@ -106,7 +106,7 @@
     <ClInclude Include="ini\CIniFile.h" />
     <ClInclude Include="quote\CHQBroker.h" />
     <ClInclude Include="quote\CHQCache.h" />
-    <ClInclude Include="quote\CSubscriptionMgr.h" />
+    <ClInclude Include="system\CSubscriptionMgr.h" />
     <ClInclude Include="quote\IMarketProvider.h" />
     <ClInclude Include="quote\MarketTypes.h" />
     <ClInclude Include="quote\v1\market.pb.h" />
@@ -122,7 +122,7 @@
     <ClInclude Include="provider\CAkShareProvider.h" />
     <ClInclude Include="python\CPythonRuntime.h" />
     <ClInclude Include="system\CBootLoader.h" />
-    <ClInclude Include="quote\CHQService.h" />
+    <ClInclude Include="system\CHQService.h" />
     <ClInclude Include="quote\CHQRecorder.h" />
     <ClInclude Include="thread\CThreadPool.h" />
     <ClInclude Include="request\request.h" />
