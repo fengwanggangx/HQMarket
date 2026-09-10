@@ -3,7 +3,7 @@
 
 #include "../quote/CHQBroker.h"
 #include "CSubscriptionMgr.h"
-#include "../hqmarket/v1/market.pb.h"
+#include "../request/v1/market.pb.h"
 #include "../network/CFrameBuffer.h"
 #include "../network/CTcpServer.h"
 #include <atomic>

@@ -7,7 +7,7 @@
     <Filter Include="quote">
       <UniqueIdentifier>{930BE2D1-F3A1-4757-BB76-D618920C4140}</UniqueIdentifier>
     </Filter>
-    <Filter Include="hqmarket\v1">
+    <Filter Include="request\v1">
       <UniqueIdentifier>{AB4BE8D7-938F-4F87-AB9D-657051021D3B}</UniqueIdentifier>
     </Filter>
     <Filter Include="network">
@@ -88,8 +88,8 @@
     <ClCompile Include="quote\MarketTypes.cpp">
       <Filter>quote</Filter>
     </ClCompile>
-    <ClCompile Include="hqmarket\v1\market.pb.cc">
-      <Filter>hqmarket\v1</Filter>
+    <ClCompile Include="request\v1\market.pb.cc">
+      <Filter>request\v1</Filter>
     </ClCompile>
     <ClCompile Include="network\CFrameBuffer.cpp">
       <Filter>network</Filter>
@@ -201,8 +201,8 @@
     <ClInclude Include="quote\MarketTypes.h">
       <Filter>quote</Filter>
     </ClInclude>
-    <ClInclude Include="hqmarket\v1\market.pb.h">
-      <Filter>hqmarket\v1</Filter>
+    <ClInclude Include="request\v1\market.pb.h">
+      <Filter>request\v1</Filter>
     </ClInclude>
     <ClInclude Include="network\CFrameBuffer.h">
       <Filter>network</Filter>
@@ -269,8 +269,8 @@
     <None Include="ini\system.ini">
       <Filter>ini</Filter>
     </None>
-    <None Include="hqmarket\v1\market.proto">
-      <Filter>hqmarket\v1</Filter>
+    <None Include="request\v1\market.proto">
+      <Filter>request\v1</Filter>
     </None>
     <None Include="$(OutDir)python\scripts\requirements.lock">
       <Filter>python</Filter>
