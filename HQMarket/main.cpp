@@ -31,7 +31,7 @@ int main()
 	net::CTcpServer& tcpServer = boot.GetTcpServer();
 	net::CHttpServer& httpServer = boot.GetHttpServer();
 	CMarketService service(&tcpServer, &boot.GetPythonRuntime());
-	if (!service.Initialize(boot.GetToken(), boot.GetPassword(), boot.GetRoot()))
+	if (!service.Initialize(boot.GetRoot()))
 	{
 		std::cerr << "HQMarket initialization failed\n";
 		service.Stop();

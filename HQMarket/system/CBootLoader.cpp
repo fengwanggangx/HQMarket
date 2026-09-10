@@ -39,21 +39,6 @@ bool CBootLoader::Initialize()
 		return false;
 	}
 
-	m_strToken = ini::CINIHandler::InstanceRef().GetValue(ini::Config::System, "HQMarket", "token", std::string());
-	if (m_strToken.empty())
-	{
-		m_nErrorCode = 2;
-		m_strLastError = "HQMarket token is required in ini/system.ini";
-		return false;
-	}
-	m_strPassword = ini::CINIHandler::InstanceRef().GetValue(ini::Config::System, "HQMarket", "password", std::string());
-	if (m_strPassword.empty())
-	{
-		m_nErrorCode = 3;
-		m_strLastError = "HQMarket password is required in ini/system.ini";
-		return false;
-	}
-	
 	std::string strPyRunTime = ini::CINIHandler::InstanceRef().GetValue(ini::Config::System, "HQMarket", "py_runtime", std::string());
 	if (strPyRunTime.empty())
 	{
@@ -138,16 +123,6 @@ void CBootLoader::Finalize()
 const std::filesystem::path& CBootLoader::GetRoot() const
 {
 	return m_exec;
-}
-
-const std::string& CBootLoader::GetToken() const
-{
-	return m_strToken;
-}
-
-const std::string& CBootLoader::GetPassword() const
-{
-	return m_strPassword;
 }
 
 CPythonRuntime& CBootLoader::GetPythonRuntime()

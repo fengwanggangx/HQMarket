@@ -74,7 +74,8 @@ class CRequest
 			QUERY_USERINFO = 2,
 			UPDATE_AUTH = 3,
 			UPDAT_PRODUCT = 4,
-			HQMARKET = 5
+			HQMARKET = 5,
+			HEARTBEAT = 6
 		};
 
 	public:

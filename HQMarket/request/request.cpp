@@ -117,6 +117,8 @@ static request::RequestType ToProtoType(CRequest::Type type)
 		return request::RequestType::UPDAT_PRODUCT;
 	case CRequest::Type::HQMARKET:
 		return request::RequestType::HQMARKET;
+	case CRequest::Type::HEARTBEAT:
+		return request::RequestType::HEARTBEAT;
 	case CRequest::Type::UNKNOWN:
 	default:
 		return request::RequestType::UNKNOWN;

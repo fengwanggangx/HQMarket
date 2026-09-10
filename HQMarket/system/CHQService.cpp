@@ -24,6 +24,7 @@ namespace
 		constexpr std::size_t MaxAccountLength = 64;
 		constexpr std::size_t MinPasswordLength = 8;
 		constexpr std::size_t MaxPasswordLength = 128;
+		constexpr std::chrono::hours TokenLifetime{ 24 };
 
 		bool IsAccountValid(const std::string& strAccount)
 		{
@@ -169,6 +170,7 @@ namespace
 			std::unique_ptr<CData> requestData = std::make_unique<CData>(T::descriptor()->full_name(), data.get());
 			data.release();
 			request.SetType(CRequest::Type::HQMARKET);
+			request.SetId(requestId);
 			request.SetReturnData("request_id", std::to_string(requestId));
 			request.SetReturnData("sequence", std::to_string(sequence));
 			request.SetReturnData("server_time_ms", std::to_string(NowMilliseconds()));
@@ -191,14 +193,12 @@ namespace
 		};
 	}
 
-	bool CMarketService::Initialize(const std::string& strToken, const std::string& strPassword, const std::filesystem::path& root)
+	bool CMarketService::Initialize(const std::filesystem::path& root)
 	{
-		if ((nullptr == m_pTcpServer) || (nullptr == m_pPythonRuntime) || !m_pPythonRuntime->IsInitialized() || strToken.empty() || strPassword.empty())
+		if ((nullptr == m_pTcpServer) || (nullptr == m_pPythonRuntime) || !m_pPythonRuntime->IsInitialized())
 		{
 			return false;
 		}
-		m_strToken = strToken;
-		m_strPassword = strPassword;
 		m_pTcpServer->RegisterHandler(std::bind_front(&CMarketService::OnNetEvent, this));
 		m_broker.SetQuoteHandler([this](const market::CQuote& quote, std::uint64_t sequence)
 			{
@@ -282,7 +282,7 @@ namespace
 			{
 				std::lock_guard<std::mutex> lck(m_mtx_sessions);
 				m_auth_clients.emplace(id);
-				m_client_tokens.emplace(strToken);
+				m_client_tokens.insert_or_assign(strToken, std::chrono::steady_clock::now() + TokenLifetime);
 			}
 			return true;
 		}
@@ -296,7 +296,12 @@ namespace
 		bool bAccepted = false;
 		{
 			std::lock_guard<std::mutex> lck(m_mtx_sessions);
-			bAccepted = m_client_tokens.end() != m_client_tokens.find(strToken);
+			auto mIter = m_client_tokens.find(strToken);
+			bAccepted = (m_client_tokens.end() != mIter) && (std::chrono::steady_clock::now() < mIter->second);
+			if ((m_client_tokens.end() != mIter) && !bAccepted)
+			{
+				m_client_tokens.erase(mIter);
+			}
 			if (bAccepted)
 			{
 				m_auth_clients.emplace(id);
@@ -377,6 +382,7 @@ namespace
 		}
 		CRequest response;
 		response.SetType(CRequest::Type::HQMARKET);
+		response.SetId(request.GetId());
 		response.SetCmd("heartbeat");
 		response.SetReturnData("client_time_ms", std::to_string(clientTime));
 		response.SetReturnData("request_id", std::to_string(request.GetId()));
@@ -432,7 +438,7 @@ namespace
 
 		CRequest response;
 		response.SetCmd("subscription_ack");
-		response.SetReturnData("accepted", "true");
+		response.SetReturnData("accepted", "1");
 		SetData(response, ack, requestId);
 		net::SendRequest(id, response);
 		if (bSubscribe && (market::Channel::quote == channel))
@@ -517,12 +523,20 @@ namespace
 		request.SetCmd("quote");
 		SetData(request, quoteData, 0, nSequence);
 		market::CChannelInfo subscription{ quote.m_security, market::Channel::quote };
+		std::vector<net::_TyConnectionId> disconnected;
 		for (net::_TyConnectionId id : AuthenticatedClients())
 		{
 			if (m_subscriptions.IsSubscribed(id, subscription))
 			{
-				net::SendRequest(id, request);
+				if (!net::SendRequest(id, request))
+				{
+					disconnected.emplace_back(id);
+				}
 			}
+		}
+		for (net::_TyConnectionId id : disconnected)
+		{
+			OnClientDisconnected(id);
 		}
 	}
 
@@ -554,12 +568,20 @@ namespace
 		request.SetCmd("depth");
 		SetData(request, depthData, 0, nSequence);
 		market::CChannelInfo subscription{ depth.m_security, market::Channel::depth };
+		std::vector<net::_TyConnectionId> disconnected;
 		for (net::_TyConnectionId id : AuthenticatedClients())
 		{
 			if (m_subscriptions.IsSubscribed(id, subscription))
 			{
-				net::SendRequest(id, request);
+				if (!net::SendRequest(id, request))
+				{
+					disconnected.emplace_back(id);
+				}
 			}
+		}
+		for (net::_TyConnectionId id : disconnected)
+		{
+			OnClientDisconnected(id);
 		}
 	}
 

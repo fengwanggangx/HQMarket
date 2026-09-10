@@ -7,6 +7,7 @@
 #include "../network/CFrameBuffer.h"
 #include "../network/CTcpServer.h"
 #include <atomic>
+#include <chrono>
 #include <filesystem>
 #include <functional>
 #include <mutex>
@@ -28,7 +29,7 @@ class CMarketService final
 
 	public:
 			explicit CMarketService(net::CTcpServer* pTcpServer, CPythonRuntime* pPythonRuntime);
-			bool Initialize(const std::string& strToken, const std::string& strPassword, const std::filesystem::path& root);
+			bool Initialize(const std::filesystem::path& root);
 			void Stop();
 			std::string HealthJson() const;
 			std::string MetricsText() const;
@@ -56,13 +57,11 @@ class CMarketService final
 			void SendAuthResponse(net::_TyConnectionId id, const CRequest& request, int nErrorCode, const std::string& strMessage) const;
 
 	private:
-			std::string m_strToken;
-			std::string m_strPassword;
 			std::unordered_map<std::string, std::function<bool(net::_TyConnectionId, const CRequest&)>> m_handler;
 
 			mutable std::mutex m_mtx_sessions;
 			std::unordered_set<net::_TyConnectionId> m_auth_clients;
-			std::unordered_set<std::string> m_client_tokens;
+			std::unordered_map<std::string, std::chrono::steady_clock::time_point> m_client_tokens;
 
 			CSubscriptionMgr m_subscriptions;
 			std::atomic_uint64_t m_nDepthSequence{ 0 };
