@@ -70,7 +70,7 @@
     <ClCompile Include="quote\CHQCache.cpp" />
     <ClCompile Include="system\CSubscriptionMgr.cpp" />
     <ClCompile Include="quote\MarketTypes.cpp" />
-    <ClCompile Include="quote\v1\market.pb.cc" />
+    <ClCompile Include="hqmarket\v1\market.pb.cc" />
     <ClCompile Include="network\CFrameBuffer.cpp" />
     <ClCompile Include="network\CHttpServer.cpp" />
     <ClCompile Include="network\CTcpServer.cpp" />
@@ -109,7 +109,7 @@
     <ClInclude Include="system\CSubscriptionMgr.h" />
     <ClInclude Include="quote\IMarketProvider.h" />
     <ClInclude Include="quote\MarketTypes.h" />
-    <ClInclude Include="quote\v1\market.pb.h" />
+    <ClInclude Include="hqmarket\v1\market.pb.h" />
     <ClInclude Include="network\CFrameBuffer.h" />
     <ClInclude Include="network\CHttpServer.h" />
     <ClInclude Include="network\CTcpServer.h" />
@@ -130,7 +130,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="config\hqmarket.json" />
-    <None Include="quote\v1\market.proto" />
+    <None Include="hqmarket\v1\market.proto" />
     <None Include="$(OutDir)python\scripts\requirements.lock" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

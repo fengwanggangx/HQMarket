@@ -166,15 +166,12 @@ namespace
 		template <typename T>
 		bool SetData(CRequest& request, const T& value, std::uint64_t requestId = 0, std::uint64_t sequence = 0)
 		{
-			std::unique_ptr<T> data = std::make_unique<T>(value);
-			std::unique_ptr<CData> requestData = std::make_unique<CData>(T::descriptor()->full_name(), data.get());
-			data.release();
 			request.SetType(CRequest::Type::HQMARKET);
 			request.SetId(requestId);
 			request.SetReturnData("request_id", std::to_string(requestId));
 			request.SetReturnData("sequence", std::to_string(sequence));
 			request.SetReturnData("server_time_ms", std::to_string(NowMilliseconds()));
-			request.SetData(std::move(requestData));
+			request.SetData(value);
 			return true;
 		}
 
