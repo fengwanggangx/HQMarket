@@ -20,7 +20,7 @@ namespace hqmarket::market::v1
 	class QuoteData;
 	class DepthData;
 	class QueryResponse;
-}
+} // namespace hqmarket::market::v1
 
 namespace google::protobuf
 {
@@ -36,19 +36,19 @@ using _TyQueryResponse = hqmarket::market::v1::QueryResponse;
 
 class CRequest
 {
-public:
+  public:
 	enum class Type
 	{
 		UNKNOWN = 0,
 		QUERY_AUTH = 1,
 		QUERY_USERINFO = 2,
 		UPDATE_AUTH = 3,
-		UPDAT_PRODUCT = 4,
+		STRATEGY = 4,
 		HQMARKET = 5,
 		HEARTBEAT = 6
 	};
 
-public:
+  public:
 	CRequest();
 	~CRequest();
 	CRequest(const CRequest& arg);
@@ -56,7 +56,7 @@ public:
 	CRequest(CRequest&& arg) noexcept;
 	CRequest& operator=(CRequest&& arg) noexcept;
 
-public:
+  public:
 	_TyRequestId GetId() const;
 	void SetId(_TyRequestId id);
 
@@ -88,7 +88,7 @@ public:
 
 	std::optional<std::pair<int, std::string>> GetErrorInfo() const;
 
-private:
+  private:
 	std::unique_ptr<google::protobuf::Arena> m_arena;
 	_TyReqData* m_data{ nullptr };
 	net::_TyConnectionId m_connection_id{ -1 };
