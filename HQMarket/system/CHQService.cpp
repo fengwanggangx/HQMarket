@@ -378,14 +378,13 @@ namespace
 			return false;
 		}
 		CRequest response;
-		response.SetType(CRequest::Type::HQMARKET);
+		response.SetType(request.GetType());
 		response.SetId(request.GetId());
 		response.SetCmd("heartbeat");
 		response.SetReturnData("client_time_ms", std::to_string(clientTime));
 		response.SetReturnData("request_id", std::to_string(request.GetId()));
-		response.SetReturnData("server_time_ms", std::to_string(NowMilliseconds()));
-		net::SendRequest(id, response);
-		return true;
+		response.SetReturnData("server_time_ms", std::to_string(NowMilliseconds()));	
+		return net::SendRequest(id, response);
 	}
 
 	bool CMarketService::HandleSubscription(net::_TyConnectionId id, const CRequest& request)
