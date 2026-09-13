@@ -150,6 +150,50 @@ namespace db
 		return nRet;
 	}
 
+	int CMySQL::ExecScript(const std::string& strSQL)
+	{
+		std::lock_guard<std::mutex> lock(m_mtx);
+		if (!IsValid())
+		{
+			return -1;
+		}
+		if (0 != mysql_set_server_option(m_pDB, MYSQL_OPTION_MULTI_STATEMENTS_ON))
+		{
+			return mysql_errno(m_pDB);
+		}
+
+		int nRet = mysql_real_query(m_pDB, strSQL.data(), static_cast<unsigned long>(strSQL.size()));
+		if (0 == nRet)
+		{
+			int nNextResult = 0;
+			do
+			{
+				MYSQL_RES* pResult = mysql_store_result(m_pDB);
+				if (nullptr != pResult)
+				{
+					mysql_free_result(pResult);
+				}
+				else if ((0 != mysql_field_count(m_pDB)) && (0 == nRet))
+				{
+					nRet = mysql_errno(m_pDB);
+				}
+				nNextResult = mysql_next_result(m_pDB);
+				if ((0 < nNextResult) && (0 == nRet))
+				{
+					nRet = mysql_errno(m_pDB);
+				}
+			}
+			while (0 == nNextResult);
+		}
+
+		int nDisableRet = mysql_set_server_option(m_pDB, MYSQL_OPTION_MULTI_STATEMENTS_OFF);
+		if ((0 == nRet) && (0 != nDisableRet))
+		{
+			nRet = mysql_errno(m_pDB);
+		}
+		return nRet;
+	}
+
 	bool CMySQL::BeginTransaction()
 	{
 		std::lock_guard<std::mutex> lock(m_mtx);

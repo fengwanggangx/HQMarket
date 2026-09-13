@@ -1,8 +1,10 @@
 #include "CBootLoader.h"
+#include "../database/CDBEngine.h"
+#include "../database/IDataBase.h"
+#include "../ini/CINIHandler.h"
 #include "../network/CHttpServer.h"
 #include "../network/CTcpServer.h"
 #include "../python/CPythonRuntime.h"
-#include "../ini/CINIHandler.h"
 
 #include <cstdlib>
 #include <utility>
@@ -66,12 +68,41 @@ bool CBootLoader::Initialize()
 		return false;
 	}
 
-	int nTcpPort = ini::CINIHandler::InstanceRef().GetValue(ini::Config::System, "System", "tcp_port",-1);
-	int nHttpPort = ini::CINIHandler::InstanceRef().GetValue(ini::Config::System, "System", "http_port", -1);
-
-	if ((nTcpPort <= 0) || nHttpPort <= 0)
+	ini::CINIHandler& hIni = ini::CINIHandler::InstanceRef();
+	std::string strMySqlHost = hIni.GetValue(ini::Config::System, "MySQL", "host", std::string());
+	int nMySqlPort = hIni.GetValue(ini::Config::System, "MySQL", "port", -1);
+	std::string strMySqlAccount = hIni.GetValue(ini::Config::System, "MySQL", "account", std::string());
+	std::string strMySqlPassword = hIni.GetValue(ini::Config::System, "MySQL", "password", std::string());
+	std::string strMySqlDatabase = hIni.GetValue(ini::Config::System, "MySQL", "database", std::string());
+	int nMySqlPoolSize = hIni.GetValue(ini::Config::System, "MySQL", "pool_size", -1);
+	if (strMySqlHost.empty() || (0 >= nMySqlPort) || strMySqlAccount.empty() || strMySqlPassword.empty() || strMySqlDatabase.empty() || (0 >= nMySqlPoolSize))
 	{
 		m_nErrorCode = 6;
+		m_strLastError = "HQMarket mysql param error";
+		return false;
+	}
+
+	db::CConnectParam dbParam(strMySqlHost, static_cast<unsigned int>(nMySqlPort), strMySqlAccount, strMySqlPassword, strMySqlDatabase, "utf8mb4");
+	if (0 != CDBEngine::InstanceRef().Initialize(db::em_database::mysql, dbParam, nMySqlPoolSize))
+	{
+		m_nErrorCode = 7;
+		m_strLastError = "MySQL initialization failed";
+		return false;
+	}
+	db::_TyDBPtr db = CDBEngine::InstanceRef().GetDBPtr(db::em_database::mysql);
+	if ((nullptr == db) || (0 != db->ExecSqlFile(m_exec / "sql" / "table_create.sql")))
+	{
+		m_nErrorCode = 8;
+		m_strLastError = "Failed to initialize MySQL tables";
+		return false;
+	}
+
+	int nTcpPort = hIni.GetValue(ini::Config::System, "System", "tcp_port", -1);
+	int nHttpPort = hIni.GetValue(ini::Config::System, "System", "http_port", -1);
+
+	if ((nTcpPort <= 0) || (nHttpPort <= 0))
+	{
+		m_nErrorCode = 9;
 		m_strLastError = "Tcp/Http port initialization failed";
 		return false;
 	}
@@ -122,6 +153,7 @@ void CBootLoader::Finalize()
 
 	m_pHttpServer.reset();
 	m_pTcpServer.reset();
+	CDBEngine::InstanceRef().Close();
 	if (nullptr != m_pPython)
 	{
 		m_pPython->Finalize();
