@@ -2,7 +2,6 @@
 build/
 out/
 *.log
-*.user
 HQMarket/data/
 HQMarket/runtime/
 HQMarket/contract/*.zip

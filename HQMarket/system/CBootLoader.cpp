@@ -39,7 +39,7 @@ bool CBootLoader::Initialize()
 		return false;
 	}
 
-	std::string strPyRunTime = ini::CINIHandler::InstanceRef().GetValue(ini::Config::System, "HQMarket", "py_runtime", std::string());
+	std::string strPyRunTime = ini::CINIHandler::InstanceRef().GetValue(ini::Config::System, "System", "py_runtime", std::string());
 	if (strPyRunTime.empty())
 	{
 		m_nErrorCode = 3;
@@ -47,7 +47,7 @@ bool CBootLoader::Initialize()
 		return false;
 	}
 
-	std::string strPyScripts = ini::CINIHandler::InstanceRef().GetValue(ini::Config::System, "HQMarket", "py_scripts", std::string());
+	std::string strPyScripts = ini::CINIHandler::InstanceRef().GetValue(ini::Config::System, "System", "py_scripts", std::string());
 	if (strPyScripts.empty())
 	{
 		m_nErrorCode = 4;
@@ -65,8 +65,18 @@ bool CBootLoader::Initialize()
 		m_pPython.reset();
 		return false;
 	}
-	m_pTcpServer = std::make_unique<net::CTcpServer>(9901);
-	m_pHttpServer = std::make_unique<net::CHttpServer>(9902);
+
+	int nTcpPort = ini::CINIHandler::InstanceRef().GetValue(ini::Config::System, "System", "tcp_port",-1);
+	int nHttpPort = ini::CINIHandler::InstanceRef().GetValue(ini::Config::System, "System", "http_port", -1);
+
+	if ((nTcpPort <= 0) || nHttpPort <= 0)
+	{
+		m_nErrorCode = 6;
+		m_strLastError = "Tcp/Http port initialization failed";
+		return false;
+	}
+	m_pTcpServer = std::make_unique<net::CTcpServer>(nTcpPort);
+	m_pHttpServer = std::make_unique<net::CHttpServer>(nHttpPort);
 
 	m_bInitialized = true;
 	return true;
