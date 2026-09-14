@@ -58,7 +58,7 @@ namespace net
 			return false;
 		}
 
-		std::unique_lock<std::shared_mutex> lock(m_shared_mtx_pool);
+		std::unique_lock<std::shared_mutex> lock(m_mtx_pool);
 		auto [mIter, bInserted] = m_pool.try_emplace(id, nullptr);
 		CNetInfo* pInfo = mIter->second.get();
 		if (bInserted)
@@ -100,7 +100,7 @@ namespace net
 			return nullptr;
 		}
 
-		std::unique_lock<std::shared_mutex> lock(m_shared_mtx_pool);
+		std::unique_lock<std::shared_mutex> lock(m_mtx_pool);
 		auto [mIter, bInserted] = m_pool.try_emplace(id, nullptr);
 		CNetInfo* pInfo = mIter->second.get();
 		if (bInserted)
@@ -172,7 +172,7 @@ namespace net
 	{
 		std::unique_ptr<CNetInfo> pInfo;
 		{
-			std::unique_lock<std::shared_mutex> lock(m_shared_mtx_pool);
+			std::unique_lock<std::shared_mutex> lock(m_mtx_pool);
 			auto mIter = m_pool.find(id);
 			if (mIter == m_pool.end())
 			{
@@ -196,7 +196,7 @@ namespace net
 		std::unique_ptr<CNetInfo> pInfo;
 		_TyConnectionId id = -1;
 		{
-			std::unique_lock<std::shared_mutex> lock(m_shared_mtx_pool);
+			std::unique_lock<std::shared_mutex> lock(m_mtx_pool);
 			auto mIter = m_pool.begin();
 			for (; mIter != m_pool.end(); ++mIter)
 			{
@@ -230,7 +230,7 @@ namespace net
 		std::optional<std::vector<std::string>> frames{ std::nullopt };
 
 		{
-			std::unique_lock<std::shared_mutex> lock(m_shared_mtx_pool);
+			std::unique_lock<std::shared_mutex> lock(m_mtx_pool);
 			const auto mIter = m_pool.find(id);
 			if ((mIter == m_pool.end()) || (mIter->second->m_pEvent != pEvent))
 			{
@@ -254,7 +254,7 @@ namespace net
 			return false;
 		}
 
-		std::shared_lock<std::shared_mutex> lock(m_shared_mtx_pool);
+		std::shared_lock<std::shared_mutex> lock(m_mtx_pool);
 		const auto mIter = m_pool.find(id);
 		if (mIter == m_pool.end())
 		{
@@ -291,7 +291,7 @@ namespace net
 			return false;
 		}
 
-		std::shared_lock<std::shared_mutex> lock(m_shared_mtx_pool);
+		std::shared_lock<std::shared_mutex> lock(m_mtx_pool);
 		const auto mIter = m_pool.find(id);
 		if (mIter == m_pool.end())
 		{
@@ -302,7 +302,7 @@ namespace net
 
 	std::size_t CNetPool::Count() const
 	{
-		std::shared_lock<std::shared_mutex> lock(m_shared_mtx_pool);
+		std::shared_lock<std::shared_mutex> lock(m_mtx_pool);
 		return m_pool.size();
 	}
 
