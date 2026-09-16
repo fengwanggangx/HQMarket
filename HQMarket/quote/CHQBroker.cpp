@@ -73,7 +73,7 @@ std::vector<market::CBar> CHQBroker::QueryBars(const market::CSecurity& security
 		return bars;
 	}
 
-std::vector<market::CSecurity> CHQBroker::QueryInstruments() const
+std::vector<market::CInstrument> CHQBroker::QueryInstruments() const
 	{
 		return m_akshare.QueryInstruments();
 	}

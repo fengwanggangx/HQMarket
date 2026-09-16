@@ -51,6 +51,13 @@ namespace market
 		std::string String() const;
 	};
 
+	struct CInstrument
+	{
+		CSecurity m_security;
+		std::string m_strName;
+		std::string m_strStatus{ "normal" };
+	};
+
 	std::string GetMarketString(Exchange mk);
 	std::string FmtSecurityString(const std::string& strCode, Exchange mk);
 

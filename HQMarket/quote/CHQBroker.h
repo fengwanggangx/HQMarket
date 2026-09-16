@@ -25,7 +25,7 @@ class CHQBroker final
 		bool Unsubscribe(const std::vector<market::CChannelInfo>& infos);
 		std::optional<market::CQuote> QueryQuote(const market::CSecurity& security) const;
 		std::vector<market::CBar> QueryBars(const market::CSecurity& security, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime);
-		std::vector<market::CSecurity> QueryInstruments() const;
+		std::vector<market::CInstrument> QueryInstruments() const;
 		market::CProviderStatus RealtimeStatus() const;
 		market::CProviderStatus HistoryStatus() const;
 		bool IsRecorderOpen() const;

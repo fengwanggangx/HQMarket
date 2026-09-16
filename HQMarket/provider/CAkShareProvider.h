@@ -17,13 +17,13 @@ namespace provider
 			void SetQuoteHandler(_TyQuoteHandler) override;
 			void SetDepthHandler(_TyDepthHandler) override;
 			void Stop() override;
-			std::vector<market::CSecurity> QueryInstruments() const;
+			std::vector<market::CInstrument> QueryInstruments() const;
 
 		private:
 			mutable std::mutex m_mtx_state;
 			market::CProviderStatus m_status;
 			void* m_pProvider{ nullptr };
-			std::vector<market::CSecurity> m_instruments;
+			std::vector<market::CInstrument> m_instruments;
 	};
 } // namespace provider
 #endif

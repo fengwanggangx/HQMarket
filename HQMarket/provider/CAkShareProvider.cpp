@@ -79,6 +79,7 @@ namespace provider
 			{
 				PyObject* row = PyList_GetItem(values, i);
 				PyObject* symbolValue = PyDict_Check(row) ? PyDict_GetItemString(row, "symbol") : nullptr;
+				PyObject* nameValue = PyDict_Check(row) ? PyDict_GetItemString(row, "name") : nullptr;
 				if (nullptr == symbolValue)
 				{
 					continue;
@@ -88,21 +89,29 @@ namespace provider
 				{
 					continue;
 				}
-				market::CSecurity security;
-				security.m_strCode = symbol;
-				if (security.m_strCode.starts_with('6'))
+				market::CInstrument instrument;
+				instrument.m_security.m_strCode = symbol;
+				if (nullptr != nameValue)
 				{
-					security.m_market = market::Exchange::sse;
+					const char* pName = PyUnicode_AsUTF8(nameValue);
+					if (nullptr != pName)
+					{
+						instrument.m_strName = pName;
+					}
 				}
-				else if (security.m_strCode.starts_with('0') || security.m_strCode.starts_with('3'))
+				if (instrument.m_security.m_strCode.starts_with('6'))
 				{
-					security.m_market = market::Exchange::szse;
+					instrument.m_security.m_market = market::Exchange::sse;
+				}
+				else if (instrument.m_security.m_strCode.starts_with('0') || instrument.m_security.m_strCode.starts_with('3'))
+				{
+					instrument.m_security.m_market = market::Exchange::szse;
 				}
 				else
 				{
-					security.m_market = market::Exchange::bse;
+					instrument.m_security.m_market = market::Exchange::bse;
 				}
-				m_instruments.emplace_back(std::move(security));
+				m_instruments.emplace_back(std::move(instrument));
 			}
 		}
 		if (nullptr == values)
@@ -183,7 +192,7 @@ namespace provider
 	void CAkShareProvider::SetDepthHandler(_TyDepthHandler)
 	{
 	}
-	std::vector<market::CSecurity> CAkShareProvider::QueryInstruments() const
+	std::vector<market::CInstrument> CAkShareProvider::QueryInstruments() const
 	{
 		std::lock_guard<std::mutex> lck(m_mtx_state);
 		return m_instruments;

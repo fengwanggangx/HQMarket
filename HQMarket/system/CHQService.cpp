@@ -185,6 +185,7 @@ namespace
 			{ "heartbeat", std::bind_front(&CMarketService::HandleHeartbeat, this) },
 			{ "query_quote", std::bind_front(&CMarketService::HandleQuery, this) },
 			{ "query_bars", std::bind_front(&CMarketService::HandleQuery, this) },
+			{ "query_instruments", std::bind_front(&CMarketService::HandleQuery, this) },
 			{ "subscribe", std::bind_front(&CMarketService::HandleSubscription, this) },
 			{ "unsubscribe", std::bind_front(&CMarketService::HandleSubscription, this) }
 		};
@@ -457,6 +458,24 @@ namespace
 	{
 		std::uint64_t requestId = requestData.GetId();
 		std::string strCmd = requestData.GetCmd();
+		if ("query_instruments" == strCmd)
+		{
+			wire::InstrumentListResponse result;
+			std::vector<market::CInstrument> instruments = m_broker.QueryInstruments();
+			for (const market::CInstrument& instrument : instruments)
+			{
+				wire::InstrumentInfo* pInfo = result.add_instruments();
+				pInfo->mutable_instrument()->set_symbol(instrument.m_security.m_strCode);
+				pInfo->mutable_instrument()->set_exchange(ToWire(instrument.m_security.m_market));
+				pInfo->set_name(instrument.m_strName);
+				pInfo->set_status(instrument.m_strStatus);
+			}
+			result.set_version(NowMilliseconds());
+			CRequest response;
+			response.SetCmd("instrument_list_response");
+			SetData(response, result, requestId);
+			return net::SendRequest(id, response);
+		}
 
 		market::CSecurity security = ParseInstrument(requestData.GetExtraData("security"));
 		market::Channel channel = "query_quote" == strCmd ? market::Channel::quote : ParseChannel(requestData.GetExtraData("channel"));
@@ -643,18 +662,18 @@ namespace
 
 	std::string CMarketService::InstrumentsJson() const
 	{
-		std::vector<market::CSecurity> values = m_broker.QueryInstruments();
+		std::vector<market::CInstrument> values = m_broker.QueryInstruments();
 		std::ostringstream out;
 		out << '[';
 		bool bFirst = true;
-		for (const market::CSecurity& security : values)
+		for (const market::CInstrument& instrument : values)
 		{
 			if (!bFirst)
 			{
 				out << ',';
 			}
 			bFirst = false;
-			out << "{\"security\":\"" << security.String() << "\"}";
+			out << "{\"security\":\"" << instrument.m_security.String() << "\",\"name\":\"" << instrument.m_strName << "\",\"status\":\"" << instrument.m_strStatus << "\"}";
 		}
 		out << ']';
 		return out.str();
