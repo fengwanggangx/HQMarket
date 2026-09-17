@@ -130,8 +130,8 @@ namespace
 
 		void FillQuote(const market::CQuote& quote, wire::QuoteData* value)
 		{
-			value->mutable_instrument()->set_symbol(quote.m_security.m_strCode);
-			value->mutable_instrument()->set_exchange(ToWire(quote.m_security.m_market));
+			value->mutable_security()->set_symbol(quote.m_security.m_strCode);
+			value->mutable_security()->set_exchange(ToWire(quote.m_security.m_market));
 			value->set_exchange_time_ms(quote.m_nExchangeTime);
 			value->set_receive_time_ms(quote.m_nReceiveTime);
 			value->set_last_price(quote.m_nLastPrice);
@@ -148,8 +148,8 @@ namespace
 
 		void FillBar(const market::CBar& bar, wire::BarData* value)
 		{
-			value->mutable_instrument()->set_symbol(bar.m_security.m_strCode);
-			value->mutable_instrument()->set_exchange(ToWire(bar.m_security.m_market));
+			value->mutable_security()->set_symbol(bar.m_security.m_strCode);
+			value->mutable_security()->set_exchange(ToWire(bar.m_security.m_market));
 			value->set_channel(static_cast<wire::Channel>(static_cast<int>(bar.m_channel)));
 			value->set_begin_time_ms(bar.m_nBeginTime);
 			value->set_open_price(bar.m_nOpenPrice);
@@ -185,7 +185,7 @@ namespace
 			{ "heartbeat", std::bind_front(&CMarketService::HandleHeartbeat, this) },
 			{ "query_quote", std::bind_front(&CMarketService::HandleQuery, this) },
 			{ "query_bars", std::bind_front(&CMarketService::HandleQuery, this) },
-			{ "query_instruments", std::bind_front(&CMarketService::HandleQuery, this) },
+			{ "query_securities", std::bind_front(&CMarketService::HandleQuery, this) },
 			{ "subscribe", std::bind_front(&CMarketService::HandleSubscription, this) },
 			{ "unsubscribe", std::bind_front(&CMarketService::HandleSubscription, this) }
 		};
@@ -428,8 +428,8 @@ namespace
 
 		wire::SubscriptionAck ack;
 		wire::SubscriptionResult* pResult = ack.add_results();
-		pResult->mutable_instrument()->set_symbol(security.m_strCode);
-		pResult->mutable_instrument()->set_exchange(ToWire(security.m_market));
+		pResult->mutable_security()->set_symbol(security.m_strCode);
+		pResult->mutable_security()->set_exchange(ToWire(security.m_market));
 		pResult->set_channel(static_cast<wire::Channel>(static_cast<int>(channel)));
 		pResult->set_accepted(true);
 
@@ -458,21 +458,21 @@ namespace
 	{
 		std::uint64_t requestId = requestData.GetId();
 		std::string strCmd = requestData.GetCmd();
-		if ("query_instruments" == strCmd)
+		if ("query_securities" == strCmd)
 		{
-			wire::InstrumentListResponse result;
+			wire::SecurityList result;
 			std::vector<market::CInstrument> instruments = m_broker.QueryInstruments();
 			for (const market::CInstrument& instrument : instruments)
 			{
-				wire::InstrumentInfo* pInfo = result.add_instruments();
-				pInfo->mutable_instrument()->set_symbol(instrument.m_security.m_strCode);
-				pInfo->mutable_instrument()->set_exchange(ToWire(instrument.m_security.m_market));
+				wire::SecurityInfo* pInfo = result.add_securities();
+				pInfo->mutable_security()->set_symbol(instrument.m_security.m_strCode);
+				pInfo->mutable_security()->set_exchange(ToWire(instrument.m_security.m_market));
 				pInfo->set_name(instrument.m_strName);
 				pInfo->set_status(instrument.m_strStatus);
 			}
 			result.set_version(NowMilliseconds());
 			CRequest response;
-			response.SetCmd("instrument_list_response");
+			response.SetCmd("security_list");
 			SetData(response, result, requestId);
 			return net::SendRequest(id, response);
 		}
@@ -486,8 +486,8 @@ namespace
 		}
 		wire::QueryResponse result;
 		wire::QueryResponse* pResult = &result;
-		pResult->mutable_instrument()->set_symbol(security.m_strCode);
-		pResult->mutable_instrument()->set_exchange(ToWire(security.m_market));
+		pResult->mutable_security()->set_symbol(security.m_strCode);
+		pResult->mutable_security()->set_exchange(ToWire(security.m_market));
 		pResult->set_channel(static_cast<wire::Channel>(static_cast<int>(channel)));
 
 		CRequest response;
@@ -559,8 +559,8 @@ namespace
 	{
 		wire::DepthData depthData;
 		wire::DepthData* pValue = &depthData;
-		pValue->mutable_instrument()->set_symbol(depth.m_security.m_strCode);
-		pValue->mutable_instrument()->set_exchange(ToWire(depth.m_security.m_market));
+		pValue->mutable_security()->set_symbol(depth.m_security.m_strCode);
+		pValue->mutable_security()->set_exchange(ToWire(depth.m_security.m_market));
 		pValue->set_exchange_time_ms(depth.m_nExchangeTime);
 		pValue->set_receive_time_ms(depth.m_nReceiveTime);
 		pValue->set_source(depth.m_strSource);
