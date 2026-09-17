@@ -39,22 +39,22 @@ class CMarketService final
 
 	private:
 			int OnNetEvent(const net::CNetEvent& netEvent);
-			void OnClientRequest(net::_TyConnectionId id, const CRequest& request);
+			void OnClientRequest(net::_TyConnectionId id, const CRequest& req);
 			void OnClientDisconnected(net::_TyConnectionId id);
 
 	private:
-			bool HandleAuth(net::_TyConnectionId id, const CRequest& request);
-			bool HandleReAuth(net::_TyConnectionId id, const CRequest& request);
-			bool Login(net::_TyConnectionId id, const CRequest& request, std::string& strToken);
-			bool HandleHeartbeat(net::_TyConnectionId id, const CRequest& request);
-			bool HandleQuery(net::_TyConnectionId id, const CRequest& request);
-			bool HandleSubscription(net::_TyConnectionId id, const CRequest& request);
+			bool HandleAuth(net::_TyConnectionId id, const CRequest& req);
+			bool HandleReAuth(net::_TyConnectionId id, const CRequest& req);
+			bool Login(net::_TyConnectionId id, const CRequest& req, std::string& strToken);
+			bool HandleHeartbeat(net::_TyConnectionId id, const CRequest& req);
+			bool HandleQuery(net::_TyConnectionId id, const CRequest& req);
+			bool HandleSubscription(net::_TyConnectionId id, const CRequest& req);
 
 			void PublishQuote(const market::CQuote& quote, std::uint64_t nSequence);
 			void PublishDepth(const market::CDepth& depth, std::uint64_t nSequence);
 			bool IsAuthenticated(net::_TyConnectionId id) const;
 			std::vector<net::_TyConnectionId> AuthenticatedClients() const;
-			void SendAuthResponse(net::_TyConnectionId id, const CRequest& request, int nErrorCode, const std::string& strMessage) const;
+			void SendAuthResponse(net::_TyConnectionId id, const CRequest& req, int nErrorCode, const std::string& strMessage) const;
 
 	private:
 			std::unordered_map<std::string, std::function<bool(net::_TyConnectionId, const CRequest&)>> m_handler;
