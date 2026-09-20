@@ -14,32 +14,34 @@
 
 class CHQBroker final
 {
-	public:
-		using _TyQuoteHandler = std::function<void(const market::CQuote&, std::uint64_t)>;
-		using _TyDepthHandler = std::function<void(market::CDepth&&)>;
+  public:
+	using _TyQuoteHandler = std::function<void(const market::CQuote&, std::uint64_t)>;
+	using _TyDepthHandler = std::function<void(market::CDepth&&)>;
 
-		~CHQBroker();
-		bool Initialize(const std::filesystem::path& root);
-		void Stop();
-		bool Subscribe(const std::vector<market::CChannelInfo>& infos);
-		bool Unsubscribe(const std::vector<market::CChannelInfo>& infos);
-		std::optional<market::CQuote> QueryQuote(const market::CSecurity& security) const;
-		std::vector<market::CBar> QueryBars(const market::CSecurity& security, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime);
-		std::vector<market::CInstrument> QueryInstruments() const;
-		market::CProviderStatus RealtimeStatus() const;
-		market::CProviderStatus HistoryStatus() const;
-		bool IsRecorderOpen() const;
-		std::size_t QuoteCount() const;
-		void SetQuoteHandler(_TyQuoteHandler handler);
-		void SetDepthHandler(_TyDepthHandler handler);
+	~CHQBroker();
+	bool Initialize(const std::filesystem::path& root);
+	void Stop();
+	bool Subscribe(const std::vector<market::CChannelInfo>& infos);
+	bool Unsubscribe(const std::vector<market::CChannelInfo>& infos);
+	std::optional<market::CQuote> QueryQuote(const market::CSecurity& security) const;
+	std::vector<market::CBar> QueryBars(const market::CSecurity& security, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime);
+	std::vector<market::CInstrument> QueryInstruments() const;
+	std::vector<market::CSector> QuerySectors(market::SectorType type);
+	market::CSectorConstituents QuerySectorConstituents(market::SectorType type, const std::string& strSectorCode);
+	market::CProviderStatus RealtimeStatus() const;
+	market::CProviderStatus HistoryStatus() const;
+	bool IsRecorderOpen() const;
+	std::size_t QuoteCount() const;
+	void SetQuoteHandler(_TyQuoteHandler handler);
+	void SetDepthHandler(_TyDepthHandler handler);
 
-	private:
-		provider::CMooTdxProvider m_mootdx;
-		provider::CAkShareProvider m_akshare;
-		CHQCache m_cache;
-		CHQRecorder m_recorder;
-		_TyQuoteHandler m_quoteHandler;
-		_TyDepthHandler m_depthHandler;
+  private:
+	provider::CMooTdxProvider m_mootdx;
+	provider::CAkShareProvider m_akshare;
+	CHQCache m_cache;
+	CHQRecorder m_recorder;
+	_TyQuoteHandler m_quoteHandler;
+	_TyDepthHandler m_depthHandler;
 };
 
 #endif

@@ -21,6 +21,10 @@ namespace hqmarket::market::v1
 	class DepthData;
 	class QueryResponse;
 	class SecurityList;
+	class SectorListRequest;
+	class SectorListResponse;
+	class SectorConstituentsRequest;
+	class SectorConstituentsResponse;
 } // namespace hqmarket::market::v1
 
 namespace google::protobuf
@@ -35,6 +39,10 @@ using _TyQuoteData = hqmarket::market::v1::QuoteData;
 using _TyDepthData = hqmarket::market::v1::DepthData;
 using _TyQueryResponse = hqmarket::market::v1::QueryResponse;
 using _TySecurityList = hqmarket::market::v1::SecurityList;
+using _TySectorListRequest = hqmarket::market::v1::SectorListRequest;
+using _TySectorListResponse = hqmarket::market::v1::SectorListResponse;
+using _TySectorConstituentsRequest = hqmarket::market::v1::SectorConstituentsRequest;
+using _TySectorConstituentsResponse = hqmarket::market::v1::SectorConstituentsResponse;
 
 class CRequest
 {
@@ -81,6 +89,10 @@ class CRequest
 	void SetData(const _TyDepthData& value);
 	void SetData(const _TyQueryResponse& value);
 	void SetData(const _TySecurityList& value);
+	void SetData(const _TySectorListRequest& value);
+	void SetData(const _TySectorListResponse& value);
+	void SetData(const _TySectorConstituentsRequest& value);
+	void SetData(const _TySectorConstituentsResponse& value);
 	const _TyReqData& GetData() const;
 
 	void SetConnectionId(net::_TyConnectionId id);
