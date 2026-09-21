@@ -492,8 +492,8 @@ bool CMarketService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 	}
 	if ("query_sectors" == strCmd)
 	{
-		const request::RequestData& message = req.GetData();
-		if (!message.has_sector_list_request() || (wire::SECTOR_TYPE_INDUSTRY != message.sector_list_request().type()))
+		int nSectorType = 0;
+		if (!utility::to_number(req.GetExtraData("sector_type"), nSectorType) || (static_cast<int>(market::SectorType::industry) != nSectorType))
 		{
 			net::SendError(id, req, 1003, "unsupported sector type");
 			return false;
@@ -504,7 +504,7 @@ bool CMarketService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 			net::SendError(id, req, StorageUnavailable, "sector data is unavailable");
 			return false;
 		}
-		wire::SectorListResponse result;
+		wire::SectorList result;
 		result.set_type(wire::SECTOR_TYPE_INDUSTRY);
 		result.set_snapshot_time_ms(sectors.front().m_nSnapshotTime);
 		result.set_source("akshare");
@@ -519,19 +519,20 @@ bool CMarketService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 	}
 	if ("query_sector_constituents" == strCmd)
 	{
-		const request::RequestData& message = req.GetData();
-		if (!message.has_sector_constituents_request() || (wire::SECTOR_TYPE_INDUSTRY != message.sector_constituents_request().type()) || message.sector_constituents_request().sector_code().empty())
+		int nSectorType = 0;
+		std::string strSectorCode = req.GetExtraData("sector_code");
+		if (!utility::to_number(req.GetExtraData("sector_type"), nSectorType) || (static_cast<int>(market::SectorType::industry) != nSectorType) || strSectorCode.empty())
 		{
 			net::SendError(id, req, 1003, "invalid sector constituent request");
 			return false;
 		}
-		market::CSectorConstituents constituents = m_broker.QuerySectorConstituents(market::SectorType::industry, message.sector_constituents_request().sector_code());
+		market::CSectorConstituents constituents = m_broker.QuerySectorConstituents(market::SectorType::industry, strSectorCode);
 		if (constituents.m_securities.empty())
 		{
 			net::SendError(id, req, StorageUnavailable, "sector constituents are unavailable");
 			return false;
 		}
-		wire::SectorConstituentsResponse result;
+		wire::SectorConstituents result;
 		result.set_type(wire::SECTOR_TYPE_INDUSTRY);
 		FillSector(constituents.m_sector, result.mutable_sector());
 		result.set_snapshot_time_ms(constituents.m_nSnapshotTime);
