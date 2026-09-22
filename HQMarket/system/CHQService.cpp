@@ -357,7 +357,7 @@ bool CMarketService::Login(net::_TyConnectionId id, const CRequest& req, std::st
 	response.SetId(req.GetId());
 	response.SetType(req.GetType());
 	response.SetCmd(req.GetCmd());
-	response.SetReturnData("status", "ok");
+	response.SetReturnData("accepted", "1");
 	response.SetReturnData("user_id", table.second.front().at(0));
 	response.SetReturnData("account", table.second.front().at(1));
 	strToken = utility::MakeSaltHex();
