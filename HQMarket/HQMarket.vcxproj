@@ -94,6 +94,7 @@
     <ClInclude Include="database\COracle.h" />
     <ClInclude Include="database\CSQLite3.h" />
     <ClInclude Include="database\IDataBase.h" />
+    <ClInclude Include="database\CQueryTable.h" />
     <ClInclude Include="basic\CDistributor.h" />
     <ClInclude Include="common\container.h" />
     <ClInclude Include="common\container_traits.h" />

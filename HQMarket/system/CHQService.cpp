@@ -346,8 +346,8 @@ bool CMarketService::Login(net::_TyConnectionId id, const CRequest& req, std::st
 	}
 
 	std::string strSql = "SELECT user_id, account FROM table_user WHERE account=" + utility::Utf8Literal(strAccount) + " AND password_hash=UNHEX(SHA2(CONCAT(password_salt,UNHEX('" + utility::ToHex(strPassword) + "')),256)) AND status=1 LIMIT 1";
-	const db::_TyTableInfo& table = db->ExecQuery(strSql);
-	if (table.second.empty())
+	const db::CQueryTable& table = db->ExecQuery(strSql);
+	if (table.m_rows.empty())
 	{
 		SendAuthResponse(id, req, InvalidCredentials, "账号或密码错误");
 		return false;
@@ -358,8 +358,8 @@ bool CMarketService::Login(net::_TyConnectionId id, const CRequest& req, std::st
 	response.SetType(req.GetType());
 	response.SetCmd(req.GetCmd());
 	response.SetReturnData("accepted", "1");
-	response.SetReturnData("user_id", table.second.front().at(0));
-	response.SetReturnData("account", table.second.front().at(1));
+	response.SetReturnData("user_id", db::QueryValueToString(table.m_rows.front().at(0)));
+	response.SetReturnData("account", db::QueryValueToString(table.m_rows.front().at(1)));
 	strToken = utility::MakeSaltHex();
 	response.SetReturnData("token", strToken);
 	net::SendRequest(id, response);

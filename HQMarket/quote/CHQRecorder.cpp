@@ -144,7 +144,7 @@ namespace
 		{
 			return result;
 		}
-		const db::_TyRows& rows = m_db->ExecQuery(sql).second;
+		const db::CQueryTable::_TyRows& rows = m_db->ExecQuery(sql).m_rows;
 		result.reserve(rows.size());
 		for (const auto& row : rows)
 		{
@@ -157,15 +157,15 @@ namespace
 			market::CBar& bar = result.back();
 			bar.m_security = security;
 			bar.m_channel = channel;
-			if (!utility::to_number(row[0], bar.m_nBeginTime) || !utility::to_number(row[1], bar.m_nOpenPrice) ||
-				!utility::to_number(row[2], bar.m_nHighPrice) || !utility::to_number(row[3], bar.m_nLowPrice) ||
-				!utility::to_number(row[4], bar.m_nClosePrice) || !utility::to_number(row[5], bar.m_nVolume) ||
-				!utility::to_number(row[6], bar.m_nTurnover) || !utility::to_number(row[7], bar.m_nPriceScale))
+			if (!utility::to_number(db::QueryValueToString(row[0]), bar.m_nBeginTime) || !utility::to_number(db::QueryValueToString(row[1]), bar.m_nOpenPrice) ||
+				!utility::to_number(db::QueryValueToString(row[2]), bar.m_nHighPrice) || !utility::to_number(db::QueryValueToString(row[3]), bar.m_nLowPrice) ||
+				!utility::to_number(db::QueryValueToString(row[4]), bar.m_nClosePrice) || !utility::to_number(db::QueryValueToString(row[5]), bar.m_nVolume) ||
+				!utility::to_number(db::QueryValueToString(row[6]), bar.m_nTurnover) || !utility::to_number(db::QueryValueToString(row[7]), bar.m_nPriceScale))
 			{
 				continue;
 			}
-			bar.m_strAdjustment = row[8];
-			bar.m_strSource = row[9];
+			bar.m_strAdjustment = db::QueryValueToString(row[8]);
+			bar.m_strSource = db::QueryValueToString(row[9]);
 			
 		}
 		return result;
