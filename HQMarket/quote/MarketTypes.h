@@ -56,6 +56,8 @@ namespace market
 		CSecurity m_security;
 		std::string m_strName;
 		std::string m_strStatus{ "normal" };
+		std::vector<std::string> m_pinyinFullAliases;
+		std::vector<std::string> m_pinyinShortAliases;
 	};
 
 	enum class SectorType

@@ -1,12 +1,59 @@
 """Thin AKShare adapter for instruments and historical daily bars."""
 from __future__ import annotations
 
+import re
+
+try:
+    from pypinyin import Style, lazy_pinyin
+except ImportError:
+    Style = None
+    lazy_pinyin = None
+
+
+_SECURITY_PREFIX_PATTERN = re.compile(
+    r"^(?:S[＊*]ST|SST|[＊*]ST|ST|N|C|U|W|V)+",
+    re.IGNORECASE,
+)
+
+
+def _normalize_pinyin(values: list[str]) -> str:
+    return re.sub(r"[^a-z0-9]", "", "".join(values).lower())
+
+
+def _convert_pinyin(name: str) -> tuple[str, str]:
+    if Style is None or lazy_pinyin is None:
+        return "", ""
+    full = _normalize_pinyin(lazy_pinyin(name, style=Style.NORMAL))
+    short = _normalize_pinyin(lazy_pinyin(name, style=Style.FIRST_LETTER))
+    return full, short
+
+
+def make_pinyin_aliases(name: str) -> tuple[list[str], list[str]]:
+    normalized_name = name.strip()
+    plain_name = _SECURITY_PREFIX_PATTERN.sub("", normalized_name)
+    full_aliases: list[str] = []
+    short_aliases: list[str] = []
+    for candidate in (normalized_name, plain_name):
+        if not candidate:
+            continue
+        full, short = _convert_pinyin(candidate)
+        if full and full not in full_aliases:
+            full_aliases.append(full)
+        if short and short not in short_aliases:
+            short_aliases.append(short)
+    return full_aliases, short_aliases
+
 
 class AkShareProvider:
     def instruments(self) -> list[dict]:
         import akshare as ak
         frame = ak.stock_info_a_code_name()
-        return frame.rename(columns={"code": "symbol", "name": "name"}).to_dict(orient="records")
+        records = frame.rename(columns={"code": "symbol", "name": "name"}).to_dict(orient="records")
+        for item in records:
+            full_aliases, short_aliases = make_pinyin_aliases(str(item.get("name", "")))
+            item["pinyin_full_aliases"] = full_aliases
+            item["pinyin_short_aliases"] = short_aliases
+        return records
 
     def daily_bars(self, symbol: str, start: str, end: str, adjustment: str = "") -> list[dict]:
         import akshare as ak

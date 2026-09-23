@@ -75,6 +75,30 @@ namespace provider
 		}
 		return pValue;
 	}
+	static std::vector<std::string> StringList(PyObject* row, const char* name)
+	{
+		std::vector<std::string> result;
+		PyObject* values = PyDict_GetItemString(row, name);
+		if ((nullptr == values) || (0 == PyList_Check(values)))
+		{
+			return result;
+		}
+		result.reserve(static_cast<std::size_t>(PyList_Size(values)));
+		for (Py_ssize_t nIndex = 0; PyList_Size(values) > nIndex; ++nIndex)
+		{
+			PyObject* value = PyList_GetItem(values, nIndex);
+			const char* pValue = nullptr != value ? PyUnicode_AsUTF8(value) : nullptr;
+			if (nullptr != pValue)
+			{
+				result.emplace_back(pValue);
+			}
+			else
+			{
+				PyErr_Clear();
+			}
+		}
+		return result;
+	}
 	static market::CSecurity Security(const std::string& strCode)
 	{
 		market::CSecurity security;
@@ -149,6 +173,8 @@ namespace provider
 						instrument.m_strName = pName;
 					}
 				}
+				instrument.m_pinyinFullAliases = StringList(row, "pinyin_full_aliases");
+				instrument.m_pinyinShortAliases = StringList(row, "pinyin_short_aliases");
 				if (instrument.m_security.m_strCode.starts_with('6'))
 				{
 					instrument.m_security.m_market = market::Exchange::sse;
@@ -346,6 +372,15 @@ namespace provider
 				market::CInstrument instrument;
 				instrument.m_security = Security(String(row, "symbol"));
 				instrument.m_strName = String(row, "name");
+				const auto instrumentIter = std::find_if(m_instruments.begin(), m_instruments.end(), [&instrument](const market::CInstrument& current)
+				{
+					return current.m_security == instrument.m_security;
+				});
+				if (m_instruments.end() != instrumentIter)
+				{
+					instrument.m_pinyinFullAliases = instrumentIter->m_pinyinFullAliases;
+					instrument.m_pinyinShortAliases = instrumentIter->m_pinyinShortAliases;
+				}
 				if (instrument.m_security.IsValid())
 				{
 					value.m_securities.emplace_back(std::move(instrument));

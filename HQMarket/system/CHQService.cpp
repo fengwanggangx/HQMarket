@@ -180,6 +180,31 @@ namespace
 		value->set_snapshot_time_ms(sector.m_nSnapshotTime);
 	}
 
+	void FillSecurityInfo(const market::CInstrument& instrument, wire::SecurityInfo* value)
+	{
+		value->mutable_security()->set_symbol(instrument.m_security.m_strCode);
+		value->mutable_security()->set_exchange(ToWire(instrument.m_security.m_market));
+		value->set_name(instrument.m_strName);
+		value->set_status(instrument.m_strStatus);
+		for (const std::string& strAlias : instrument.m_pinyinFullAliases)
+		{
+			value->add_pinyin_full_aliases(strAlias);
+		}
+		for (const std::string& strAlias : instrument.m_pinyinShortAliases)
+		{
+			value->add_pinyin_short_aliases(strAlias);
+		}
+	}
+
+	void HashString(std::uint64_t& value, const std::string& strText)
+	{
+		for (unsigned char character : strText)
+		{
+			value = (value ^ character) * 1099511628211ULL;
+		}
+		value = (value ^ 0xffU) * 1099511628211ULL;
+	}
+
 	template <typename T>
 	bool SetData(CRequest& request, const T& value, std::uint64_t requestId = 0, std::uint64_t sequence = 0)
 	{
@@ -531,15 +556,19 @@ bool CMarketService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 		for (const market::CInstrument& instrument : instruments)
 		{
 			wire::SecurityInfo* pInfo = result.add_securities();
-			pInfo->mutable_security()->set_symbol(instrument.m_security.m_strCode);
-			pInfo->mutable_security()->set_exchange(ToWire(instrument.m_security.m_market));
-			pInfo->set_name(instrument.m_strName);
-			pInfo->set_status(instrument.m_strStatus);
-			for (unsigned char ch : instrument.m_security.m_strCode)
-			{
-				version = (version ^ ch) * 1099511628211ULL;
-			}
+			FillSecurityInfo(instrument, pInfo);
+			HashString(version, instrument.m_security.m_strCode);
 			version = (version ^ static_cast<std::uint64_t>(instrument.m_security.m_market)) * 1099511628211ULL;
+			HashString(version, instrument.m_strName);
+			HashString(version, instrument.m_strStatus);
+			for (const std::string& strAlias : instrument.m_pinyinFullAliases)
+			{
+				HashString(version, strAlias);
+			}
+			for (const std::string& strAlias : instrument.m_pinyinShortAliases)
+			{
+				HashString(version, strAlias);
+			}
 		}
 		result.set_version(static_cast<std::int64_t>(version));
 		CRequest response;
@@ -597,10 +626,7 @@ bool CMarketService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 		for (const auto& instrument : constituents.m_securities)
 		{
 			wire::SecurityInfo* pInfo = result.add_securities();
-			pInfo->mutable_security()->set_symbol(instrument.m_security.m_strCode);
-			pInfo->mutable_security()->set_exchange(ToWire(instrument.m_security.m_market));
-			pInfo->set_name(instrument.m_strName);
-			pInfo->set_status(instrument.m_strStatus);
+			FillSecurityInfo(instrument, pInfo);
 		}
 		CRequest response;
 		response.SetCmd(strCmd);

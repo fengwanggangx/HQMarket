@@ -10,4 +10,4 @@ mkdir -p "${RUNTIME}"
 cp -a "$("${PYTHON_BIN}" -c 'import sys; print(sys.prefix)')/." "${RUNTIME}/"
 "${RUNTIME}/bin/python3.12" -m pip install --disable-pip-version-check --no-cache-dir -r "${ROOT}/python/requirements.lock"
 "${RUNTIME}/bin/python3.12" -m pip check
-"${RUNTIME}/bin/python3.12" -c 'import akshare, mootdx, pandas; print("embedded providers ready")'
+"${RUNTIME}/bin/python3.12" -c 'import akshare, mootdx, pandas, pypinyin; print("embedded providers ready")'
