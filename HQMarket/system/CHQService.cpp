@@ -447,9 +447,9 @@ bool CMarketService::HandleSubscription(net::_TyConnectionId id, const CRequest&
 		for (const auto& securityValue : payload.securities())
 		{
 			market::CSecurity security(securityValue.symbol(), static_cast<market::Exchange>(static_cast<int>(securityValue.exchange())));
-			for (hqmarket::market::v1::Channel channelValue : payload.channels())
+			for (int nChannelValue : payload.channels())
 			{
-				market::Channel channel = static_cast<market::Channel>(static_cast<int>(channelValue));
+				market::Channel channel = static_cast<market::Channel>(nChannelValue);
 				if (security.IsValid() && IsRealtimeChannel(channel))
 				{
 					requested.emplace_back(market::CChannelInfo{ security, channel });
@@ -464,9 +464,9 @@ bool CMarketService::HandleSubscription(net::_TyConnectionId id, const CRequest&
 		for (const auto& securityValue : payload.securities())
 		{
 			market::CSecurity security(securityValue.symbol(), static_cast<market::Exchange>(static_cast<int>(securityValue.exchange())));
-			for (hqmarket::market::v1::Channel channelValue : payload.channels())
+			for (int nChannelValue : payload.channels())
 			{
-				market::Channel channel = static_cast<market::Channel>(static_cast<int>(channelValue));
+				market::Channel channel = static_cast<market::Channel>(nChannelValue);
 				if (security.IsValid() && IsRealtimeChannel(channel))
 				{
 					requested.emplace_back(market::CChannelInfo{ security, channel });
