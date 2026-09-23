@@ -30,6 +30,12 @@ namespace db
 			m_columns.clear();
 			m_rows.clear();
 		}
+
+		bool IsEmpty() const
+		{
+			return m_columns.empty() || m_rows.empty();
+		}
+
 		_TyColumns m_columns;
 		_TyRows m_rows;
 	};
