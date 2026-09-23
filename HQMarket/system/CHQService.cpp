@@ -412,21 +412,57 @@ bool CMarketService::HandleSubscription(net::_TyConnectionId id, const CRequest&
 	}
 
 	bool bSubscribe = "subscribe" == strCmd;
-
 	std::uint64_t requestId = req.GetId();
-
-	market::CSecurity security = ParseInstrument(req.GetExtraData("security"));
-	market::Channel channel = ParseChannel(req.GetExtraData("channel"));
-
-	bool bAccepted = security.IsValid() && IsRealtimeChannel(channel);
-	if (!bAccepted)
+	std::vector<market::CChannelInfo> requested;
+	const _TyReqData& message = req.GetData();
+	if (bSubscribe && message.has_subscribe_request())
+	{
+		const hqmarket::market::v1::SubscribeRequest& payload = message.subscribe_request();
+		requested.reserve(static_cast<std::size_t>(payload.securities_size()) * static_cast<std::size_t>(payload.channels_size()));
+		for (const auto& securityValue : payload.securities())
+		{
+			market::CSecurity security(securityValue.symbol(), static_cast<market::Exchange>(static_cast<int>(securityValue.exchange())));
+			for (hqmarket::market::v1::Channel channelValue : payload.channels())
+			{
+				market::Channel channel = static_cast<market::Channel>(static_cast<int>(channelValue));
+				if (security.IsValid() && IsRealtimeChannel(channel))
+				{
+					requested.emplace_back(market::CChannelInfo{ security, channel });
+				}
+			}
+		}
+	}
+	else if (!bSubscribe && message.has_unsubscribe_request())
+	{
+		const hqmarket::market::v1::UnsubscribeRequest& payload = message.unsubscribe_request();
+		requested.reserve(static_cast<std::size_t>(payload.securities_size()) * static_cast<std::size_t>(payload.channels_size()));
+		for (const auto& securityValue : payload.securities())
+		{
+			market::CSecurity security(securityValue.symbol(), static_cast<market::Exchange>(static_cast<int>(securityValue.exchange())));
+			for (hqmarket::market::v1::Channel channelValue : payload.channels())
+			{
+				market::Channel channel = static_cast<market::Channel>(static_cast<int>(channelValue));
+				if (security.IsValid() && IsRealtimeChannel(channel))
+				{
+					requested.emplace_back(market::CChannelInfo{ security, channel });
+				}
+			}
+		}
+	}
+	else
+	{
+		market::CSecurity security = ParseInstrument(req.GetExtraData("security"));
+		market::Channel channel = ParseChannel(req.GetExtraData("channel"));
+		if (security.IsValid() && IsRealtimeChannel(channel))
+		{
+			requested.emplace_back(market::CChannelInfo{ security, channel });
+		}
+	}
+	if (requested.empty())
 	{
 		net::SendError(id, req, 1003, "invalid security or unsupported subscription channel");
 		return false;
 	}
-
-	market::CChannelInfo subscription{ security, channel };
-	std::vector<market::CChannelInfo> requested{ subscription };
 	std::vector<market::CChannelInfo> changed = bSubscribe ? m_subscriptions.Subscribe(id, requested) : m_subscriptions.Unsubscribe(id, requested);
 	if (!changed.empty())
 	{
@@ -441,28 +477,38 @@ bool CMarketService::HandleSubscription(net::_TyConnectionId id, const CRequest&
 	}
 
 	wire::SubscriptionAck ack;
-	wire::SubscriptionResult* pResult = ack.add_results();
-	pResult->mutable_security()->set_symbol(security.m_strCode);
-	pResult->mutable_security()->set_exchange(ToWire(security.m_market));
-	pResult->set_channel(static_cast<wire::Channel>(static_cast<int>(channel)));
-	pResult->set_accepted(true);
+	for (const market::CChannelInfo& subscription : requested)
+	{
+		wire::SubscriptionResult* pResult = ack.add_results();
+		pResult->mutable_security()->set_symbol(subscription.m_security.m_strCode);
+		pResult->mutable_security()->set_exchange(ToWire(subscription.m_security.m_market));
+		pResult->set_channel(static_cast<wire::Channel>(static_cast<int>(subscription.m_channel)));
+		pResult->set_accepted(true);
+	}
 
 	CRequest response;
 	response.SetCmd("subscription_ack");
 	response.SetReturnData("accepted", "1");
 	SetData(response, ack, requestId);
 	net::SendRequest(id, response);
-	if (bSubscribe && (market::Channel::quote == channel))
+	if (bSubscribe)
 	{
-		std::optional<market::CQuote> quote = m_broker.QueryQuote(security);
-		if (quote.has_value())
+		for (const market::CChannelInfo& subscription : requested)
 		{
-			wire::QuoteData quoteData;
-			FillQuote(*quote, &quoteData);
-			CRequest snapshot;
-			snapshot.SetCmd("quote");
-			SetData(snapshot, quoteData);
-			net::SendRequest(id, snapshot);
+			if (market::Channel::quote != subscription.m_channel)
+			{
+				continue;
+			}
+			std::optional<market::CQuote> quote = m_broker.QueryQuote(subscription.m_security);
+			if (quote.has_value())
+			{
+				wire::QuoteData quoteData;
+				FillQuote(*quote, &quoteData);
+				CRequest snapshot;
+				snapshot.SetCmd("quote");
+				SetData(snapshot, quoteData);
+				net::SendRequest(id, snapshot);
+			}
 		}
 	}
 	return true;
@@ -476,6 +522,12 @@ bool CMarketService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 	{
 		wire::SecurityList result;
 		std::vector<market::CInstrument> instruments = m_broker.QueryInstruments();
+		if (instruments.empty())
+		{
+			net::SendError(id, req, StorageUnavailable, "security list is unavailable");
+			return false;
+		}
+		std::uint64_t version = 1469598103934665603ULL;
 		for (const market::CInstrument& instrument : instruments)
 		{
 			wire::SecurityInfo* pInfo = result.add_securities();
@@ -483,8 +535,13 @@ bool CMarketService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 			pInfo->mutable_security()->set_exchange(ToWire(instrument.m_security.m_market));
 			pInfo->set_name(instrument.m_strName);
 			pInfo->set_status(instrument.m_strStatus);
+			for (unsigned char ch : instrument.m_security.m_strCode)
+			{
+				version = (version ^ ch) * 1099511628211ULL;
+			}
+			version = (version ^ static_cast<std::uint64_t>(instrument.m_security.m_market)) * 1099511628211ULL;
 		}
-		result.set_version(NowMilliseconds());
+		result.set_version(static_cast<std::int64_t>(version));
 		CRequest response;
 		response.SetCmd(strCmd);
 		SetData(response, result, requestId);
