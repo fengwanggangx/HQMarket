@@ -45,6 +45,17 @@ namespace provider
 		}
 		return 0 != PyLong_Check(value) ? PyLong_AsLongLong(value) : static_cast<std::int64_t>(PyFloat_AsDouble(value));
 	}
+	static std::string String(PyObject* dictionary, const char* name)
+	{
+		PyObject* value = PyDict_GetItemString(dictionary, name);
+		const char* pValue = nullptr != value ? PyUnicode_AsUTF8(value) : nullptr;
+		if (nullptr == pValue)
+		{
+			PyErr_Clear();
+			return {};
+		}
+		return pValue;
+	}
 	static void PrintPythonError(const char* context)
 	{
 		PyObject* errorType = nullptr;
@@ -195,9 +206,12 @@ namespace provider
 	bool CMooTdxProvider::Poll(const std::vector<market::CSecurity>& securities)
 	{
 		PyGILState_STATE gil = PyGILState_Ensure();
+		std::unordered_map<std::string, market::CSecurity> securityByKey;
+		securityByKey.reserve(securities.size());
 		PyObject* list = PyList_New(static_cast<Py_ssize_t>(securities.size()));
 		for (std::size_t i = 0; i < securities.size(); ++i)
 		{
+			securityByKey.emplace(securities[i].m_strCode + ":" + ExchangeName(securities[i].m_market), securities[i]);
 			PyObject* item = Py_BuildValue("{s:s,s:s}", "symbol", securities[i].m_strCode.c_str(), "exchange",
 										   ExchangeName(securities[i].m_market));
 			PyList_SET_ITEM(list, static_cast<Py_ssize_t>(i), item);
@@ -210,13 +224,20 @@ namespace provider
 			for (Py_ssize_t i = 0; i < PyList_Size(result); ++i)
 			{
 				PyObject* row = PyList_GetItem(result, i);
-				if ((0 == PyDict_Check(row)) || (securities.size() <= static_cast<std::size_t>(i)))
+				if (0 == PyDict_Check(row))
+				{
+					continue;
+				}
+				std::string strSymbol = String(row, "symbol");
+				std::string strExchange = String(row, "exchange");
+				const auto securityIter = securityByKey.find(strSymbol + ":" + strExchange);
+				if (securityByKey.end() == securityIter)
 				{
 					continue;
 				}
 				std::int64_t now = NowMs();
 				market::CQuote quote;
-				quote.m_security = securities[static_cast<std::size_t>(i)];
+				quote.m_security = securityIter->second;
 				quote.m_nReceiveTime = now;
 				quote.m_nExchangeTime = now;
 				quote.m_nLastPrice = Fixed(row, "price");
@@ -226,12 +247,12 @@ namespace provider
 				quote.m_nPreClose = Fixed(row, "last_close");
 				quote.m_nVolume = Integer(row, "vol");
 				quote.m_nTurnover = Fixed(row, "amount", 2);
-				quote.m_strSource = "mootdx";
+				quote.m_strSource = String(row, "source");
 				market::CDepth depth;
 				depth.m_security = quote.m_security;
 				depth.m_nReceiveTime = now;
 				depth.m_nExchangeTime = now;
-				depth.m_strSource = "mootdx";
+				depth.m_strSource = quote.m_strSource;
 				for (int level = 1; level <= 5; ++level)
 				{
 					std::string suffix = std::to_string(level);
@@ -259,7 +280,14 @@ namespace provider
 		}
 		if (!bOk)
 		{
-			PyErr_Clear();
+			if (nullptr != PyErr_Occurred())
+			{
+				PrintPythonError("MooTdxProvider quote request failed");
+			}
+			else
+			{
+				std::cerr << "MooTdxProvider quote request failed: invalid Python result" << std::endl;
+			}
 		}
 		Py_XDECREF(result);
 		PyGILState_Release(gil);
