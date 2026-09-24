@@ -43,7 +43,10 @@ class MooTdxProvider:
             market="std",
             server=_ensure_mootdx_config(),
             timeout=3,
-            heartbeat=True,
+            # Quotes are polled every 800 ms by C++, so tdxpy's background
+            # heartbeat is unnecessary.  It also races with quote reads on the
+            # same socket and logs a full traceback when a server disconnects.
+            heartbeat=False,
             auto_retry=False,
             raise_exception=True,
         )
