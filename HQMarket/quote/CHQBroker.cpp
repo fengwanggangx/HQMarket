@@ -1,4 +1,5 @@
 #include "CHQBroker.h"
+#include <map>
 #include <utility>
 
 CHQBroker::~CHQBroker()
@@ -60,12 +61,24 @@ std::optional<market::CQuote> CHQBroker::QueryQuote(const market::CSecurity& sec
 std::vector<market::CBar> CHQBroker::QueryBars(const market::CSecurity& security, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime)
 {
 	std::vector<market::CBar> bars = m_recorder.QueryBars(security, channel, nBeginTime, nEndTime);
-	if (bars.empty())
+	std::vector<market::CBar> providerBars = m_akshare.QueryBars(security, channel, nBeginTime, nEndTime);
+	if (!providerBars.empty())
 	{
-		bars = m_akshare.QueryBars(security, channel, nBeginTime, nEndTime);
-		if (!bars.empty())
+		m_recorder.UpsertBars(providerBars);
+		std::map<std::int64_t, market::CBar> mergedBars;
+		for (const market::CBar& bar : bars)
 		{
-			m_recorder.UpsertBars(bars);
+			mergedBars.insert_or_assign(bar.m_nBeginTime, bar);
+		}
+		for (const market::CBar& bar : providerBars)
+		{
+			mergedBars.insert_or_assign(bar.m_nBeginTime, bar);
+		}
+		bars.clear();
+		bars.reserve(mergedBars.size());
+		for (const auto& value : mergedBars)
+		{
+			bars.emplace_back(value.second);
 		}
 	}
 	return bars;
