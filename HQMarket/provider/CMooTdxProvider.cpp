@@ -1,5 +1,6 @@
 #include "CMooTdxProvider.h"
 #include <Python.h>
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <iostream>
@@ -190,7 +191,21 @@ namespace provider
 				std::this_thread::sleep_for(std::chrono::milliseconds(200));
 				continue;
 			}
-			if (Poll(securities))
+			constexpr std::size_t BatchSize = 1000;
+			std::size_t nSize = securities.size();
+			bool bOk = true;
+			for (std::size_t nOffset = 0; nSize > nOffset; nOffset += BatchSize)
+			{
+				std::size_t nEnd = (std::min)(nSize, nOffset + BatchSize);
+				std::vector<market::CSecurity> batch(securities.begin() + static_cast<std::ptrdiff_t>(nOffset),
+					securities.begin() + static_cast<std::ptrdiff_t>(nEnd));
+				if (!Poll(batch))
+				{
+					bOk = false;
+					break;
+				}
+			}
+			if (bOk)
 			{
 				nFailures = 0;
 				std::this_thread::sleep_for(std::chrono::milliseconds(800));

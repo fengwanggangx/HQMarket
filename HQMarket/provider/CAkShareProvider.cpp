@@ -8,6 +8,8 @@
 #include <sstream>
 namespace provider
 {
+	constexpr std::int64_t ChinaTimeOffsetMilliseconds = 8LL * 60LL * 60LL * 1000LL;
+
 	static std::string DateString(std::int64_t nMilliseconds)
 	{
 		if (0 >= nMilliseconds)
@@ -32,16 +34,40 @@ namespace provider
 		out << std::put_time(&date, "%Y%m%d");
 		return out.str();
 	}
+	static std::string DateTimeString(std::int64_t nMilliseconds)
+	{
+		if (0 >= nMilliseconds)
+		{
+			return "1990-01-01 00:00:00";
+		}
+		std::time_t value = static_cast<std::time_t>((nMilliseconds + ChinaTimeOffsetMilliseconds) / 1000);
+		std::tm date{};
+#ifdef _WIN32
+		gmtime_s(&date, &value);
+#else
+		gmtime_r(&value, &date);
+#endif
+		std::ostringstream out;
+		out << std::put_time(&date, "%Y-%m-%d %H:%M:%S");
+		return out.str();
+	}
 	static std::int64_t DateMilliseconds(const char* value)
 	{
 		std::tm date{};
-		std::istringstream input(nullptr != value ? value : "");
-		input >> std::get_time(&date, "%Y-%m-%d");
+		std::string strValue = nullptr != value ? value : "";
+		bool bHasTime = std::string::npos != strValue.find(' ');
+		std::istringstream input(strValue);
+		input >> std::get_time(&date, bHasTime ? "%Y-%m-%d %H:%M:%S" : "%Y-%m-%d");
+		if (input.fail())
+		{
+			return 0;
+		}
 #ifdef _WIN32
-		return static_cast<std::int64_t>(_mkgmtime(&date)) * 1000;
+		std::int64_t nResult = static_cast<std::int64_t>(_mkgmtime(&date)) * 1000;
 #else
-		return static_cast<std::int64_t>(timegm(&date)) * 1000;
+		std::int64_t nResult = static_cast<std::int64_t>(timegm(&date)) * 1000;
 #endif
+		return bHasTime ? nResult - ChinaTimeOffsetMilliseconds : nResult;
 	}
 	static std::int64_t Fixed(PyObject* row, const char* name, int scale)
 	{
@@ -214,14 +240,15 @@ namespace provider
 	{
 		std::vector<market::CBar> bars;
 		std::unique_lock<std::mutex> lck(m_mtx_state);
-		if ((market::Channel::bar_1d != channel) || (nullptr == m_pProvider))
+		if (((market::Channel::bar_1d != channel) && (market::Channel::bar_1m != channel)) || (nullptr == m_pProvider))
 		{
 			return bars;
 		}
-		std::string begin = DateString(nBeginTime);
-		std::string end = DateString(nEndTime);
+		bool bMinute = market::Channel::bar_1m == channel;
+		std::string begin = bMinute ? DateTimeString(nBeginTime) : DateString(nBeginTime);
+		std::string end = bMinute ? DateTimeString(nEndTime) : DateString(nEndTime);
 		PyGILState_STATE gil = PyGILState_Ensure();
-		PyObject* result = PyObject_CallMethod(static_cast<PyObject*>(m_pProvider), "daily_bars", "ssss",
+		PyObject* result = PyObject_CallMethod(static_cast<PyObject*>(m_pProvider), bMinute ? "minute_bars" : "daily_bars", "ssss",
 											   security.m_strCode.c_str(), begin.c_str(), end.c_str(), "");
 		bool bOk = (nullptr != result) && (0 != PyList_Check(result));
 		if (bOk)

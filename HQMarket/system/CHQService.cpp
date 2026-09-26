@@ -675,6 +675,14 @@ bool CMarketService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 			return false;
 		}
 		std::vector<market::CBar> bars = m_broker.QueryBars(security, channel, begin, end);
+		market::CProviderStatus history = m_broker.HistoryStatus();
+		if (bars.empty() && !history.m_bHealthy)
+		{
+			net::SetError(response, req, StorageUnavailable,
+						  history.m_strDetail.empty() ? "history provider is unavailable" : history.m_strDetail);
+			net::SendRequest(id, response);
+			return false;
+		}
 		pResult->set_found(!bars.empty());
 		for (const market::CBar& bar : bars)
 		{
