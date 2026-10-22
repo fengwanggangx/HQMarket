@@ -157,8 +157,18 @@ bool CRequest::Deserialize(const std::string& strData)
 	return m_data->ParseFromString(strData);
 }
 
+void CRequest::SetErrorInfo(int nCode, const std::string& strMessage)
+{
+	m_data->set_error_code(nCode);
+	m_data->set_error_message(strMessage);
+}
+
 std::optional<std::pair<int, std::string>> CRequest::GetErrorInfo() const
 {
+	if (0 != m_data->error_code())
+	{
+		return std::pair<int, std::string>{ m_data->error_code(), m_data->error_message() };
+	}
 	std::string strErrorCode = GetReturnData("error_code");
 	if (strErrorCode.empty())
 	{

@@ -51,7 +51,9 @@ class CRequest
 		UPDATE_AUTH = 3,
 		STRATEGY = 4,
 		HQMARKET = 5,
-		HEARTBEAT = 6
+		HEARTBEAT = 6,
+		TRADE_ACCOUNT_LOGIN = 8,
+		TRADE_ACCOUNT_QUERY = 9
 	};
 
   public:
@@ -96,6 +98,7 @@ class CRequest
 	bool Deserialize(const std::string& strData);
 
 	std::optional<std::pair<int, std::string>> GetErrorInfo() const;
+	void SetErrorInfo(int nCode, const std::string& strMessage);
 
   private:
 	std::unique_ptr<google::protobuf::Arena> m_arena;

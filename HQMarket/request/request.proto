@@ -12,6 +12,8 @@ enum RequestType {
 	STRATEGY = 4;
 	HQMARKET = 5;
 	HEARTBEAT = 6;
+	TRADE_ACCOUNT_LOGIN = 8;
+	TRADE_ACCOUNT_QUERY = 9;
 }
 
 message StrategySubscription {
@@ -46,6 +48,8 @@ message RequestData {
     map<string, string> extra = 3;
     map<string, string> ret = 4;
 	uint64 id = 5;
+	int32 error_code = 6;
+	string error_message = 7;
 	oneof payload {
 		hqmarket.market.v1.AuthRequest auth_request = 10;
 		hqmarket.market.v1.SubscribeRequest subscribe_request = 11;

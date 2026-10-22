@@ -93,6 +93,8 @@ enum RequestType : int {
   STRATEGY = 4,
   HQMARKET = 5,
   HEARTBEAT = 6,
+  TRADE_ACCOUNT_LOGIN = 8,
+  TRADE_ACCOUNT_QUERY = 9,
   RequestType_INT_MIN_SENTINEL_DO_NOT_USE_ =
       std::numeric_limits<::int32_t>::min(),
   RequestType_INT_MAX_SENTINEL_DO_NOT_USE_ =
@@ -102,8 +104,8 @@ enum RequestType : int {
 bool RequestType_IsValid(int value);
 extern const uint32_t RequestType_internal_data_[];
 constexpr RequestType RequestType_MIN = static_cast<RequestType>(0);
-constexpr RequestType RequestType_MAX = static_cast<RequestType>(6);
-constexpr int RequestType_ARRAYSIZE = 6 + 1;
+constexpr RequestType RequestType_MAX = static_cast<RequestType>(9);
+constexpr int RequestType_ARRAYSIZE = 9 + 1;
 const ::google::protobuf::EnumDescriptor*
 RequestType_descriptor();
 template <typename T>
@@ -116,7 +118,7 @@ const std::string& RequestType_Name(T value) {
 template <>
 inline const std::string& RequestType_Name(RequestType value) {
   return ::google::protobuf::internal::NameOfDenseEnum<RequestType_descriptor,
-                                                 0, 6>(
+                                                 0, 9>(
       static_cast<int>(value));
 }
 inline bool RequestType_Parse(absl::string_view name, RequestType* value) {
@@ -1145,8 +1147,10 @@ class RequestData final : public ::google::protobuf::Message
     kExtraFieldNumber = 3,
     kRetFieldNumber = 4,
     kCmdFieldNumber = 2,
-    kIdFieldNumber = 5,
+    kErrorMessageFieldNumber = 7,
     kTypeFieldNumber = 1,
+    kErrorCodeFieldNumber = 6,
+    kIdFieldNumber = 5,
     kAuthRequestFieldNumber = 10,
     kSubscribeRequestFieldNumber = 11,
     kUnsubscribeRequestFieldNumber = 12,
@@ -1211,14 +1215,20 @@ class RequestData final : public ::google::protobuf::Message
   std::string* _internal_mutable_cmd();
 
   public:
-  // uint64 id = 5;
-  void clear_id() ;
-  ::uint64_t id() const;
-  void set_id(::uint64_t value);
+  // string error_message = 7;
+  void clear_error_message() ;
+  const std::string& error_message() const;
+  template <typename Arg_ = const std::string&, typename... Args_>
+  void set_error_message(Arg_&& arg, Args_... args);
+  std::string* mutable_error_message();
+  PROTOBUF_NODISCARD std::string* release_error_message();
+  void set_allocated_error_message(std::string* value);
 
   private:
-  ::uint64_t _internal_id() const;
-  void _internal_set_id(::uint64_t value);
+  const std::string& _internal_error_message() const;
+  inline PROTOBUF_ALWAYS_INLINE void _internal_set_error_message(
+      const std::string& value);
+  std::string* _internal_mutable_error_message();
 
   public:
   // .request.RequestType type = 1;
@@ -1229,6 +1239,26 @@ class RequestData final : public ::google::protobuf::Message
   private:
   ::request::RequestType _internal_type() const;
   void _internal_set_type(::request::RequestType value);
+
+  public:
+  // int32 error_code = 6;
+  void clear_error_code() ;
+  ::int32_t error_code() const;
+  void set_error_code(::int32_t value);
+
+  private:
+  ::int32_t _internal_error_code() const;
+  void _internal_set_error_code(::int32_t value);
+
+  public:
+  // uint64 id = 5;
+  void clear_id() ;
+  ::uint64_t id() const;
+  void set_id(::uint64_t value);
+
+  private:
+  ::uint64_t _internal_id() const;
+  void _internal_set_id(::uint64_t value);
 
   public:
   // .hqmarket.market.v1.AuthRequest auth_request = 10;
@@ -1580,8 +1610,8 @@ class RequestData final : public ::google::protobuf::Message
   inline void clear_has_payload();
   friend class ::google::protobuf::internal::TcParser;
   static const ::google::protobuf::internal::TcParseTable<
-      3, 22, 19,
-      55, 2>
+      3, 24, 19,
+      76, 2>
       _table_;
 
   friend class ::google::protobuf::MessageLite;
@@ -1607,8 +1637,10 @@ class RequestData final : public ::google::protobuf::Message
                       ::google::protobuf::internal::WireFormatLite::TYPE_STRING>
         ret_;
     ::google::protobuf::internal::ArenaStringPtr cmd_;
-    ::uint64_t id_;
+    ::google::protobuf::internal::ArenaStringPtr error_message_;
     int type_;
+    ::int32_t error_code_;
+    ::uint64_t id_;
     union PayloadUnion {
       constexpr PayloadUnion() : _constinit_{} {}
       ::google::protobuf::internal::ConstantInitialized _constinit_;
@@ -2272,6 +2304,76 @@ inline ::uint64_t RequestData::_internal_id() const {
 inline void RequestData::_internal_set_id(::uint64_t value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
   _impl_.id_ = value;
+}
+
+// int32 error_code = 6;
+inline void RequestData::clear_error_code() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.error_code_ = 0;
+}
+inline ::int32_t RequestData::error_code() const {
+  // @@protoc_insertion_point(field_get:request.RequestData.error_code)
+  return _internal_error_code();
+}
+inline void RequestData::set_error_code(::int32_t value) {
+  _internal_set_error_code(value);
+  // @@protoc_insertion_point(field_set:request.RequestData.error_code)
+}
+inline ::int32_t RequestData::_internal_error_code() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.error_code_;
+}
+inline void RequestData::_internal_set_error_code(::int32_t value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.error_code_ = value;
+}
+
+// string error_message = 7;
+inline void RequestData::clear_error_message() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.error_message_.ClearToEmpty();
+}
+inline const std::string& RequestData::error_message() const
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:request.RequestData.error_message)
+  return _internal_error_message();
+}
+template <typename Arg_, typename... Args_>
+inline PROTOBUF_ALWAYS_INLINE void RequestData::set_error_message(Arg_&& arg,
+                                                     Args_... args) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.error_message_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
+  // @@protoc_insertion_point(field_set:request.RequestData.error_message)
+}
+inline std::string* RequestData::mutable_error_message() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  std::string* _s = _internal_mutable_error_message();
+  // @@protoc_insertion_point(field_mutable:request.RequestData.error_message)
+  return _s;
+}
+inline const std::string& RequestData::_internal_error_message() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.error_message_.Get();
+}
+inline void RequestData::_internal_set_error_message(const std::string& value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.error_message_.Set(value, GetArena());
+}
+inline std::string* RequestData::_internal_mutable_error_message() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  return _impl_.error_message_.Mutable( GetArena());
+}
+inline std::string* RequestData::release_error_message() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  // @@protoc_insertion_point(field_release:request.RequestData.error_message)
+  return _impl_.error_message_.Release();
+}
+inline void RequestData::set_allocated_error_message(std::string* value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.error_message_.SetAllocated(value, GetArena());
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.error_message_.IsDefault()) {
+    _impl_.error_message_.Set("", GetArena());
+  }
+  // @@protoc_insertion_point(field_set_allocated:request.RequestData.error_message)
 }
 
 // .hqmarket.market.v1.AuthRequest auth_request = 10;

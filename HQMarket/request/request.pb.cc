@@ -181,8 +181,12 @@ inline constexpr RequestData::Impl_::Impl_(
         cmd_(
             &::google::protobuf::internal::fixed_address_empty_string,
             ::_pbi::ConstantInitialized()),
-        id_{::uint64_t{0u}},
+        error_message_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()),
         type_{static_cast< ::request::RequestType >(0)},
+        error_code_{0},
+        id_{::uint64_t{0u}},
         payload_{},
         _cached_size_{0},
         _oneof_case_{} {}
@@ -298,6 +302,8 @@ const ::uint32_t
         PROTOBUF_FIELD_OFFSET(::request::RequestData, _impl_.extra_),
         PROTOBUF_FIELD_OFFSET(::request::RequestData, _impl_.ret_),
         PROTOBUF_FIELD_OFFSET(::request::RequestData, _impl_.id_),
+        PROTOBUF_FIELD_OFFSET(::request::RequestData, _impl_.error_code_),
+        PROTOBUF_FIELD_OFFSET(::request::RequestData, _impl_.error_message_),
         ::_pbi::kInvalidFieldOffsetTag,
         ::_pbi::kInvalidFieldOffsetTag,
         ::_pbi::kInvalidFieldOffsetTag,
@@ -351,44 +357,46 @@ const char descriptor_table_protodef_request_2eproto[] ABSL_ATTRIBUTE_SECTION_VA
     "(\010\022\017\n\007enabled\030\010 \001(\010\0321\n\017ParametersEntry\022\013"
     "\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"9\n\014Strate"
     "gyList\022)\n\nstrategies\030\001 \003(\0132\025.request.Str"
-    "ategyInfo\"\314\n\n\013RequestData\022\"\n\004type\030\001 \001(\0162"
+    "ategyInfo\"\367\n\n\013RequestData\022\"\n\004type\030\001 \001(\0162"
     "\024.request.RequestType\022\013\n\003cmd\030\002 \001(\t\022.\n\005ex"
     "tra\030\003 \003(\0132\037.request.RequestData.ExtraEnt"
     "ry\022*\n\003ret\030\004 \003(\0132\035.request.RequestData.Re"
-    "tEntry\022\n\n\002id\030\005 \001(\004\0227\n\014auth_request\030\n \001(\013"
-    "2\037.hqmarket.market.v1.AuthRequestH\000\022A\n\021s"
-    "ubscribe_request\030\013 \001(\0132$.hqmarket.market"
-    ".v1.SubscribeRequestH\000\022E\n\023unsubscribe_re"
-    "quest\030\014 \001(\0132&.hqmarket.market.v1.Unsubsc"
-    "ribeRequestH\000\022\?\n\020subscription_ack\030\r \001(\0132"
-    "#.hqmarket.market.v1.SubscriptionAckH\000\022."
-    "\n\005quote\030\016 \001(\0132\035.hqmarket.market.v1.Quote"
-    "DataH\000\022.\n\005depth\030\017 \001(\0132\035.hqmarket.market."
-    "v1.DepthDataH\000\022.\n\005trade\030\020 \001(\0132\035.hqmarket"
-    ".market.v1.TradeDataH\000\022*\n\003bar\030\021 \001(\0132\033.hq"
-    "market.market.v1.BarDataH\000\022=\n\rmarket_sta"
-    "tus\030\022 \001(\0132$.hqmarket.market.v1.MarketSta"
-    "tusDataH\000\022A\n\017provider_status\030\023 \001(\0132&.hqm"
-    "arket.market.v1.ProviderStatusDataH\000\0229\n\r"
-    "query_request\030\024 \001(\0132 .hqmarket.market.v1"
-    ".QueryRequestH\000\022;\n\016query_response\030\025 \001(\0132"
-    "!.hqmarket.market.v1.QueryResponseH\000\022)\n\010"
-    "strategy\030\026 \001(\0132\025.request.StrategyInfoH\000\022"
-    ".\n\rstrategy_list\030\027 \001(\0132\025.request.Strateg"
-    "yListH\000\0229\n\rsecurity_list\030\031 \001(\0132 .hqmarke"
-    "t.market.v1.SecurityListH\000\0225\n\013sector_lis"
-    "t\030\033 \001(\0132\036.hqmarket.market.v1.SectorListH"
-    "\000\022E\n\023sector_constituents\030\035 \001(\0132&.hqmarke"
-    "t.market.v1.SectorConstituentsH\000\032,\n\nExtr"
-    "aEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\032*"
-    "\n\010RetEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\002"
-    "8\001B\t\n\007payloadJ\004\010\030\020\031J\004\010\032\020\033J\004\010\034\020\035R\025securit"
-    "y_list_requestR\026security_list_responseR\023"
-    "sector_list_requestR\033sector_constituents"
-    "_request*z\n\013RequestType\022\013\n\007UNKNOWN\020\000\022\016\n\n"
-    "QUERY_AUTH\020\001\022\022\n\016QUERY_USERINFO\020\002\022\017\n\013UPDA"
-    "TE_AUTH\020\003\022\014\n\010STRATEGY\020\004\022\014\n\010HQMARKET\020\005\022\r\n"
-    "\tHEARTBEAT\020\006b\006proto3"
+    "tEntry\022\n\n\002id\030\005 \001(\004\022\022\n\nerror_code\030\006 \001(\005\022\025"
+    "\n\rerror_message\030\007 \001(\t\0227\n\014auth_request\030\n "
+    "\001(\0132\037.hqmarket.market.v1.AuthRequestH\000\022A"
+    "\n\021subscribe_request\030\013 \001(\0132$.hqmarket.mar"
+    "ket.v1.SubscribeRequestH\000\022E\n\023unsubscribe"
+    "_request\030\014 \001(\0132&.hqmarket.market.v1.Unsu"
+    "bscribeRequestH\000\022\?\n\020subscription_ack\030\r \001"
+    "(\0132#.hqmarket.market.v1.SubscriptionAckH"
+    "\000\022.\n\005quote\030\016 \001(\0132\035.hqmarket.market.v1.Qu"
+    "oteDataH\000\022.\n\005depth\030\017 \001(\0132\035.hqmarket.mark"
+    "et.v1.DepthDataH\000\022.\n\005trade\030\020 \001(\0132\035.hqmar"
+    "ket.market.v1.TradeDataH\000\022*\n\003bar\030\021 \001(\0132\033"
+    ".hqmarket.market.v1.BarDataH\000\022=\n\rmarket_"
+    "status\030\022 \001(\0132$.hqmarket.market.v1.Market"
+    "StatusDataH\000\022A\n\017provider_status\030\023 \001(\0132&."
+    "hqmarket.market.v1.ProviderStatusDataH\000\022"
+    "9\n\rquery_request\030\024 \001(\0132 .hqmarket.market"
+    ".v1.QueryRequestH\000\022;\n\016query_response\030\025 \001"
+    "(\0132!.hqmarket.market.v1.QueryResponseH\000\022"
+    ")\n\010strategy\030\026 \001(\0132\025.request.StrategyInfo"
+    "H\000\022.\n\rstrategy_list\030\027 \001(\0132\025.request.Stra"
+    "tegyListH\000\0229\n\rsecurity_list\030\031 \001(\0132 .hqma"
+    "rket.market.v1.SecurityListH\000\0225\n\013sector_"
+    "list\030\033 \001(\0132\036.hqmarket.market.v1.SectorLi"
+    "stH\000\022E\n\023sector_constituents\030\035 \001(\0132&.hqma"
+    "rket.market.v1.SectorConstituentsH\000\032,\n\nE"
+    "xtraEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028"
+    "\001\032*\n\010RetEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001("
+    "\t:\0028\001B\t\n\007payloadJ\004\010\030\020\031J\004\010\032\020\033J\004\010\034\020\035R\025secu"
+    "rity_list_requestR\026security_list_respons"
+    "eR\023sector_list_requestR\033sector_constitue"
+    "nts_request*\254\001\n\013RequestType\022\013\n\007UNKNOWN\020\000"
+    "\022\016\n\nQUERY_AUTH\020\001\022\022\n\016QUERY_USERINFO\020\002\022\017\n\013"
+    "UPDATE_AUTH\020\003\022\014\n\010STRATEGY\020\004\022\014\n\010HQMARKET\020"
+    "\005\022\r\n\tHEARTBEAT\020\006\022\027\n\023TRADE_ACCOUNT_LOGIN\020"
+    "\010\022\027\n\023TRADE_ACCOUNT_QUERY\020\tb\006proto3"
 };
 static const ::_pbi::DescriptorTable* const descriptor_table_request_2eproto_deps[1] =
     {
@@ -398,7 +406,7 @@ static ::absl::once_flag descriptor_table_request_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_request_2eproto = {
     false,
     false,
-    1980,
+    2074,
     descriptor_table_protodef_request_2eproto,
     "request.proto",
     &descriptor_table_request_2eproto_once,
@@ -417,9 +425,9 @@ const ::google::protobuf::EnumDescriptor* RequestType_descriptor() {
   return file_level_enum_descriptors_request_2eproto[0];
 }
 PROTOBUF_CONSTINIT const uint32_t RequestType_internal_data_[] = {
-    458752u, 0u, };
+    458752u, 32u, 6u, };
 bool RequestType_IsValid(int value) {
-  return 0 <= value && value <= 6;
+  return 0 <= value && value <= 9 && ((895u >> value) & 1) != 0;
 }
 // ===================================================================
 
@@ -2107,6 +2115,7 @@ inline PROTOBUF_NDEBUG_INLINE RequestData::Impl_::Impl_(
       : extra_{visibility, arena, from.extra_},
         ret_{visibility, arena, from.ret_},
         cmd_(arena, from.cmd_),
+        error_message_(arena, from.error_message_),
         payload_{},
         _cached_size_{0},
         _oneof_case_{from._oneof_case_[0]} {}
@@ -2125,12 +2134,12 @@ RequestData::RequestData(
       from._internal_metadata_);
   new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
   ::memcpy(reinterpret_cast<char *>(&_impl_) +
-               offsetof(Impl_, id_),
+               offsetof(Impl_, type_),
            reinterpret_cast<const char *>(&from._impl_) +
-               offsetof(Impl_, id_),
-           offsetof(Impl_, type_) -
-               offsetof(Impl_, id_) +
-               sizeof(Impl_::type_));
+               offsetof(Impl_, type_),
+           offsetof(Impl_, id_) -
+               offsetof(Impl_, type_) +
+               sizeof(Impl_::id_));
   switch (payload_case()) {
     case PAYLOAD_NOT_SET:
       break;
@@ -2195,6 +2204,7 @@ inline PROTOBUF_NDEBUG_INLINE RequestData::Impl_::Impl_(
       : extra_{visibility, arena},
         ret_{visibility, arena},
         cmd_(arena),
+        error_message_(arena),
         payload_{},
         _cached_size_{0},
         _oneof_case_{} {}
@@ -2202,11 +2212,11 @@ inline PROTOBUF_NDEBUG_INLINE RequestData::Impl_::Impl_(
 inline void RequestData::SharedCtor(::_pb::Arena* arena) {
   new (&_impl_) Impl_(internal_visibility(), arena);
   ::memset(reinterpret_cast<char *>(&_impl_) +
-               offsetof(Impl_, id_),
+               offsetof(Impl_, type_),
            0,
-           offsetof(Impl_, type_) -
-               offsetof(Impl_, id_) +
-               sizeof(Impl_::type_));
+           offsetof(Impl_, id_) -
+               offsetof(Impl_, type_) +
+               sizeof(Impl_::id_));
 }
 RequestData::~RequestData() {
   // @@protoc_insertion_point(destructor:request.RequestData)
@@ -2217,6 +2227,7 @@ inline void RequestData::SharedDtor(MessageLite& self) {
   this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
   ABSL_DCHECK(this_.GetArena() == nullptr);
   this_._impl_.cmd_.Destroy();
+  this_._impl_.error_message_.Destroy();
   if (this_.has_payload()) {
     this_.clear_payload();
   }
@@ -2431,15 +2442,15 @@ const ::google::protobuf::internal::ClassData* RequestData::GetClassData() const
   return _class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<3, 22, 19, 55, 2> RequestData::_table_ = {
+const ::_pbi::TcParseTable<3, 24, 19, 76, 2> RequestData::_table_ = {
   {
     0,  // no _has_bits_
     0, // no _extensions_
     29, 56,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
-    3934257632,  // skipmap
+    3934257536,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    22,  // num_field_entries
+    24,  // num_field_entries
     19,  // num_aux_entries
     offsetof(decltype(_table_), aux_entries),
     _class_data_.base(),
@@ -2461,8 +2472,12 @@ const ::_pbi::TcParseTable<3, 22, 19, 55, 2> RequestData::_table_ = {
     // uint64 id = 5;
     {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(RequestData, _impl_.id_), 63>(),
      {40, 63, 0, PROTOBUF_FIELD_OFFSET(RequestData, _impl_.id_)}},
-    {::_pbi::TcParser::MiniParse, {}},
-    {::_pbi::TcParser::MiniParse, {}},
+    // int32 error_code = 6;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(RequestData, _impl_.error_code_), 63>(),
+     {48, 63, 0, PROTOBUF_FIELD_OFFSET(RequestData, _impl_.error_code_)}},
+    // string error_message = 7;
+    {::_pbi::TcParser::FastUS1,
+     {58, 63, 0, PROTOBUF_FIELD_OFFSET(RequestData, _impl_.error_message_)}},
   }}, {{
     65535, 65535
   }}, {{
@@ -2481,6 +2496,12 @@ const ::_pbi::TcParseTable<3, 22, 19, 55, 2> RequestData::_table_ = {
     // uint64 id = 5;
     {PROTOBUF_FIELD_OFFSET(RequestData, _impl_.id_), 0, 0,
     (0 | ::_fl::kFcSingular | ::_fl::kUInt64)},
+    // int32 error_code = 6;
+    {PROTOBUF_FIELD_OFFSET(RequestData, _impl_.error_code_), 0, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kInt32)},
+    // string error_message = 7;
+    {PROTOBUF_FIELD_OFFSET(RequestData, _impl_.error_message_), 0, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUtf8String | ::_fl::kRepAString)},
     // .hqmarket.market.v1.AuthRequest auth_request = 10;
     {PROTOBUF_FIELD_OFFSET(RequestData, _impl_.payload_.auth_request_), _Internal::kOneofCaseOffset + 0, 0,
     (0 | ::_fl::kFcOneof | ::_fl::kMessage | ::_fl::kTvTable)},
@@ -2559,11 +2580,12 @@ const ::_pbi::TcParseTable<3, 22, 19, 55, 2> RequestData::_table_ = {
         1, 0, 0, 9,
         9)},
   }}, {{
-    "\23\0\3\5\3\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+    "\23\0\3\5\3\0\0\15\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
     "request.RequestData"
     "cmd"
     "extra"
     "ret"
+    "error_message"
   }},
 };
 
@@ -2577,9 +2599,10 @@ PROTOBUF_NOINLINE void RequestData::Clear() {
   _impl_.extra_.Clear();
   _impl_.ret_.Clear();
   _impl_.cmd_.ClearToEmpty();
-  ::memset(&_impl_.id_, 0, static_cast<::size_t>(
-      reinterpret_cast<char*>(&_impl_.type_) -
-      reinterpret_cast<char*>(&_impl_.id_)) + sizeof(_impl_.type_));
+  _impl_.error_message_.ClearToEmpty();
+  ::memset(&_impl_.type_, 0, static_cast<::size_t>(
+      reinterpret_cast<char*>(&_impl_.id_) -
+      reinterpret_cast<char*>(&_impl_.type_)) + sizeof(_impl_.id_));
   clear_payload();
   _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
 }
@@ -2685,6 +2708,21 @@ PROTOBUF_NOINLINE void RequestData::Clear() {
             target = stream->EnsureSpace(target);
             target = ::_pbi::WireFormatLite::WriteUInt64ToArray(
                 5, this_._internal_id(), target);
+          }
+
+          // int32 error_code = 6;
+          if (this_._internal_error_code() != 0) {
+            target = ::google::protobuf::internal::WireFormatLite::
+                WriteInt32ToArrayWithField<6>(
+                    stream, this_._internal_error_code(), target);
+          }
+
+          // string error_message = 7;
+          if (!this_._internal_error_message().empty()) {
+            const std::string& _s = this_._internal_error_message();
+            ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+                _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "request.RequestData.error_message");
+            target = stream->WriteStringMaybeAliased(7, _s, target);
           }
 
           switch (this_.payload_case()) {
@@ -2845,15 +2883,25 @@ PROTOBUF_NOINLINE void RequestData::Clear() {
               total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
                                               this_._internal_cmd());
             }
-            // uint64 id = 5;
-            if (this_._internal_id() != 0) {
-              total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(
-                  this_._internal_id());
+            // string error_message = 7;
+            if (!this_._internal_error_message().empty()) {
+              total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
+                                              this_._internal_error_message());
             }
             // .request.RequestType type = 1;
             if (this_._internal_type() != 0) {
               total_size += 1 +
                             ::_pbi::WireFormatLite::EnumSize(this_._internal_type());
+            }
+            // int32 error_code = 6;
+            if (this_._internal_error_code() != 0) {
+              total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
+                  this_._internal_error_code());
+            }
+            // uint64 id = 5;
+            if (this_._internal_id() != 0) {
+              total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(
+                  this_._internal_id());
             }
           }
           switch (this_.payload_case()) {
@@ -2981,11 +3029,17 @@ void RequestData::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::goo
   if (!from._internal_cmd().empty()) {
     _this->_internal_set_cmd(from._internal_cmd());
   }
-  if (from._internal_id() != 0) {
-    _this->_impl_.id_ = from._impl_.id_;
+  if (!from._internal_error_message().empty()) {
+    _this->_internal_set_error_message(from._internal_error_message());
   }
   if (from._internal_type() != 0) {
     _this->_impl_.type_ = from._impl_.type_;
+  }
+  if (from._internal_error_code() != 0) {
+    _this->_impl_.error_code_ = from._impl_.error_code_;
+  }
+  if (from._internal_id() != 0) {
+    _this->_impl_.id_ = from._impl_.id_;
   }
   if (const uint32_t oneof_from_case = from._impl_._oneof_case_[0]) {
     const uint32_t oneof_to_case = _this->_impl_._oneof_case_[0];
@@ -3174,12 +3228,13 @@ void RequestData::InternalSwap(RequestData* PROTOBUF_RESTRICT other) {
   _impl_.extra_.InternalSwap(&other->_impl_.extra_);
   _impl_.ret_.InternalSwap(&other->_impl_.ret_);
   ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.cmd_, &other->_impl_.cmd_, arena);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.error_message_, &other->_impl_.error_message_, arena);
   ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(RequestData, _impl_.type_)
-      + sizeof(RequestData::_impl_.type_)
-      - PROTOBUF_FIELD_OFFSET(RequestData, _impl_.id_)>(
-          reinterpret_cast<char*>(&_impl_.id_),
-          reinterpret_cast<char*>(&other->_impl_.id_));
+      PROTOBUF_FIELD_OFFSET(RequestData, _impl_.id_)
+      + sizeof(RequestData::_impl_.id_)
+      - PROTOBUF_FIELD_OFFSET(RequestData, _impl_.type_)>(
+          reinterpret_cast<char*>(&_impl_.type_),
+          reinterpret_cast<char*>(&other->_impl_.type_));
   swap(_impl_.payload_, other->_impl_.payload_);
   swap(_impl_._oneof_case_[0], other->_impl_._oneof_case_[0]);
 }
