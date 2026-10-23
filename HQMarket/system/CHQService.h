@@ -16,7 +16,7 @@
 #include <unordered_set>
 #include <vector>
 
-class CRequest;
+#include "../request/request.h"
 class CPythonRuntime;
 
 class CMarketService final
@@ -57,14 +57,14 @@ class CMarketService final
 			void SendAuthResponse(net::_TyConnectionId id, const CRequest& req, int nErrorCode, const std::string& strMessage) const;
 
 	private:
-			std::unordered_map<std::string, std::function<bool(net::_TyConnectionId, const CRequest&)>> m_handler;
+	std::unordered_map<_TyRequest, std::function<bool(net::_TyConnectionId, const CRequest&)>> m_handler;
 
-			mutable std::mutex m_mtx_sessions;
-			std::unordered_set<net::_TyConnectionId> m_auth_clients;
-			std::unordered_map<std::string, std::chrono::steady_clock::time_point> m_client_tokens;
+	mutable std::mutex m_mtx_sessions;
+	std::unordered_set<net::_TyConnectionId> m_auth_clients;
+	std::unordered_map<std::string, std::chrono::steady_clock::time_point> m_client_tokens;
 
-			CSubscriptionMgr m_subscriptions;
-			std::atomic_uint64_t m_nDepthSequence{ 0 };
+	CSubscriptionMgr m_subscriptions;
+	std::atomic_uint64_t m_nDepthSequence{ 0 };
 
 	private:
 			CHQBroker m_broker;
