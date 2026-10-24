@@ -57,7 +57,6 @@ void CRequest::SetType(_TyRequest t)
 	m_data->set_type(static_cast<request::RequestType>(t));
 }
 
-
 std::string CRequest::GetExtraData(const std::string& strKey) const
 {
 	const auto mIter = m_data->extra().find(strKey);
@@ -69,11 +68,11 @@ std::unordered_map<std::string, std::string> CRequest::GetExtraData() const
 	return { m_data->extra().begin(), m_data->extra().end() };
 }
 
-void CRequest::SetExtraData(const std::string& strKey, const std::string& strValue)
+void CRequest::SetExtraData(const std::string& strKey,
+	const std::string& strValue)
 {
 	(*m_data->mutable_extra())[strKey] = strValue;
 }
-
 
 void CRequest::SetData(const _TySubscriptionAck& value)
 {
@@ -157,7 +156,8 @@ std::optional<std::pair<int, std::string>> CRequest::GetErrorInfo() const
 	{
 		return std::nullopt;
 	}
-	return std::pair<int, std::string>{ m_data->error_code(), m_data->error_message() };
+	return std::pair<int, std::string>{ m_data->error_code(),
+		m_data->error_message() };
 }
 
 void CRequest::SetData(const request::TradeAccountRecord& value)
@@ -182,22 +182,21 @@ void CRequest::SetData(const request::TradeAccountLogList& value)
 
 bool CRequest::IsMarket() const
 {
-	return (_TyRequest::MARKET_SUBSCRIBE <= GetType()) && (_TyRequest::MARKET_DEPTH_PUSH >= GetType());
+	return (_TyRequest::MARKET_SUBSCRIBE <= GetType()) &&
+		   (_TyRequest::MARKET_DEPTH_PUSH >= GetType());
 }
 bool CRequest::IsStrategy() const
 {
-	return (_TyRequest::STRATEGY_ADD <= GetType()) && (_TyRequest::STRATEGY_STOP >= GetType());
-}
-bool CRequest::IsTradeAccount() const
-{
-	return (_TyRequest::TRADE_ACCOUNT_LOGIN <= GetType()) && (_TyRequest::TRADE_ACCOUNT_LOGS_QUERY >= GetType());
+	return (_TyRequest::STRATEGY_ADD <= GetType()) &&
+		   (_TyRequest::STRATEGY_STOP >= GetType());
 }
 std::string CRequest::GetTypeName() const
 {
 	return request::RequestType_Name(m_data->type());
 }
 
-void CRequest::SetExtraData(const std::string& strKey, const std::vector<std::uint64_t>& values)
+void CRequest::SetExtraData(const std::string& strKey,
+	const std::vector<std::uint64_t>& values)
 {
 	rapidjson::StringBuffer buffer;
 	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
@@ -209,7 +208,8 @@ void CRequest::SetExtraData(const std::string& strKey, const std::vector<std::ui
 	writer.EndArray();
 	SetExtraData(strKey, std::string(buffer.GetString(), buffer.GetSize()));
 }
-void CRequest::SetExtraData(const std::string& strKey, const _TyExtraRows& rows)
+void CRequest::SetExtraData(const std::string& strKey,
+	const _TyExtraRows& rows)
 {
 	rapidjson::StringBuffer buffer;
 	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
@@ -219,21 +219,25 @@ void CRequest::SetExtraData(const std::string& strKey, const _TyExtraRows& rows)
 		writer.StartObject();
 		for (const auto& item : row)
 		{
-			writer.Key(item.first.data(), static_cast<rapidjson::SizeType>(item.first.size()));
-			writer.String(item.second.data(), static_cast<rapidjson::SizeType>(item.second.size()));
+			writer.Key(item.first.data(),
+				static_cast<rapidjson::SizeType>(item.first.size()));
+			writer.String(item.second.data(),
+				static_cast<rapidjson::SizeType>(item.second.size()));
 		}
 		writer.EndObject();
 	}
 	writer.EndArray();
 	SetExtraData(strKey, std::string(buffer.GetString(), buffer.GetSize()));
 }
-bool CRequest::GetExtraData(const std::string& strKey, std::vector<std::uint64_t>& values) const
+bool CRequest::GetExtraData(const std::string& strKey,
+	std::vector<std::uint64_t>& values) const
 {
 	values.clear();
 	std::string strJson = GetExtraData(strKey);
 	rapidjson::Document document;
 	document.Parse(strJson.data(), strJson.size());
-	if (document.HasParseError() || !document.IsArray() || (4096 < document.Size()))
+	if (document.HasParseError() || !document.IsArray() ||
+		(4096 < document.Size()))
 	{
 		return false;
 	}
@@ -250,13 +254,15 @@ bool CRequest::GetExtraData(const std::string& strKey, std::vector<std::uint64_t
 	values = std::move(parsed);
 	return true;
 }
-bool CRequest::GetExtraData(const std::string& strKey, _TyExtraRows& rows) const
+bool CRequest::GetExtraData(const std::string& strKey,
+	_TyExtraRows& rows) const
 {
 	rows.clear();
 	std::string strJson = GetExtraData(strKey);
 	rapidjson::Document document;
 	document.Parse(strJson.data(), strJson.size());
-	if (document.HasParseError() || !document.IsArray() || (4096 < document.Size()))
+	if (document.HasParseError() || !document.IsArray() ||
+		(4096 < document.Size()))
 	{
 		return false;
 	}
@@ -269,9 +275,15 @@ bool CRequest::GetExtraData(const std::string& strKey, _TyExtraRows& rows) const
 			return false;
 		}
 		std::unordered_map<std::string, std::string> row;
-		for (auto mIter = value.MemberBegin(); value.MemberEnd() != mIter; ++mIter)
+		for (auto mIter = value.MemberBegin(); value.MemberEnd() != mIter;
+			++mIter)
 		{
-			if (!mIter->value.IsString() || !row.emplace(std::string(mIter->name.GetString(), mIter->name.GetStringLength()), std::string(mIter->value.GetString(), mIter->value.GetStringLength())).second)
+			if (!mIter->value.IsString() ||
+				!row.emplace(std::string(mIter->name.GetString(),
+								 mIter->name.GetStringLength()),
+						std::string(mIter->value.GetString(),
+							mIter->value.GetStringLength()))
+					.second)
 			{
 				return false;
 			}
