@@ -2,6 +2,7 @@
 #define HQMARKET_REQUEST_REQUEST_H
 
 #include "../network/common_net.h"
+#include "AccountIdentity.h"
 namespace hqmarket::market::v1
 {
 	class SubscriptionAck;
@@ -150,6 +151,7 @@ public:
 	void SetData(const request::TradeCounterReply& value);
 	void SetData(const request::BrokerList& value);
 	const _TyReqData& GetData() const;
+	void SetEventAccount(const request::TradeAccountInfo& value);
 
 	void SetConnectionId(net::_TyConnectionId id);
 	net::_TyConnectionId GetConnectionId() const;
