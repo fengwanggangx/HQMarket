@@ -22,6 +22,7 @@ using _TySectorList = hqmarket::market::v1::SectorList;
 using _TySectorConstituents = hqmarket::market::v1::SectorConstituents;
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -98,6 +99,9 @@ using _TyRequestId = std::uint64_t;
 using _TyReqData = request::RequestData;
 using _TyStrategyInfo = request::StrategyInfo;
 using _TyStrategyList = request::StrategyList;
+class CRequest;
+using _TyRequestNotify = std::function<bool(const CRequest&)>;
+
 class CRequest
 {
 public:
