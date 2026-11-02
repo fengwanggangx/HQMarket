@@ -21,19 +21,19 @@ namespace
 	constexpr int InvalidRequest = 1001;
 	constexpr int InvalidCredentials = 1002;
 	constexpr int StorageUnavailable = 1004;
-	constexpr std::size_t MinAccountLength = 3;
-	constexpr std::size_t MaxAccountLength = 64;
+	constexpr std::size_t MinUserLength = 3;
+	constexpr std::size_t MaxUserLength = 64;
 	constexpr std::size_t MinPasswordLength = 8;
 	constexpr std::size_t MaxPasswordLength = 128;
 	constexpr std::chrono::hours TokenLifetime{ 24 };
 
-	bool IsAccountValid(const std::string& strAccount)
+	bool IsUserValid(const std::string& strUser)
 	{
-		if ((MinAccountLength > strAccount.size()) || (MaxAccountLength < strAccount.size()))
+		if ((MinUserLength > strUser.size()) || (MaxUserLength < strUser.size()))
 		{
 			return false;
 		}
-		for (unsigned char character : strAccount)
+		for (unsigned char character : strUser)
 		{
 			if ((0 == std::isalnum(character)) && ('_' != character) && ('-' != character) && ('.' != character) && ('@' != character))
 			{
@@ -354,9 +354,9 @@ bool CMarketService::HandleReAuth(net::_TyConnectionId id, const CRequest& req)
 
 bool CMarketService::Login(net::_TyConnectionId id, const CRequest& req, std::string& strToken)
 {
-	std::string strAccount = req.GetExtraData("user");
+	std::string strUser = req.GetExtraData("user");
 	std::string strPassword = req.GetExtraData("password");
-	if (!IsAccountValid(strAccount) || !IsPasswordValid(strPassword))
+	if (!IsUserValid(strUser) || !IsPasswordValid(strPassword))
 	{
 		SendAuthResponse(id, req, InvalidCredentials, "账号或密码错误");
 		return false;
@@ -369,7 +369,7 @@ bool CMarketService::Login(net::_TyConnectionId id, const CRequest& req, std::st
 		return false;
 	}
 
-	std::string strSql = "SELECT user_id, account FROM table_user WHERE account=" + utility::Utf8Literal(strAccount) + " AND password_hash=UNHEX(SHA2(CONCAT(password_salt,UNHEX('" + utility::ToHex(strPassword) + "')),256)) AND status=1 LIMIT 1";
+	std::string strSql = "SELECT user_id, user FROM table_user WHERE user=" + utility::Utf8Literal(strUser) + " AND password_hash=UNHEX(SHA2(CONCAT(password_salt,UNHEX('" + utility::ToHex(strPassword) + "')),256)) AND status=1 LIMIT 1";
 	const db::CQueryTable& table = db->ExecQuery(strSql);
 	if (table.m_rows.empty())
 	{
@@ -382,7 +382,7 @@ bool CMarketService::Login(net::_TyConnectionId id, const CRequest& req, std::st
 	response.SetType(req.GetType());
 	response.SetErrorInfo(0, "");
 	response.SetExtraData("user_id", db::QueryValueToString(table.m_rows.front().at(0)));
-	response.SetExtraData("account", db::QueryValueToString(table.m_rows.front().at(1)));
+	response.SetExtraData("user", db::QueryValueToString(table.m_rows.front().at(1)));
 	strToken = utility::MakeSaltHex();
 	response.SetExtraData("token", strToken);
 	net::SendRequest(id, response);
