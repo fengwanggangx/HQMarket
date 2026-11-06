@@ -127,6 +127,9 @@
     <ClCompile Include="system\CHQService.cpp">
       <Filter>system</Filter>
     </ClCompile>
+<ClCompile Include="system\CHQCenter.cpp">
+      <Filter>system</Filter>
+    </ClCompile>
     <ClCompile Include="thread\CThreadPool.cpp">
       <Filter>thread</Filter>
     </ClCompile>
@@ -241,6 +244,9 @@
       <Filter>system</Filter>
     </ClInclude>
     <ClInclude Include="system\CHQService.h">
+      <Filter>system</Filter>
+    </ClInclude>
+<ClInclude Include="system\CHQCenter.h">
       <Filter>system</Filter>
     </ClInclude>
     <ClInclude Include="thread\CThreadPool.h">

@@ -1,75 +1,59 @@
-#ifndef __CMARKET_SERVICE_H__
-#define __CMARKET_SERVICE_H__
+#ifndef HQMARKET_SYSTEM_CHQSERVICE_H
+#define HQMARKET_SYSTEM_CHQSERVICE_H
 
 #include "../quote/CHQBroker.h"
+#include "../request/request.h"
 #include "CSubscriptionMgr.h"
-#include "../request/v1/market.pb.h"
-#include "../network/CFrameBuffer.h"
-#include "../network/CTcpServer.h"
 #include <atomic>
-#include <chrono>
 #include <filesystem>
 #include <functional>
-#include <mutex>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
 
-#include "../request/request.h"
 class CPythonRuntime;
 
-class CMarketService final
+class CHQService final
 {
-	private:
-		struct CClientSession
-		{
-			bool m_bAuthenticated{ false };
-		};
+	friend class CHQRoutingTests;
 
-	public:
-			explicit CMarketService(net::CTcpServer* pTcpServer, CPythonRuntime* pPythonRuntime);
-			bool Initialize(const std::filesystem::path& root);
-			void Stop();
-			std::string HealthJson() const;
-			std::string MetricsText() const;
-			std::string QuoteJson(const std::string& strInstrument) const;
-			std::string InstrumentsJson() const;
-			std::string BarsJson(const std::string& strInstrument, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime);
+public:
+	using _TyQuoteHandler = CHQBroker::_TyQuoteHandler;
+	using _TyDepthHandler = CHQBroker::_TyDepthHandler;
+	using _TyReplyHandler = std::function<bool(net::_TyConnectionId, const CRequest&)>;
 
-	private:
-			int OnNetEvent(const net::CNetEvent& netEvent);
-			void OnClientRequest(net::_TyConnectionId id, const CRequest& req);
-			void OnClientDisconnected(net::_TyConnectionId id);
+	explicit CHQService(CPythonRuntime* pPythonRuntime);
+	~CHQService();
+	CHQService(const CHQService& arg) = delete;
+	CHQService& operator=(const CHQService& arg) = delete;
 
-	private:
-			bool HandleAuth(net::_TyConnectionId id, const CRequest& req);
-			bool HandleReAuth(net::_TyConnectionId id, const CRequest& req);
-			bool Login(net::_TyConnectionId id, const CRequest& req, std::string& strToken);
-			bool HandleHeartbeat(net::_TyConnectionId id, const CRequest& req);
-			bool HandleQuery(net::_TyConnectionId id, const CRequest& req);
-			bool HandleSubscription(net::_TyConnectionId id, const CRequest& req);
+	void Stop();
+	bool Initialize(const std::filesystem::path& root);
+	bool OnRequest(const CRequest& req);
+	void HandleClientDisconnected(net::_TyConnectionId id);
 
-			void PublishQuote(const market::CQuote& quote, std::uint64_t nSequence);
-			void PublishDepth(const market::CDepth& depth, std::uint64_t nSequence);
-			bool IsAuthenticated(net::_TyConnectionId id) const;
-			std::vector<net::_TyConnectionId> AuthenticatedClients() const;
-			void SendAuthResponse(net::_TyConnectionId id, const CRequest& req, int nErrorCode, const std::string& strMessage) const;
+	void OnDepth(market::CDepth&& depth);
+	void OnQuote(const market::CQuote& quote, std::uint64_t nSequence);
 
-	private:
-	std::unordered_map<_TyRequest, std::function<bool(net::_TyConnectionId, const CRequest&)>> m_handler;
+	void SetReplyHandler(_TyReplyHandler&& handler);
+	void SetQuoteHandler(_TyQuoteHandler&& handler);
+	void SetDepthHandler(_TyDepthHandler&& handler);
 
-	mutable std::mutex m_mtx_sessions;
-	std::unordered_set<net::_TyConnectionId> m_auth_clients;
-	std::unordered_map<std::string, std::chrono::steady_clock::time_point> m_client_tokens;
+	std::string HealthJson() const;
+	std::string InstrumentsJson() const;
+	std::string MetricsText(std::size_t nClients) const;
+	std::string QuoteJson(const std::string& strInstrument) const;
+	std::string BarsJson(const std::string& strInstrument, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime);
 
+private:
+	bool HandleQuery(net::_TyConnectionId id, const CRequest& req);
+	bool HandleSubscription(net::_TyConnectionId id, const CRequest& req);
+	bool SendResponse(net::_TyConnectionId id, const CRequest& req) const;
+	void SendError(net::_TyConnectionId id, const CRequest& req, int code, const std::string& message) const;
+
+	CHQBroker m_broker;
 	CSubscriptionMgr m_subscriptions;
 	std::atomic_uint64_t m_nDepthSequence{ 0 };
-
-	private:
-			CHQBroker m_broker;
-			net::CTcpServer* m_pTcpServer{ nullptr };
-			CPythonRuntime* m_pPythonRuntime{ nullptr };
+	_TyReplyHandler m_handler_reply;
+	CPythonRuntime* m_pPythonRuntime{ nullptr }; // Borrowed from BootLoader; providers stop before Python finalizes.
 };
 
 #endif

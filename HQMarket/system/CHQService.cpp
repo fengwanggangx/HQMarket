@@ -1,10 +1,6 @@
 #include "CHQService.h"
 #include "../common/utility.h"
-#include "../database/CDBEngine.h"
-#include "../database/IDataBase.h"
 #include "../python/CPythonRuntime.h"
-#include "../network/CNetPool.h"
-#include "../network/CNetTools.h"
 #include "../request/request.h"
 #include "../request/request.pb.h"
 #include "../common/defines.h"
@@ -18,40 +14,12 @@ namespace wire = hqmarket::market::v1;
 
 namespace
 {
-	constexpr int InvalidRequest = 1001;
-	constexpr int InvalidCredentials = 1002;
 	constexpr int StorageUnavailable = 1004;
-	constexpr std::size_t MinUserLength = 3;
-	constexpr std::size_t MaxUserLength = 64;
-	constexpr std::size_t MinPasswordLength = 8;
-	constexpr std::size_t MaxPasswordLength = 128;
-	constexpr std::chrono::hours TokenLifetime{ 24 };
-
-	bool IsUserValid(const std::string& strUser)
-	{
-		if ((MinUserLength > strUser.size()) || (MaxUserLength < strUser.size()))
-		{
-			return false;
-		}
-		for (unsigned char character : strUser)
-		{
-			if ((0 == std::isalnum(character)) && ('_' != character) && ('-' != character) && ('.' != character) && ('@' != character))
-			{
-				return false;
-			}
-		}
-		return true;
-	}
-
-	bool IsPasswordValid(const std::string& strPassword)
-	{
-		return (MinPasswordLength <= strPassword.size()) && (MaxPasswordLength >= strPassword.size());
-	}
 
 	std::int64_t NowMilliseconds()
 	{
 		return std::chrono::duration_cast<std::chrono::milliseconds>(
-				   std::chrono::system_clock::now().time_since_epoch())
+			std::chrono::system_clock::now().time_since_epoch())
 			.count();
 	}
 
@@ -205,6 +173,19 @@ namespace
 		value = (value ^ 0xffU) * 1099511628211ULL;
 	}
 
+	void SetError(CRequest& response, const CRequest& request, int code, const std::string& message)
+	{
+		response = CRequest();
+		response.SetId(request.GetId());
+		response.SetType(request.GetType());
+		if ((_TyRequest::MARKET_SUBSCRIBE == request.GetType()) || (_TyRequest::MARKET_UNSUBSCRIBE == request.GetType()))
+		{
+			response.SetExtraData("security", request.GetExtraData("security"));
+			response.SetExtraData("channel", request.GetExtraData("channel"));
+		}
+		response.SetErrorInfo(code, message);
+	}
+
 	template <typename T>
 	bool SetData(CRequest& request, const T& value, std::uint64_t requestId = 0, std::uint64_t sequence = 0)
 	{
@@ -218,60 +199,46 @@ namespace
 
 } // namespace
 
-CMarketService::CMarketService(net::CTcpServer* pTcpServer, CPythonRuntime* pPythonRuntime) : m_pTcpServer(pTcpServer), m_pPythonRuntime(pPythonRuntime)
+CHQService::CHQService(CPythonRuntime* pPythonRuntime) : m_pPythonRuntime(pPythonRuntime)
 {
-	m_handler = {
-		{ _TyRequest::AUTH_LOGIN, std::bind_front(&CMarketService::HandleAuth, this) },
-		{ _TyRequest::HEARTBEAT, std::bind_front(&CMarketService::HandleHeartbeat, this) },
-		{ _TyRequest::MARKET_QUOTE_QUERY, std::bind_front(&CMarketService::HandleQuery, this) },
-		{ _TyRequest::MARKET_BARS_QUERY, std::bind_front(&CMarketService::HandleQuery, this) },
-		{ _TyRequest::MARKET_SECURITIES_QUERY, std::bind_front(&CMarketService::HandleQuery, this) },
-		{ _TyRequest::MARKET_SECTORS_QUERY, std::bind_front(&CMarketService::HandleQuery, this) },
-		{ _TyRequest::MARKET_SECTOR_CONSTITUENTS_QUERY, std::bind_front(&CMarketService::HandleQuery, this) },
-		{ _TyRequest::MARKET_SUBSCRIBE, std::bind_front(&CMarketService::HandleSubscription, this) },
-		{ _TyRequest::MARKET_UNSUBSCRIBE, std::bind_front(&CMarketService::HandleSubscription, this) }
-	};
 }
 
-bool CMarketService::Initialize(const std::filesystem::path& root)
+CHQService::~CHQService()
 {
-	if ((nullptr == m_pTcpServer) || (nullptr == m_pPythonRuntime) || !m_pPythonRuntime->IsInitialized())
-	{
-		return false;
-	}
-	m_pTcpServer->RegisterHandler(std::bind_front(&CMarketService::OnNetEvent, this));
-	m_broker.SetQuoteHandler([this](const market::CQuote& quote, std::uint64_t sequence)
-							 { PublishQuote(quote, sequence); });
-	m_broker.SetDepthHandler([this](market::CDepth&& depth)
-							 { PublishDepth(depth, ++m_nDepthSequence); });
-	return m_broker.Initialize(root);
+	Stop();
 }
 
-int CMarketService::OnNetEvent(const net::CNetEvent& ev)
+bool CHQService::Initialize(const std::filesystem::path& root)
 {
-	if (net::em_event::request == ev.m_event)
-	{
-		OnClientRequest(ev.m_request->GetConnectionId(), *ev.m_request);
-	}
-	else if (net::em_event::disconnected == ev.m_event)
-	{
-		OnClientDisconnected(ev.m_connection_id);
-	}
-	return 1;
+	return nullptr != m_pPythonRuntime && m_pPythonRuntime->IsInitialized() && m_broker.Initialize(root);
 }
 
-void CMarketService::Stop()
+void CHQService::Stop()
 {
 	m_broker.Stop();
 }
 
-void CMarketService::OnClientDisconnected(net::_TyConnectionId id)
+bool CHQService::OnRequest(const CRequest& req)
 {
-	net::CNetPool::InstancePtr()->CloseAConnection(id);
+	switch (req.GetType())
 	{
-		std::lock_guard<std::mutex> lck(m_mtx_sessions);
-		m_auth_clients.erase(id);
+	case _TyRequest::MARKET_SUBSCRIBE:
+	case _TyRequest::MARKET_UNSUBSCRIBE:
+		return HandleSubscription(req.GetConnectionId(), req);
+	case _TyRequest::MARKET_QUOTE_QUERY:
+	case _TyRequest::MARKET_BARS_QUERY:
+	case _TyRequest::MARKET_SECURITIES_QUERY:
+	case _TyRequest::MARKET_SECTORS_QUERY:
+	case _TyRequest::MARKET_SECTOR_CONSTITUENTS_QUERY:
+		return HandleQuery(req.GetConnectionId(), req);
+	default:
+		SendError(req.GetConnectionId(), req, 1006, "unknown request type");
+		return false;
 	}
+}
+
+void CHQService::HandleClientDisconnected(net::_TyConnectionId id)
+{
 	std::vector<market::CChannelInfo> removed = m_subscriptions.RemoveClient(id);
 	if (!removed.empty())
 	{
@@ -279,157 +246,12 @@ void CMarketService::OnClientDisconnected(net::_TyConnectionId id)
 	}
 }
 
-void CMarketService::OnClientRequest(net::_TyConnectionId id, const CRequest& req)
-{
-	_TyRequest type = req.GetType();
-	const auto mIter = m_handler.find(type);
-	if (m_handler.end() == mIter)
-	{
-		net::SendError(id, req, 1006, "unknown request type");
-		return;
-	}
-
-	if (_TyRequest::AUTH_LOGIN == type)
-	{
-		mIter->second(id, req);
-		return;
-	}
-
-	if (!IsAuthenticated(id))
-	{
-		net::SendError(id, req, 1002, "authentication required");
-		return;
-	}
-
-	mIter->second(id, req);
-}
-
-bool CMarketService::HandleAuth(net::_TyConnectionId id, const CRequest& req)
-{
-	std::string strToken = req.GetExtraData("token");
-	if (!strToken.empty())
-	{
-		return HandleReAuth(id, req);
-	}
-
-	if (_TyRequest::AUTH_LOGIN == req.GetType())
-	{
-		if (Login(id, req, strToken))
-		{
-			std::lock_guard<std::mutex> lck(m_mtx_sessions);
-			m_auth_clients.emplace(id);
-			m_client_tokens.insert_or_assign(strToken, std::chrono::steady_clock::now() + TokenLifetime);
-		}
-		return true;
-	}
-	net::SendError(id, req, InvalidRequest, "unsupported authentication request");
-	return false;
-}
-
-bool CMarketService::HandleReAuth(net::_TyConnectionId id, const CRequest& req)
-{
-	std::string strToken = req.GetExtraData("token");
-	bool bAccepted = false;
-	{
-		std::lock_guard<std::mutex> lck(m_mtx_sessions);
-		auto mIter = m_client_tokens.find(strToken);
-		bAccepted = (m_client_tokens.end() != mIter) && (std::chrono::steady_clock::now() < mIter->second);
-		if ((m_client_tokens.end() != mIter) && !bAccepted)
-		{
-			m_client_tokens.erase(mIter);
-		}
-		if (bAccepted)
-		{
-			m_auth_clients.emplace(id);
-		}
-	}
-	if (bAccepted)
-	{
-		SendAuthResponse(id, req, 0, "认证成功");
-		return true;
-	}
-	SendAuthResponse(id, req, InvalidCredentials, "登录状态已失效");
-	return false;
-}
-
-bool CMarketService::Login(net::_TyConnectionId id, const CRequest& req, std::string& strToken)
-{
-	std::string strUser = req.GetExtraData("user");
-	std::string strPassword = req.GetExtraData("password");
-	if (!IsUserValid(strUser) || !IsPasswordValid(strPassword))
-	{
-		SendAuthResponse(id, req, InvalidCredentials, "账号或密码错误");
-		return false;
-	}
-
-	db::_TyDBPtr db = CDBEngine::InstanceRef().GetDBPtr(db::em_database::mysql);
-	if (nullptr == db)
-	{
-		SendAuthResponse(id, req, StorageUnavailable, "用户数据库暂不可用");
-		return false;
-	}
-
-	std::string strSql = "SELECT user_id, user FROM table_user WHERE user=" + utility::Utf8Literal(strUser) + " AND password_hash=UNHEX(SHA2(CONCAT(password_salt,UNHEX('" + utility::ToHex(strPassword) + "')),256)) AND status=1 LIMIT 1";
-	const db::CQueryTable& table = db->ExecQuery(strSql);
-	if (table.m_rows.empty())
-	{
-		SendAuthResponse(id, req, InvalidCredentials, "账号或密码错误");
-		return false;
-	}
-
-	CRequest response;
-	response.SetId(req.GetId());
-	response.SetType(req.GetType());
-	response.SetErrorInfo(0, "");
-	response.SetExtraData("user_id", db::QueryValueToString(table.m_rows.front().at(0)));
-	response.SetExtraData("user", db::QueryValueToString(table.m_rows.front().at(1)));
-	strToken = utility::MakeSaltHex();
-	response.SetExtraData("token", strToken);
-	net::SendRequest(id, response);
-	return true;
-}
-
-void CMarketService::SendAuthResponse(net::_TyConnectionId id, const CRequest& req, int nErrorCode, const std::string& strMessage) const
-{
-	CRequest response;
-	response.SetId(req.GetId());
-	response.SetType(req.GetType());
-	if (0 != nErrorCode)
-	{
-		net::SetError(response, nErrorCode, strMessage);
-	}
-	else
-	{
-
-		response.SetErrorInfo(0, "");
-	}
-	net::SendRequest(id, response);
-}
-
-bool CMarketService::HandleHeartbeat(net::_TyConnectionId id, const CRequest& req)
-{
-	std::int64_t clientTime = 0;
-	if (!ParseMilliseconds(req.GetExtraData("client_time_ms"), clientTime))
-	{
-		net::SendError(id, req, 1005, "invalid client_time_ms");
-		return false;
-	}
-	CRequest response;
-	response.SetType(req.GetType());
-	response.SetId(req.GetId());
-	response.SetType(req.GetType());
-	response.SetExtraData("client_time_ms", std::to_string(clientTime));
-	response.SetExtraData("request_id", std::to_string(req.GetId()));
-	response.SetExtraData("server_time_ms", std::to_string(NowMilliseconds()));
-	return net::SendRequest(id, response);
-}
-
-bool CMarketService::HandleSubscription(net::_TyConnectionId id, const CRequest& req)
+bool CHQService::HandleSubscription(net::_TyConnectionId id, const CRequest& req)
 {
 	_TyRequest type = req.GetType();
 	if ((_TyRequest::MARKET_SUBSCRIBE != type) && (_TyRequest::MARKET_UNSUBSCRIBE != type))
 	{
-		net::SendError(id, req, 1001, "invalid subscription type");
+		SendError(id, req, 1001, "invalid subscription type");
 		return false;
 	}
 
@@ -441,7 +263,7 @@ bool CMarketService::HandleSubscription(net::_TyConnectionId id, const CRequest&
 		CRequest::_TyExtraRows rows;
 		if (!req.GetExtraData("subscriptions", rows) || rows.empty())
 		{
-			net::SendError(id, req, 1003, "subscriptions must be a nonempty JSON array");
+			SendError(id, req, 1003, "subscriptions must be a nonempty JSON array");
 			return false;
 		}
 		requested.reserve(rows.size());
@@ -451,14 +273,14 @@ bool CMarketService::HandleSubscription(net::_TyConnectionId id, const CRequest&
 			auto channelValue = row.find("channel");
 			if ((row.end() == securityValue) || (row.end() == channelValue))
 			{
-				net::SendError(id, req, 1003, "subscription row requires security and channel");
+				SendError(id, req, 1003, "subscription row requires security and channel");
 				return false;
 			}
 			market::CSecurity security = ParseInstrument(securityValue->second);
 			market::Channel channel = ParseChannel(channelValue->second);
 			if (!security.IsValid() || !IsRealtimeChannel(channel))
 			{
-				net::SendError(id, req, 1003, "invalid subscription row");
+				SendError(id, req, 1003, "invalid subscription row");
 				return false;
 			}
 			requested.emplace_back(market::CChannelInfo{ security, channel });
@@ -475,7 +297,7 @@ bool CMarketService::HandleSubscription(net::_TyConnectionId id, const CRequest&
 	}
 	if (requested.empty())
 	{
-		net::SendError(id, req, 1003, "invalid security or unsupported subscription channel");
+		SendError(id, req, 1003, "invalid security or unsupported subscription channel");
 		return false;
 	}
 	std::vector<market::CChannelInfo> changed = bSubscribe ? m_subscriptions.Subscribe(id, requested) : m_subscriptions.Unsubscribe(id, requested);
@@ -505,7 +327,7 @@ bool CMarketService::HandleSubscription(net::_TyConnectionId id, const CRequest&
 	response.SetType(req.GetType());
 	response.SetErrorInfo(0, "");
 	SetData(response, ack, requestId);
-	net::SendRequest(id, response);
+	SendResponse(id, response);
 	if (bSubscribe)
 	{
 		for (const market::CChannelInfo& subscription : requested)
@@ -522,14 +344,14 @@ bool CMarketService::HandleSubscription(net::_TyConnectionId id, const CRequest&
 				CRequest snapshot;
 				snapshot.SetType(_TyRequest::MARKET_QUOTE_PUSH);
 				SetData(snapshot, quoteData);
-				net::SendRequest(id, snapshot);
+				SendResponse(id, snapshot);
 			}
 		}
 	}
 	return true;
 }
 
-bool CMarketService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
+bool CHQService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 {
 	std::uint64_t requestId = req.GetId();
 	_TyRequest type = req.GetType();
@@ -539,7 +361,7 @@ bool CMarketService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 		std::vector<market::CInstrument> instruments = m_broker.QueryInstruments();
 		if (instruments.empty())
 		{
-			net::SendError(id, req, StorageUnavailable, "security list is unavailable");
+			SendError(id, req, StorageUnavailable, "security list is unavailable");
 			return false;
 		}
 		std::uint64_t version = 1469598103934665603ULL;
@@ -564,20 +386,20 @@ bool CMarketService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 		CRequest response;
 		response.SetType(type);
 		SetData(response, result, requestId);
-		return net::SendRequest(id, response);
+		return SendResponse(id, response);
 	}
 	if (_TyRequest::MARKET_SECTORS_QUERY == type)
 	{
 		int nSectorType = 0;
 		if (!utility::to_number(req.GetExtraData("sector_type"), nSectorType) || (static_cast<int>(market::SectorType::industry) != nSectorType))
 		{
-			net::SendError(id, req, 1003, "unsupported sector type");
+			SendError(id, req, 1003, "unsupported sector type");
 			return false;
 		}
 		std::vector<market::CSector> sectors = m_broker.QuerySectors(market::SectorType::industry);
 		if (sectors.empty())
 		{
-			net::SendError(id, req, StorageUnavailable, "sector data is unavailable");
+			SendError(id, req, StorageUnavailable, "sector data is unavailable");
 			return false;
 		}
 		wire::SectorList result;
@@ -591,7 +413,7 @@ bool CMarketService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 		CRequest response;
 		response.SetType(type);
 		SetData(response, result, requestId);
-		return net::SendRequest(id, response);
+		return SendResponse(id, response);
 	}
 	if (_TyRequest::MARKET_SECTOR_CONSTITUENTS_QUERY == type)
 	{
@@ -599,13 +421,13 @@ bool CMarketService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 		std::string strSectorCode = req.GetExtraData("sector_code");
 		if (!utility::to_number(req.GetExtraData("sector_type"), nSectorType) || (static_cast<int>(market::SectorType::industry) != nSectorType) || strSectorCode.empty())
 		{
-			net::SendError(id, req, 1003, "invalid sector constituent request");
+			SendError(id, req, 1003, "invalid sector constituent request");
 			return false;
 		}
 		market::CSectorConstituents constituents = m_broker.QuerySectorConstituents(market::SectorType::industry, strSectorCode);
 		if (constituents.m_securities.empty())
 		{
-			net::SendError(id, req, StorageUnavailable, "sector constituents are unavailable");
+			SendError(id, req, StorageUnavailable, "sector constituents are unavailable");
 			return false;
 		}
 		wire::SectorConstituents result;
@@ -621,14 +443,14 @@ bool CMarketService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 		CRequest response;
 		response.SetType(type);
 		SetData(response, result, requestId);
-		return net::SendRequest(id, response);
+		return SendResponse(id, response);
 	}
 
 	market::CSecurity security = ParseInstrument(req.GetExtraData("security"));
 	market::Channel channel = _TyRequest::MARKET_QUOTE_QUERY == type ? market::Channel::quote : ParseChannel(req.GetExtraData("channel"));
 	if (!security.IsValid() || ((market::Channel::quote != channel) && (market::Channel::bar_1m != channel) && (market::Channel::bar_1d != channel)))
 	{
-		net::SendError(id, req, 1003, "invalid security or unsupported query channel");
+		SendError(id, req, 1003, "invalid security or unsupported query channel");
 		return false;
 	}
 	wire::QueryResponse result;
@@ -653,24 +475,24 @@ bool CMarketService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 		std::int64_t end = 0;
 		if (!ParseMilliseconds(req.GetExtraData("begin_time_ms"), begin) || !ParseMilliseconds(req.GetExtraData("end_time_ms"), end))
 		{
-			net::SetError(response, req, 1004, "invalid query time range");
-			net::SendRequest(id, response);
+			SetError(response, req, 1004, "invalid query time range");
+			SendResponse(id, response);
 			return false;
 		}
 		end = 0 < end ? end : NowMilliseconds();
 		if ((0 > begin) || (end < begin))
 		{
-			net::SetError(response, req, 1004, "invalid query time range");
-			net::SendRequest(id, response);
+			SetError(response, req, 1004, "invalid query time range");
+			SendResponse(id, response);
 			return false;
 		}
 		std::vector<market::CBar> bars = m_broker.QueryBars(security, channel, begin, end);
 		market::CProviderStatus history = m_broker.HistoryStatus();
 		if (bars.empty() && !history.m_bHealthy)
 		{
-			net::SetError(response, req, StorageUnavailable,
-						  history.m_strDetail.empty() ? "history provider is unavailable" : history.m_strDetail);
-			net::SendRequest(id, response);
+			SetError(response, req, StorageUnavailable,
+				history.m_strDetail.empty() ? "history provider is unavailable" : history.m_strDetail);
+			SendResponse(id, response);
 			return false;
 		}
 		pResult->set_found(!bars.empty());
@@ -681,11 +503,11 @@ bool CMarketService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 	}
 	response.SetType(type);
 	SetData(response, result, requestId);
-	net::SendRequest(id, response);
+	SendResponse(id, response);
 	return true;
 }
 
-void CMarketService::PublishQuote(const market::CQuote& quote, std::uint64_t nSequence)
+void CHQService::OnQuote(const market::CQuote& quote, std::uint64_t nSequence)
 {
 	wire::QuoteData quoteData;
 	FillQuote(quote, &quoteData);
@@ -693,25 +515,15 @@ void CMarketService::PublishQuote(const market::CQuote& quote, std::uint64_t nSe
 	request.SetType(_TyRequest::MARKET_QUOTE_PUSH);
 	SetData(request, quoteData, 0, nSequence);
 	market::CChannelInfo subscription{ quote.m_security, market::Channel::quote };
-	std::vector<net::_TyConnectionId> disconnected;
-	for (net::_TyConnectionId id : AuthenticatedClients())
+	for (net::_TyConnectionId id : m_subscriptions.GetSubscriberIds(subscription))
 	{
-		if (m_subscriptions.IsSubscribed(id, subscription))
-		{
-			if (!net::SendRequest(id, request))
-			{
-				disconnected.emplace_back(id);
-			}
-		}
-	}
-	for (net::_TyConnectionId id : disconnected)
-	{
-		OnClientDisconnected(id);
+		SendResponse(id, request);
 	}
 }
 
-void CMarketService::PublishDepth(const market::CDepth& depth, std::uint64_t nSequence)
+void CHQService::OnDepth(market::CDepth&& depth)
 {
+	std::uint64_t nSequence = ++m_nDepthSequence;
 	wire::DepthData depthData;
 	wire::DepthData* pValue = &depthData;
 	pValue->mutable_security()->set_symbol(depth.m_security.m_strCode);
@@ -738,47 +550,13 @@ void CMarketService::PublishDepth(const market::CDepth& depth, std::uint64_t nSe
 	request.SetType(_TyRequest::MARKET_DEPTH_PUSH);
 	SetData(request, depthData, 0, nSequence);
 	market::CChannelInfo subscription{ depth.m_security, market::Channel::depth };
-	std::vector<net::_TyConnectionId> disconnected;
-	for (net::_TyConnectionId id : AuthenticatedClients())
+	for (net::_TyConnectionId id : m_subscriptions.GetSubscriberIds(subscription))
 	{
-		if (m_subscriptions.IsSubscribed(id, subscription))
-		{
-			if (!net::SendRequest(id, request))
-			{
-				disconnected.emplace_back(id);
-			}
-		}
-	}
-	for (net::_TyConnectionId id : disconnected)
-	{
-		OnClientDisconnected(id);
+		SendResponse(id, request);
 	}
 }
 
-bool CMarketService::IsAuthenticated(net::_TyConnectionId id) const
-{
-	std::lock_guard<std::mutex> lck(m_mtx_sessions);
-	const auto mIter = m_auth_clients.find(id);
-	return (m_auth_clients.end() != mIter);
-}
-
-std::vector<net::_TyConnectionId> CMarketService::AuthenticatedClients() const
-{
-	std::vector<net::_TyConnectionId> clients;
-	clients.reserve(m_auth_clients.size());
-
-	{
-		std::lock_guard<std::mutex> lck(m_mtx_sessions);
-		for (const auto& v : m_auth_clients)
-		{
-			clients.emplace_back(v);
-		}
-	}
-
-	return clients;
-}
-
-std::string CMarketService::HealthJson() const
+std::string CHQService::HealthJson() const
 {
 	market::CProviderStatus realtime = m_broker.RealtimeStatus();
 	market::CProviderStatus history = m_broker.HistoryStatus();
@@ -791,15 +569,15 @@ std::string CMarketService::HealthJson() const
 	return out.str();
 }
 
-std::string CMarketService::MetricsText() const
+std::string CHQService::MetricsText(std::size_t nClients) const
 {
 	std::ostringstream out;
-	out << "hqmarket_clients " << net::CNetPool::InstancePtr()->Count()
+	out << "hqmarket_clients " << nClients
 		<< "\nhqmarket_quotes_cached " << m_broker.QuoteCount() << "\n";
 	return out.str();
 }
 
-std::string CMarketService::QuoteJson(const std::string& strInstrument) const
+std::string CHQService::QuoteJson(const std::string& strInstrument) const
 {
 	std::optional<market::CQuote> quote = m_broker.QueryQuote(ParseInstrument(strInstrument));
 	if (!quote.has_value())
@@ -815,7 +593,7 @@ std::string CMarketService::QuoteJson(const std::string& strInstrument) const
 	return out.str();
 }
 
-std::string CMarketService::InstrumentsJson() const
+std::string CHQService::InstrumentsJson() const
 {
 	std::vector<market::CInstrument> values = m_broker.QueryInstruments();
 	std::ostringstream out;
@@ -834,7 +612,7 @@ std::string CMarketService::InstrumentsJson() const
 	return out.str();
 }
 
-std::string CMarketService::BarsJson(const std::string& strInstrument, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime)
+std::string CHQService::BarsJson(const std::string& strInstrument, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime)
 {
 	market::CSecurity security = ParseInstrument(strInstrument);
 	std::vector<market::CBar> values = m_broker.QueryBars(security, channel, nBeginTime, nEndTime);
@@ -854,4 +632,31 @@ std::string CMarketService::BarsJson(const std::string& strInstrument, market::C
 	}
 	out << ']';
 	return out.str();
+}
+
+void CHQService::SetReplyHandler(_TyReplyHandler&& handler)
+{
+	m_handler_reply = std::move(handler);
+}
+
+void CHQService::SetQuoteHandler(_TyQuoteHandler&& handler)
+{
+	m_broker.SetQuoteHandler(std::move(handler));
+}
+
+void CHQService::SetDepthHandler(_TyDepthHandler&& handler)
+{
+	m_broker.SetDepthHandler(std::move(handler));
+}
+
+bool CHQService::SendResponse(net::_TyConnectionId id, const CRequest& req) const
+{
+	return nullptr != m_handler_reply && m_handler_reply(id, req);
+}
+
+void CHQService::SendError(net::_TyConnectionId id, const CRequest& req, int code, const std::string& message) const
+{
+	CRequest response;
+	SetError(response, req, code, message);
+	SendResponse(id, response);
 }

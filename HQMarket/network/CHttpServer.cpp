@@ -21,13 +21,20 @@ namespace
 	{
 		switch (method)
 		{
-		case net::HttpMethod::GET: return "GET";
-		case net::HttpMethod::POST: return "POST";
-		case net::HttpMethod::PUT: return "PUT";
-		case net::HttpMethod::DELETE: return "DELETE";
-		case net::HttpMethod::OPTIONS: return "OPTIONS";
-		case net::HttpMethod::PATCH: return "PATCH";
-		default: return "UNKNOWN";
+		case net::HttpMethod::GET:
+			return "GET";
+		case net::HttpMethod::POST:
+			return "POST";
+		case net::HttpMethod::PUT:
+			return "PUT";
+		case net::HttpMethod::DELETE:
+			return "DELETE";
+		case net::HttpMethod::OPTIONS:
+			return "OPTIONS";
+		case net::HttpMethod::PATCH:
+			return "PATCH";
+		default:
+			return "UNKNOWN";
 		}
 	}
 
@@ -35,13 +42,20 @@ namespace
 	{
 		switch (method)
 		{
-		case EVHTTP_REQ_GET: return net::HttpMethod::GET;
-		case EVHTTP_REQ_POST: return net::HttpMethod::POST;
-		case EVHTTP_REQ_PUT: return net::HttpMethod::PUT;
-		case EVHTTP_REQ_DELETE: return net::HttpMethod::DELETE;
-		case EVHTTP_REQ_OPTIONS: return net::HttpMethod::OPTIONS;
-		case EVHTTP_REQ_PATCH: return net::HttpMethod::PATCH;
-		default: return net::HttpMethod::UNKNOWN;
+		case EVHTTP_REQ_GET:
+			return net::HttpMethod::GET;
+		case EVHTTP_REQ_POST:
+			return net::HttpMethod::POST;
+		case EVHTTP_REQ_PUT:
+			return net::HttpMethod::PUT;
+		case EVHTTP_REQ_DELETE:
+			return net::HttpMethod::DELETE;
+		case EVHTTP_REQ_OPTIONS:
+			return net::HttpMethod::OPTIONS;
+		case EVHTTP_REQ_PATCH:
+			return net::HttpMethod::PATCH;
+		default:
+			return net::HttpMethod::UNKNOWN;
 		}
 	}
 
@@ -164,14 +178,20 @@ namespace
 		}
 		return true;
 	}
-}
+} // namespace
 
 namespace net
 {
 	struct CHttpStream::State
 	{
-		struct CloseContext { std::shared_ptr<State> state; };
-		struct DrainContext { std::shared_ptr<State> state; };
+		struct CloseContext
+		{
+			std::shared_ptr<State> state;
+		};
+		struct DrainContext
+		{
+			std::shared_ptr<State> state;
+		};
 
 		event_base* base{ nullptr };
 		evhttp_request* request{ nullptr };
@@ -369,12 +389,12 @@ namespace net
 		std::atomic_int mode{ 0 };
 	};
 
-	HttpMethod CHttpRequest::GetMethod() const 
-	{ 
+	HttpMethod CHttpRequest::GetMethod() const
+	{
 		return m_method;
 	}
-	const std::string& CHttpRequest::GetPath() const 
-	{ 
+	const std::string& CHttpRequest::GetPath() const
+	{
 		return m_strPath;
 	}
 	const std::string& CHttpRequest::GetUri() const
@@ -396,9 +416,14 @@ namespace net
 		return container::vfind(m_queries, strName);
 	}
 
-	CHttpStream::CHttpStream(std::shared_ptr<State> state) : m_state(std::move(state)) {}
+	CHttpStream::CHttpStream(std::shared_ptr<State> state) : m_state(std::move(state))
+	{
+	}
 
-	bool CHttpStream::Send(const std::string& strData) { return Send(std::string(), strData); }
+	bool CHttpStream::Send(const std::string& strData)
+	{
+		return Send(std::string(), strData);
+	}
 
 	bool CHttpStream::Send(const std::string& strEvent, const std::string& strData)
 	{
@@ -425,7 +450,9 @@ namespace net
 		}
 	}
 
-	CHttpResponse::CHttpResponse(std::shared_ptr<State> state) : m_state(std::move(state)) {}
+	CHttpResponse::CHttpResponse(std::shared_ptr<State> state) : m_state(std::move(state))
+	{
+	}
 
 	void CHttpResponse::SetStatus(int nStatus)
 	{
@@ -523,9 +550,11 @@ namespace net
 		return (nullptr != m_state) && (0 != m_state->mode.load());
 	}
 
-	CHttpServer::CHttpServer(int nPort) : m_nPort(nPort) {}
+	CHttpServer::CHttpServer(int nPort) : m_nPort(nPort)
+	{
+	}
 	CHttpServer::~CHttpServer()
-	{ 
+	{
 		Release();
 	}
 
@@ -550,6 +579,11 @@ namespace net
 			return -3;
 		}
 		return 0;
+	}
+
+	void CHttpServer::ClearHandlers()
+	{
+		m_handlers.clear();
 	}
 
 	void CHttpServer::RegisterHandler(HttpMethod method, const std::string& strPath, _TyHandler&& func)
@@ -577,7 +611,7 @@ namespace net
 		}
 		request.m_method = Cmd2Method(evhttp_request_get_command(pRequest));
 
-		//统一资源标识符 Uniform Resource Identifier
+		// 统一资源标识符 Uniform Resource Identifier
 		const char* pURI = evhttp_request_get_uri(pRequest);
 		if (nullptr == pURI)
 		{
@@ -585,7 +619,7 @@ namespace net
 		}
 		request.m_strURI = pURI;
 
-		//结构化Uri
+		// 结构化Uri
 		evhttp_uri* pFmtURI = evhttp_uri_parse(request.m_strURI.c_str());
 		if (nullptr != pFmtURI)
 		{
@@ -650,35 +684,35 @@ namespace net
 				return;
 			}
 
-			//确定要异步处理后才取得所有权。
+			// 确定要异步处理后才取得所有权。
 			evhttp_request_own(pRequest);
 			event_base* pBase = GetNet();
 			_TyHandler handler = mIter->second;
 			pThreadPool->PushTask(task_priority::em_normal, 0, [pBase, pRequest, handler = std::move(handler), request = std::move(request)]() mutable
+			{
+				std::unique_ptr<CHttpResponseData> response;
+				try
 				{
-					std::unique_ptr<CHttpResponseData> response;
-					try
-					{
-						response = handler(request);
-						if (nullptr == response)
-						{
-							response = std::make_unique<CHttpResponseData>();
-							response->m_nStatus = HTTP_INTERNAL;
-							response->m_strBody = "Internal Server Error";
-						}
-					}
-					catch (...)
+					response = handler(request);
+					if (nullptr == response)
 					{
 						response = std::make_unique<CHttpResponseData>();
 						response->m_nStatus = HTTP_INTERNAL;
 						response->m_strBody = "Internal Server Error";
 					}
+				}
+				catch (...)
+				{
+					response = std::make_unique<CHttpResponseData>();
+					response->m_nStatus = HTTP_INTERNAL;
+					response->m_strBody = "Internal Server Error";
+				}
 
-					if (!PostAsyncResponse(pBase, pRequest, std::move(response)))
-					{
-						evhttp_request_free(pRequest);
-					}
-				});
+				if (!PostAsyncResponse(pBase, pRequest, std::move(response)))
+				{
+					evhttp_request_free(pRequest);
+				}
+			});
 			return;
 		}
 
@@ -698,9 +732,11 @@ namespace net
 	void CHttpServer::RegisterStream(const std::shared_ptr<CHttpStream::State>& state)
 	{
 		std::lock_guard<std::mutex> lock(m_mtx_streams);
-		m_streams.erase(std::remove_if(m_streams.begin(), m_streams.end(), [](const auto& item) {
+		m_streams.erase(std::remove_if(m_streams.begin(), m_streams.end(), [](const auto& item)
+		{
 			return item.expired();
-		}), m_streams.end());
+		}),
+			m_streams.end());
 		m_streams.emplace_back(state);
 	}
 
@@ -729,5 +765,4 @@ namespace net
 			m_pHttp = nullptr;
 		}
 	}
-}
-
+} // namespace net

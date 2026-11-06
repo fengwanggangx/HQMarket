@@ -83,6 +83,7 @@
     <ClCompile Include="python\CPythonRuntime.cpp" />
     <ClCompile Include="system\CBootLoader.cpp" />
     <ClCompile Include="system\CHQService.cpp" />
+    <ClCompile Include="system\CHQCenter.cpp" />
     <ClCompile Include="quote\CHQRecorder.cpp" />
     <ClCompile Include="thread\CThreadPool.cpp" />
   </ItemGroup>
@@ -124,6 +125,7 @@
     <ClInclude Include="python\CPythonRuntime.h" />
     <ClInclude Include="system\CBootLoader.h" />
     <ClInclude Include="system\CHQService.h" />
+    <ClInclude Include="system\CHQCenter.h" />
     <ClInclude Include="quote\CHQRecorder.h" />
     <ClInclude Include="thread\CThreadPool.h" />
     <ClInclude Include="request\request.h" />

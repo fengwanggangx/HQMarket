@@ -25,7 +25,6 @@ std::vector<market::CChannelInfo> CSubscriptionMgr::Subscribe(net::_TyConnection
 	return adds;
 }
 
-
 std::vector<market::CChannelInfo> CSubscriptionMgr::Unsubscribe(net::_TyConnectionId id, const std::vector<market::CChannelInfo>& channels)
 {
 	std::vector<market::CChannelInfo> removed;
@@ -117,4 +116,15 @@ bool CSubscriptionMgr::IsSubscribed(net::_TyConnectionId id, const market::CChan
 	std::shared_lock<std::shared_mutex> lock(m_mtx_info);
 	const auto mIter = m_id_infos.find(id);
 	return (m_id_infos.end() != mIter) && mIter->second.contains(info.String());
+}
+
+std::vector<net::_TyConnectionId> CSubscriptionMgr::GetSubscriberIds(const market::CChannelInfo& info) const
+{
+	std::shared_lock<std::shared_mutex> lock(m_mtx_info);
+	const auto mIter = m_info_ids.find(info.String());
+	if (m_info_ids.end() == mIter)
+	{
+		return {};
+	}
+	return { mIter->second.begin(), mIter->second.end() };
 }

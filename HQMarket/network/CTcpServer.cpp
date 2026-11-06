@@ -1,5 +1,5 @@
 #include "CTcpServer.h"
-#include <event2/buffer.h>  // 主要头文件
+#include <event2/buffer.h> // 主要头文件
 #include "CNetTools.h"
 #include <iostream>
 #include <event2/thread.h>
@@ -11,7 +11,6 @@
 #include "../request/request.h"
 #include "../basic/CDistributor.h"
 
-
 namespace net
 {
 	CTcpServer::~CTcpServer() = default;
@@ -22,7 +21,6 @@ namespace net
 
 	void CTcpServer::OnListenerError(struct evconnlistener* pListener)
 	{
-
 	}
 
 	void CTcpServer::OnConnAccept(struct evconnlistener* pListener, _TyConnectionId id, struct sockaddr* pAddr, int nLength)
@@ -92,20 +90,37 @@ namespace net
 			return -1;
 		}
 		struct evconnlistener* pListener = evconnlistener_new_bind(
-			GetNet(), 
+			GetNet(),
 			CTcpServer::ConnAccept_Callback,
 			this,
 			LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE,
 			-1,
-			(struct sockaddr*)&svr, 
+			(struct sockaddr*)&svr,
 			sizeof(svr));
 
 		if (nullptr == pListener)
 		{
 			return -1;
 		}
-		//evconnlistener_set_error_cb(pListener, ListenerErrorCallback);
+		// evconnlistener_set_error_cb(pListener, ListenerErrorCallback);
 		return 0;
+	}
+
+	void CTcpServer::ClearHandlers()
+	{
+		if (nullptr != m_dispatcher)
+		{
+			m_dispatcher->ClearHandlers();
+		}
+	}
+
+	void CTcpServer::Drain()
+	{
+		if (nullptr != m_dispatcher)
+		{
+			m_dispatcher->StopAndWait();
+			m_dispatcher->ClearHandlers();
+		}
 	}
 
 	void CTcpServer::RegisterHandler(_TyHandler&& func)
@@ -115,4 +130,4 @@ namespace net
 			m_dispatcher->RegisterHandler(std::move(func));
 		}
 	}
-}
+} // namespace net

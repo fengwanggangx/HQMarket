@@ -1,4 +1,6 @@
 #include "CBootLoader.h"
+#include "CHQCenter.h"
+#include "CHQService.h"
 #include "../database/CDBEngine.h"
 #include "../database/IDataBase.h"
 #include "../ini/CINIHandler.h"
@@ -109,6 +111,20 @@ bool CBootLoader::Initialize()
 	m_pTcpServer = std::make_unique<net::CTcpServer>(nTcpPort);
 	m_pHttpServer = std::make_unique<net::CHttpServer>(nHttpPort);
 
+	m_pHQService = std::make_unique<CHQService>(m_pPython.get());
+	m_pHQCenter = std::make_unique<CHQCenter>(m_pHQService.get());
+	if (!m_pHQCenter->Initialize() || !m_pHQService->Initialize(m_exec))
+	{
+		m_nErrorCode = 10;
+		m_strLastError = "HQMarket service initialization failed";
+		return false;
+	}
+	m_pTcpServer->RegisterHandler(std::bind_front(&CHQCenter::OnClientNetEvent, m_pHQCenter.get()));
+	m_pHttpServer->RegisterHandler(net::HttpMethod::GET, "/health", std::bind_front(&CHQCenter::OnHealthRequest, m_pHQCenter.get()));
+	m_pHttpServer->RegisterHandler(net::HttpMethod::GET, "/metrics", std::bind_front(&CHQCenter::OnMetricsRequest, m_pHQCenter.get()));
+	m_pHttpServer->RegisterHandler(net::HttpMethod::GET, "/v1/instruments", std::bind_front(&CHQCenter::OnInstrumentsRequest, m_pHQCenter.get()));
+	m_pHttpServer->RegisterHandler(net::HttpMethod::GET, "/v1/quotes", std::bind_front(&CHQCenter::OnQuoteRequest, m_pHQCenter.get()));
+	m_pHttpServer->RegisterHandler(net::HttpMethod::GET, "/v1/bars", std::bind_front(&CHQCenter::OnBarsRequest, m_pHQCenter.get()));
 	m_bInitialized = true;
 	return true;
 }
@@ -134,7 +150,10 @@ bool CBootLoader::Run()
 		return false;
 	}
 
-	std::jthread t([this]() { m_pTcpServer->Start(true); });
+	std::jthread t([this]()
+	{
+		m_pTcpServer->Start(true);
+	});
 	m_pHttpServer->Start(true);
 	m_pTcpServer->ShutDown();
 	return true;
@@ -149,8 +168,22 @@ void CBootLoader::Finalize()
 	if (nullptr != m_pTcpServer)
 	{
 		m_pTcpServer->ShutDown();
+		m_pTcpServer->Drain();
 	}
-
+	if (nullptr != m_pHttpServer)
+	{
+		m_pHttpServer->ClearHandlers();
+	}
+	if (nullptr != m_pHQService)
+	{
+		m_pHQService->Stop();
+	}
+	if (nullptr != m_pHQCenter)
+	{
+		m_pHQCenter->Stop();
+	}
+	m_pHQCenter.reset();
+	m_pHQService.reset();
 	m_pHttpServer.reset();
 	m_pTcpServer.reset();
 	CDBEngine::InstanceRef().Close();

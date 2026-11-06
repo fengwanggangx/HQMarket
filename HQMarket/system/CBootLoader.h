@@ -7,6 +7,8 @@
 #include <thread>
 
 class CPythonRuntime;
+class CHQService;
+class CHQCenter;
 
 namespace net
 {
@@ -16,34 +18,36 @@ namespace net
 
 class CBootLoader final
 {
-	public:
-		CBootLoader();
-		~CBootLoader();
-		CBootLoader(const CBootLoader&) = delete;
-		CBootLoader& operator=(const CBootLoader&) = delete;
+public:
+	CBootLoader();
+	~CBootLoader();
+	CBootLoader(const CBootLoader& arg) = delete;
+	CBootLoader& operator=(const CBootLoader& arg) = delete;
 
-		bool Initialize();
-		bool Run();
-		void Finalize();
-		const std::filesystem::path& GetRoot() const;
-		CPythonRuntime& GetPythonRuntime();
-		net::CTcpServer& GetTcpServer();
-		net::CHttpServer& GetHttpServer();
-		const std::string& GetLastError() const;
-		int GetErrorCode() const;
+	bool Initialize();
+	bool Run();
+	void Finalize();
+	const std::filesystem::path& GetRoot() const;
+	CPythonRuntime& GetPythonRuntime();
+	net::CTcpServer& GetTcpServer();
+	net::CHttpServer& GetHttpServer();
+	const std::string& GetLastError() const;
+	int GetErrorCode() const;
 
-	private:
-		std::filesystem::path m_exec;
-		std::filesystem::path m_path_py_runtime;
-		std::filesystem::path m_path_py_scripts;
-		std::string m_strLastError;
-		int m_nErrorCode{ 0 };
-		bool m_bInitialized{ false };
+private:
+	std::filesystem::path m_exec;
+	std::filesystem::path m_path_py_runtime;
+	std::filesystem::path m_path_py_scripts;
+	std::string m_strLastError;
+	int m_nErrorCode{ 0 };
+	bool m_bInitialized{ false };
 
-	private:
-		std::unique_ptr<CPythonRuntime> m_pPython;
-		std::unique_ptr<net::CTcpServer> m_pTcpServer;
-		std::unique_ptr<net::CHttpServer> m_pHttpServer;
+private:
+	std::unique_ptr<CHQService> m_pHQService;
+	std::unique_ptr<CHQCenter> m_pHQCenter;
+	std::unique_ptr<CPythonRuntime> m_pPython;
+	std::unique_ptr<net::CTcpServer> m_pTcpServer;
+	std::unique_ptr<net::CHttpServer> m_pHttpServer;
 };
 
 #endif

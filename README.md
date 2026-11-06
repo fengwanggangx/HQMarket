@@ -46,3 +46,19 @@ cmake -S . -B build
 cmake --build build
 ctest --test-dir build
 ```
+
+## 服务分层
+
+`CBootLoader` 创建并持有网络端点、PythonRuntime、`CHQService` 和 `CHQCenter`，统一绑定 TCP/HTTP 入口和行情回调。`CHQCenter` 只借用行情服务指针，管理认证、心跳、请求转发和网络发送；查询、订阅关系、行情转换、缓存和数据源由 `CHQService` 及其持有的 `CHQBroker` 管理。行情源回调经中心转交服务，服务通过固定响应回调向指定 client 回包或推送，不直接调用网络发送接口。
+
+查询仍采用同步返回，保留原请求 ID；行情推送的请求 ID 为 0。订阅共享、ACK 后补发缓存快照、HTTP 路径和响应格式保持原有行为。退出时先停止网络循环并排空 TCP 异步请求、清除入口回调，再停止行情源并关闭记录器，解绑和销毁中心、服务，最后释放网络、数据库和 PythonRuntime。
+
+离线路由测试使用真实中心、服务、行情聚合层、缓存及 SQLite 记录器，替换 TCP/HTTP 传输、PythonRuntime 和行情源边界，不连接外部行情或 MySQL。可单独构建：
+
+```sh
+cmake -S HQMarket/system/tests -B build-routing -DHQMARKET_DEPS=/path/to/dependency-bundle
+cmake --build build-routing
+ctest --test-dir build-routing --output-on-failure
+```
+
+依赖目录结构为 `include/debug` 和 `libs/debug`，可通过 `HQMARKET_MODE` 选择其他配置；Windows 运行时还需将对应依赖 DLL 所在目录加入 PATH。

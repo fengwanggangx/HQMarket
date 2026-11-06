@@ -98,7 +98,13 @@ namespace net
 {
 	enum class HttpMethod
 	{
-		GET, POST, PUT, DELETE, OPTIONS, PATCH, UNKNOWN
+		GET,
+		POST,
+		PUT,
+		DELETE,
+		OPTIONS,
+		PATCH,
+		UNKNOWN
 	};
 
 	class CHttpRequest final
@@ -179,6 +185,8 @@ namespace net
 		explicit CHttpServer(int nPort);
 		~CHttpServer() override;
 		int Initialize();
+		// Only clear handlers after the HTTP event loop has stopped.
+		void ClearHandlers();
 		void RegisterHandler(HttpMethod method, const std::string& strPath, _TyHandler&& func);
 
 	private:
@@ -196,7 +204,6 @@ namespace net
 		std::mutex m_mtx_streams;
 		std::vector<std::weak_ptr<CHttpStream::State>> m_streams;
 	};
-}
+} // namespace net
 
 #endif
-

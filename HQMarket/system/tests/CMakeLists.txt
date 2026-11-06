@@ -1,0 +1,37 @@
+cmake_minimum_required(VERSION 3.20)
+project(HQMarketRoutingTests LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+find_package(Threads REQUIRED)
+get_filename_component(hqRoot "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
+set(HQMARKET_DEPS "${hqRoot}" CACHE PATH "Dependency bundle")
+set(HQMARKET_MODE debug CACHE STRING "Dependency configuration")
+set(depInc "${HQMARKET_DEPS}/include/${HQMARKET_MODE}")
+set(depLib "${HQMARKET_DEPS}/libs/${HQMARKET_MODE}")
+file(GLOB protoSources "${hqRoot}/request/*.cc" "${hqRoot}/request/v1/*.cc")
+add_executable(hqmarket_routing_tests HQCenterTests.cpp HQTestBoundaries.cpp
+ "${hqRoot}/system/CHQCenter.cpp" "${hqRoot}/system/CHQService.cpp" "${hqRoot}/system/CSubscriptionMgr.cpp"
+ "${hqRoot}/quote/CHQBroker.cpp" "${hqRoot}/quote/CHQCache.cpp" "${hqRoot}/quote/CHQRecorder.cpp" "${hqRoot}/quote/MarketTypes.cpp"
+ "${hqRoot}/request/request.cpp" ${protoSources}
+ "${hqRoot}/common/utility.cpp" "${hqRoot}/database/CDBEngine.cpp" "${hqRoot}/database/CODBC.cpp"
+ "${hqRoot}/database/CMySQL.cpp" "${hqRoot}/database/CSQLite3.cpp" "${hqRoot}/database/COracle.cpp"
+ "${hqRoot}/database/IDataBase.cpp" "${hqRoot}/database/common_db.cpp")
+target_include_directories(hqmarket_routing_tests PRIVATE "${hqRoot}/request" "${depInc}/protobuf" "${depInc}/libevent" "${depInc}/mysql" "${depInc}/mysql/mysql" "${depInc}/sqlite" "${depInc}/rapidjson")
+target_link_directories(hqmarket_routing_tests PRIVATE "${depLib}")
+target_link_libraries(hqmarket_routing_tests PRIVATE Threads::Threads)
+set(protoSuffix "")
+if(HQMARKET_MODE STREQUAL "debug")
+ set(protoSuffix d)
+endif()
+if(MSVC)
+ target_include_directories(hqmarket_routing_tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/compat")
+ target_compile_options(hqmarket_routing_tests PRIVATE /utf-8 /EHsc /FS /MP3 /wd4828 "/FI${CMAKE_CURRENT_SOURCE_DIR}/WindowsCompatibility.h")
+ target_compile_definitions(hqmarket_routing_tests PRIVATE PROTOBUF_USE_DLLS NOMINMAX _HAS_DEPRECATED_RESULT_OF=1)
+ target_link_libraries(hqmarket_routing_tests PRIVATE libprotobuf${protoSuffix} abseil_dll utf8_range utf8_validity libmysql sqlite3 ws2_32)
+else()
+ file(GLOB abslLibraries "${depLib}/libabsl_*.so")
+ target_link_libraries(hqmarket_routing_tests PRIVATE protobuf${protoSuffix} ${abslLibraries} utf8_validity utf8_range mysqlclient sqlite3)
+endif()
+set_target_properties(hqmarket_routing_tests PROPERTIES BUILD_RPATH "${depLib}")
+enable_testing()
+add_test(NAME hqmarket_routing_tests COMMAND hqmarket_routing_tests)
