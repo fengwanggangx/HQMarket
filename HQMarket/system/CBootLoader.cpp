@@ -43,7 +43,7 @@ bool CBootLoader::Initialize()
 		return false;
 	}
 
-	std::string strPyRunTime = ini::CINIHandler::InstanceRef().GetValue(ini::Config::System, "System", "py_runtime", std::string());
+	std::string strPyRunTime = ini::CINIHandler::InstanceRef().GetString(ini::Config::System, "System", "py_runtime");
 	if (strPyRunTime.empty())
 	{
 		m_nErrorCode = 3;
@@ -51,7 +51,7 @@ bool CBootLoader::Initialize()
 		return false;
 	}
 
-	std::string strPyScripts = ini::CINIHandler::InstanceRef().GetValue(ini::Config::System, "System", "py_scripts", std::string());
+	std::string strPyScripts = ini::CINIHandler::InstanceRef().GetString(ini::Config::System, "System", "py_scripts");
 	if (strPyScripts.empty())
 	{
 		m_nErrorCode = 4;
@@ -71,12 +71,12 @@ bool CBootLoader::Initialize()
 	}
 
 	ini::CINIHandler& hIni = ini::CINIHandler::InstanceRef();
-	std::string strMySqlHost = hIni.GetValue(ini::Config::System, "MySQL", "host", std::string());
-	int nMySqlPort = hIni.GetValue(ini::Config::System, "MySQL", "port", -1);
-	std::string strMySqlAccount = hIni.GetValue(ini::Config::System, "MySQL", "account", std::string());
-	std::string strMySqlPassword = hIni.GetValue(ini::Config::System, "MySQL", "password", std::string());
-	std::string strMySqlDatabase = hIni.GetValue(ini::Config::System, "MySQL", "database", std::string());
-	int nMySqlPoolSize = hIni.GetValue(ini::Config::System, "MySQL", "pool_size", -1);
+	std::string strMySqlHost = hIni.GetString(ini::Config::System, "MySQL", "host");
+	int nMySqlPort = hIni.GetInt(ini::Config::System, "MySQL", "port");
+	std::string strMySqlAccount = hIni.GetString(ini::Config::System, "MySQL", "user");
+	std::string strMySqlPassword = hIni.GetString(ini::Config::System, "MySQL", "password");
+	std::string strMySqlDatabase = hIni.GetString(ini::Config::System, "MySQL", "database");
+	int nMySqlPoolSize = hIni.GetInt(ini::Config::System, "MySQL", "pool_size");
 	if (strMySqlHost.empty() || (0 >= nMySqlPort) || strMySqlAccount.empty() || strMySqlPassword.empty() || strMySqlDatabase.empty() || (0 >= nMySqlPoolSize))
 	{
 		m_nErrorCode = 6;
@@ -99,8 +99,8 @@ bool CBootLoader::Initialize()
 		return false;
 	}
 
-	int nTcpPort = hIni.GetValue(ini::Config::System, "System", "tcp_port", -1);
-	int nHttpPort = hIni.GetValue(ini::Config::System, "System", "http_port", -1);
+	int nTcpPort = hIni.GetInt(ini::Config::System, "System", "tcp_port");
+	int nHttpPort = hIni.GetInt(ini::Config::System, "System", "http_port");
 
 	if ((nTcpPort <= 0) || (nHttpPort <= 0))
 	{
