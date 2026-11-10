@@ -71,12 +71,14 @@ bool CBootLoader::Initialize()
 	}
 
 	ini::CINIHandler& hIni = ini::CINIHandler::InstanceRef();
-	std::string strMySqlHost = hIni.GetString(ini::Config::System, "MySQL", "host");
-	int nMySqlPort = hIni.GetInt(ini::Config::System, "MySQL", "port");
-	std::string strMySqlAccount = hIni.GetString(ini::Config::System, "MySQL", "user");
-	std::string strMySqlPassword = hIni.GetString(ini::Config::System, "MySQL", "password");
-	std::string strMySqlDatabase = hIni.GetString(ini::Config::System, "MySQL", "database");
-	int nMySqlPoolSize = hIni.GetInt(ini::Config::System, "MySQL", "pool_size");
+
+	static const std::string cs_mysql = "MySQL";
+	std::string strMySqlHost = hIni.GetString(ini::Config::System, cs_mysql, "host");
+	int nMySqlPort = hIni.GetInt(ini::Config::System, cs_mysql, "port");
+	std::string strMySqlAccount = hIni.GetString(ini::Config::System, cs_mysql, "user");
+	std::string strMySqlPassword = hIni.GetString(ini::Config::System, cs_mysql, "password");
+	std::string strMySqlDatabase = hIni.GetString(ini::Config::System, cs_mysql, "database");
+	int nMySqlPoolSize = hIni.GetInt(ini::Config::System, cs_mysql, "pool_size");
 	if (strMySqlHost.empty() || (0 >= nMySqlPort) || strMySqlAccount.empty() || strMySqlPassword.empty() || strMySqlDatabase.empty() || (0 >= nMySqlPoolSize))
 	{
 		m_nErrorCode = 6;
