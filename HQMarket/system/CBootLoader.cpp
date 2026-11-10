@@ -46,7 +46,7 @@ bool CBootLoader::Initialize()
 	std::string strPyRunTime = ini::CINIHandler::InstanceRef().GetString(ini::Config::System, "System", "py_runtime");
 	if (strPyRunTime.empty())
 	{
-		m_nErrorCode = 3;
+		m_nErrorCode = 2;
 		m_strLastError = "HQMarket py_runtime is required in ini/system.ini";
 		return false;
 	}
@@ -54,7 +54,7 @@ bool CBootLoader::Initialize()
 	std::string strPyScripts = ini::CINIHandler::InstanceRef().GetString(ini::Config::System, "System", "py_scripts");
 	if (strPyScripts.empty())
 	{
-		m_nErrorCode = 4;
+		m_nErrorCode = 3;
 		m_strLastError = "HQMarket py_scripts is required in ini/system.ini";
 		return false;
 	}
@@ -64,7 +64,7 @@ bool CBootLoader::Initialize()
 	std::filesystem::path script = m_exec / strPyScripts;
 	if (!m_pPython->Initialize(run, script))
 	{
-		m_nErrorCode = 5;
+		m_nErrorCode = 4;
 		m_strLastError = "Python initialization failed: " + m_pPython->GetLastError();
 		m_pPython.reset();
 		return false;
@@ -81,7 +81,7 @@ bool CBootLoader::Initialize()
 	int nMySqlPoolSize = hIni.GetInt(ini::Config::System, cs_mysql, "pool_size");
 	if (strMySqlHost.empty() || (0 >= nMySqlPort) || strMySqlAccount.empty() || strMySqlPassword.empty() || strMySqlDatabase.empty() || (0 >= nMySqlPoolSize))
 	{
-		m_nErrorCode = 6;
+		m_nErrorCode = 5;
 		m_strLastError = "HQMarket mysql param error";
 		return false;
 	}
@@ -89,15 +89,21 @@ bool CBootLoader::Initialize()
 	db::CConnectParam dbParam(strMySqlHost, static_cast<unsigned int>(nMySqlPort), strMySqlAccount, strMySqlPassword, strMySqlDatabase, "utf8mb4");
 	if (0 != CDBEngine::InstanceRef().Initialize(db::em_database::mysql, dbParam, nMySqlPoolSize))
 	{
-		m_nErrorCode = 7;
+		m_nErrorCode = 6;
 		m_strLastError = "MySQL initialization failed";
 		return false;
 	}
 	db::_TyDBPtr db = CDBEngine::InstanceRef().GetDBPtr(db::em_database::mysql);
 	if ((nullptr == db) || (0 != db->ExecSqlFile(m_exec / "sql" / "table_create.sql")))
 	{
-		m_nErrorCode = 8;
+		m_nErrorCode = 7;
 		m_strLastError = "Failed to initialize MySQL tables";
+		return false;
+	}
+	if (0 != db->ExecSqlFile(m_exec / "sql" / "table_init.sql"))
+	{
+		m_nErrorCode = 8;
+		m_strLastError = "Failed to execute sql/table_init.sql";
 		return false;
 	}
 
@@ -135,19 +141,19 @@ bool CBootLoader::Run()
 {
 	if (!m_bInitialized || (nullptr == m_pTcpServer) || (nullptr == m_pHttpServer))
 	{
-		m_nErrorCode = 4;
+		m_nErrorCode = 11;
 		m_strLastError = "Boot loader is not initialized";
 		return false;
 	}
 	if (0 != m_pTcpServer->Initialize())
 	{
-		m_nErrorCode = 4;
+		m_nErrorCode = 12;
 		m_strLastError = "TCP server initialization failed";
 		return false;
 	}
 	if (0 != m_pHttpServer->Initialize())
 	{
-		m_nErrorCode = 5;
+		m_nErrorCode = 13;
 		m_strLastError = "HTTP server initialization failed";
 		return false;
 	}
