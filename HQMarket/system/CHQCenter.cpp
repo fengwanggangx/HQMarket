@@ -175,12 +175,7 @@ bool CHQCenter::HandleAuth(net::_TyConnectionId id, const CRequest& req)
 
 	if (_TyRequest::AUTH_LOGIN == req.GetType())
 	{
-		if (Login(id, req, strToken))
-		{
-			std::lock_guard<std::mutex> lck(m_mtx_sessions);
-			m_auth_clients.emplace(id);
-			m_client_tokens.insert_or_assign(strToken, std::chrono::steady_clock::now() + TokenLifetime);
-		}
+		Login(id, req, strToken);
 		return true;
 	}
 	net::SendError(id, req, InvalidRequest, "unsupported authentication request");
@@ -246,6 +241,11 @@ bool CHQCenter::Login(net::_TyConnectionId id, const CRequest& req, std::string&
 	response.SetExtraData("user", db::QueryValueToString(table.m_rows.front().at(1)));
 	strToken = utility::MakeSaltHex();
 	response.SetExtraData("token", strToken);
+	{
+		std::lock_guard<std::mutex> lck(m_mtx_sessions);
+		m_auth_clients.emplace(id);
+		m_client_tokens.insert_or_assign(strToken, std::chrono::steady_clock::now() + TokenLifetime);
+	}
 	net::SendRequest(id, response);
 	return true;
 }
