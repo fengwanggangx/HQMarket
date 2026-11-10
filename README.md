@@ -38,14 +38,9 @@ home=/opt/hqmarket
 
 ## 构建与测试
 
-Visual Studio Linux项目位于 `HQMarket.sln`。目标机需要Python 3.12开发文件和
-SQLite3开发库。与外部依赖无关的核心测试可通过CMake构建：
+正式程序通过 `HQMarket.sln` 中的 `HQMarket/HQMarket.vcxproj` 进行 VS Linux 远程构建。目标机需要 Python 3.12 开发文件和 SQLite3 开发库。
 
-```bash
-cmake -S . -B build
-cmake --build build
-ctest --test-dir build
-```
+根目录 CMake 仅转接 `HQMarket/system/tests` 的离线路由测试，不再保留已删除的 CoreTests/CFrameCodec 测试目标。测试依赖及可选命令见下文；不作为正式程序构建入口。
 
 ## 服务分层
 
@@ -62,3 +57,10 @@ ctest --test-dir build-routing --output-on-failure
 ```
 
 依赖目录结构为 `include/debug` 和 `libs/debug`，可通过 `HQMARKET_MODE` 选择其他配置；Windows 运行时还需将对应依赖 DLL 所在目录加入 PATH。
+
+## 正式程序构建入口
+
+正式程序统一从 Visual Studio 解决方案构建，以 `.vcxproj` 为准。仓库中的 CMake 入口仅用于辅助验证，不作为正式程序构建、发布或验收依据。
+
+打开 `HQMarket.sln`，选择 `HQMarket/HQMarket.vcxproj`，使用 VS Linux 远程构建，配置为 Debug 或 Release、平台 x64；需在 VS 中配置 Linux 连接及工程所需依赖。
+本次仅核对解决方案及工程文件，不执行编译、链接或运行测试。

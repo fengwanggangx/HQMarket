@@ -1,16 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
-project(HQMarketCoreTests LANGUAGES CXX)
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-if(MSVC)
-    add_compile_options(/utf-8)
-endif()
+project(HQMarketOfflineTests LANGUAGES CXX)
+
+# The production application is built from HQMarket.sln / HQMarket.vcxproj.
+# This entry point only delegates to the maintained offline routing tests.
 enable_testing()
-add_executable(hqmarket_core_tests
-    HQMarket/tests/CoreTests.cpp
-    HQMarket/quote/MarketTypes.cpp
-    HQMarket/quote/CHQCache.cpp
-    HQMarket/system/CSubscriptionMgr.cpp
-    HQMarket/network/CFrameCodec.cpp)
-target_include_directories(hqmarket_core_tests PRIVATE HQMarket)
-add_test(NAME hqmarket_core_tests COMMAND hqmarket_core_tests)
+add_subdirectory(HQMarket/system/tests)
