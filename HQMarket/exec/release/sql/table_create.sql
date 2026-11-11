@@ -10,20 +10,3 @@ CREATE TABLE IF NOT EXISTS table_user
 	PRIMARY KEY (user_id),
 	UNIQUE KEY uk_table_user_user (user)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
-
-CREATE TABLE IF NOT EXISTS table_strategy
-(
-	strategy_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-	strategy_type VARCHAR(64) NOT NULL,
-	strategy_name VARCHAR(128) NOT NULL,
-	parameters JSON NOT NULL,
-	subscriptions JSON NOT NULL,
-	event_queue_limit INT UNSIGNED NOT NULL DEFAULT 4096,
-	auto_start TINYINT UNSIGNED NOT NULL DEFAULT 0,
-	enabled TINYINT UNSIGNED NOT NULL DEFAULT 1,
-	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-	PRIMARY KEY (strategy_id),
-	UNIQUE KEY uk_table_strategy_name (strategy_name),
-	KEY idx_table_strategy_enabled (enabled)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
