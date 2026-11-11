@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import re
 import json
+import sys
 from datetime import datetime
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -21,7 +22,13 @@ _SECURITY_PREFIX_PATTERN = re.compile(
 )
 
 
-def _tencent_code(symbol: str) -> str:
+def _tencent_code(symbol: str, exchange: str = "") -> str:
+    if exchange == "HKEX":
+        return "hk" + symbol
+    if exchange == "SSE":
+        return "sh" + symbol
+    if exchange == "SZSE":
+        return "sz" + symbol
     if symbol.startswith("6"):
         return "sh" + symbol
     if symbol.startswith(("0", "3")):
@@ -45,8 +52,8 @@ def _tencent_json(path: str, parameters: dict[str, str]) -> dict:
     raise RuntimeError("Tencent history request failed")
 
 
-def _tencent_daily_bars(symbol: str, start: str, end: str) -> list[dict]:
-    code = _tencent_code(symbol)
+def _tencent_daily_bars(symbol: str, start: str, end: str, exchange: str = "") -> list[dict]:
+    code = _tencent_code(symbol, exchange)
     start = datetime.strptime(start, "%Y%m%d").strftime("%Y-%m-%d")
     end = datetime.strptime(end, "%Y%m%d").strftime("%Y-%m-%d")
     response = _tencent_json(
@@ -65,8 +72,8 @@ def _tencent_daily_bars(symbol: str, start: str, end: str) -> list[dict]:
     ]
 
 
-def _tencent_minute_bars(symbol: str) -> list[dict]:
-    code = _tencent_code(symbol)
+def _tencent_minute_bars(symbol: str, exchange: str = "") -> list[dict]:
+    code = _tencent_code(symbol, exchange)
     response = _tencent_json(
         "/appstock/app/day/query", {"code": code}
     )
@@ -130,13 +137,46 @@ class AkShareProvider:
         import akshare as ak
         frame = ak.stock_info_a_code_name()
         records = frame.rename(columns={"code": "symbol", "name": "name"}).to_dict(orient="records")
+        try:
+            indices = ak.stock_zh_index_spot_sina()
+            for row in indices.to_dict(orient="records"):
+                code = str(row["代码"]).lower()
+                if (code.startswith("sh000") or code.startswith("sz399")) and len(code) == 8:
+                    records.append({"symbol": code[2:], "name": str(row["名称"]),
+                                    "exchange": "SSE" if code.startswith("sh") else "SZSE"})
+        except Exception as error:
+            print(f"akshare stock_zh_index_spot_sina failed: {type(error).__name__}: {error}", file=sys.stderr)
+        try:
+            hong_kong = ak.stock_hk_spot()
+            for row in hong_kong.to_dict(orient="records"):
+                code = str(row["代码"]).zfill(5)
+                if code.isdigit():
+                    records.append({"symbol": code, "name": str(row["中文名称"]), "exchange": "HKEX"})
+        except Exception as error:
+            print(f"akshare stock_hk_spot failed: {type(error).__name__}: {error}", file=sys.stderr)
         for item in records:
             full_aliases, short_aliases = make_pinyin_aliases(str(item.get("name", "")))
             item["pinyin_full_aliases"] = full_aliases
             item["pinyin_short_aliases"] = short_aliases
         return records
 
-    def daily_bars(self, symbol: str, start: str, end: str, adjustment: str = "") -> list[dict]:
+    def daily_bars(self, symbol: str, start: str, end: str, adjustment: str = "", exchange: str = "") -> list[dict]:
+        is_index = (exchange == "SSE" and symbol.startswith("000")) or (exchange == "SZSE" and symbol.startswith("399"))
+        if exchange == "HKEX" or is_index:
+            try:
+                import akshare as ak
+                frame = ak.stock_hk_daily(symbol=symbol) if exchange == "HKEX" else ak.stock_zh_index_daily(symbol=("sh" if exchange == "SSE" else "sz") + symbol)
+                if frame is not None and not frame.empty:
+                    frame = frame.rename(columns={"date": "date", "open": "open", "high": "high", "low": "low", "close": "close", "volume": "volume"})
+                    frame["date"] = frame["date"].astype(str)
+                    frame = frame[(frame["date"] >= start[:4] + "-" + start[4:6] + "-" + start[6:]) &
+                                  (frame["date"] <= end[:4] + "-" + end[4:6] + "-" + end[6:])]
+                    frame["turnover"] = 0
+                    return frame.to_dict(orient="records")
+            except Exception as error:
+                source = "stock_hk_daily" if exchange == "HKEX" else "stock_zh_index_daily"
+                print(f"akshare {source} failed: {type(error).__name__}: {error}; using Tencent daily history", file=sys.stderr)
+            return _tencent_daily_bars(symbol, start, end, exchange)
         try:
             import akshare as ak
             frame = ak.stock_zh_a_hist(symbol=symbol, period="daily", start_date=start, end_date=end, adjust=adjustment)
@@ -147,11 +187,28 @@ class AkShareProvider:
                 })
                 frame["date"] = frame["date"].astype(str)
                 return frame.to_dict(orient="records")
-        except Exception:
-            pass
-        return _tencent_daily_bars(symbol, start, end)
+        except Exception as error:
+            print(f"akshare stock_zh_a_hist failed: {type(error).__name__}: {error}; using Tencent daily history", file=sys.stderr)
+        return _tencent_daily_bars(symbol, start, end, exchange)
 
-    def minute_bars(self, symbol: str, start: str, end: str, adjustment: str = "") -> list[dict]:
+    def minute_bars(self, symbol: str, start: str, end: str, adjustment: str = "", exchange: str = "") -> list[dict]:
+        is_index = (exchange == "SSE" and symbol.startswith("000")) or (exchange == "SZSE" and symbol.startswith("399"))
+        if exchange == "HKEX" or is_index:
+            try:
+                import akshare as ak
+                frame = (ak.stock_hk_hist_min_em(symbol=symbol, period="1", start_date=start, end_date=end)
+                         if exchange == "HKEX" else ak.index_zh_a_hist_min_em(symbol=symbol, period="1", start_date=start, end_date=end))
+                if frame is not None and not frame.empty:
+                    frame = frame.rename(columns={
+                        "时间": "date", "开盘": "open", "最高": "high", "最低": "low", "收盘": "close",
+                        "成交量": "volume", "成交额": "turnover",
+                    })
+                    frame["date"] = frame["date"].astype(str)
+                    return frame.to_dict(orient="records")
+            except Exception as error:
+                source = "stock_hk_hist_min_em" if exchange == "HKEX" else "index_zh_a_hist_min_em"
+                print(f"akshare {source} failed: {type(error).__name__}: {error}; using Tencent minute history", file=sys.stderr)
+            return _tencent_minute_bars(symbol, exchange)
         try:
             import akshare as ak
             frame = ak.stock_zh_a_hist_min_em(
@@ -164,9 +221,9 @@ class AkShareProvider:
                 })
                 frame["date"] = frame["date"].astype(str)
                 return frame.to_dict(orient="records")
-        except Exception:
-            pass
-        return _tencent_minute_bars(symbol)
+        except Exception as error:
+            print(f"akshare stock_zh_a_hist_min_em failed: {type(error).__name__}: {error}; using Tencent minute history", file=sys.stderr)
+        return _tencent_minute_bars(symbol, exchange)
 
     def industry_sectors(self) -> list[dict]:
         import akshare as ak

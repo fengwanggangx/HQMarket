@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 import json
+import math
+import sys
+import time
 from pathlib import Path
 from typing import Iterable
 from urllib.request import Request, urlopen
@@ -36,6 +39,8 @@ class MooTdxProvider:
     def __init__(self) -> None:
         self._client = None
         self._use_tencent = False
+        self._hk_quotes_cache = {}
+        self._hk_quotes_time = 0.0
 
     def initialize(self) -> None:
         from mootdx.quotes import Quotes
@@ -54,14 +59,46 @@ class MooTdxProvider:
             return []
         if self._client is None and not self._use_tencent:
             raise RuntimeError("MooTDX provider is not initialized")
-        if not self._use_tencent:
+        hong_kong = [item for item in values if item["exchange"] == "HKEX"]
+        mainland = [item for item in values if item["exchange"] != "HKEX"]
+        rows = self._hk_quotes(hong_kong) if hong_kong else []
+        if mainland:
+            if not self._use_tencent:
+                try:
+                    rows.extend(self._mootdx_quotes(mainland))
+                    return rows
+                except Exception:
+                    self._client.close()
+                    self._client = None
+                    self._use_tencent = True
+            rows.extend(self._tencent_quotes(mainland))
+        return rows
+
+    def _hk_quotes(self, instruments: list[dict]) -> list[dict]:
+        if time.monotonic() - self._hk_quotes_time >= 120:
+            self._hk_quotes_time = time.monotonic()
             try:
-                return self._mootdx_quotes(values)
-            except Exception:
-                self._client.close()
-                self._client = None
-                self._use_tencent = True
-        return self._tencent_quotes(values)
+                import akshare as ak
+                frame = ak.stock_hk_spot()
+                def number(value: object) -> float:
+                    try:
+                        result = float(value)
+                        return result if math.isfinite(result) else 0.0
+                    except (TypeError, ValueError):
+                        return 0.0
+                self._hk_quotes_cache = {
+                    str(row["代码"]).zfill(5): {
+                        "symbol": str(row["代码"]).zfill(5), "exchange": "HKEX", "source": "akshare:sina",
+                        "price": number(row["最新价"]), "last_close": number(row["昨收"]),
+                        "open": number(row["今开"]), "high": number(row["最高"]), "low": number(row["最低"]),
+                        "vol": int(number(row["成交量"])), "amount": number(row["成交额"]),
+                        "bid1": number(row["买一"]), "ask1": number(row["卖一"]),
+                    }
+                    for row in frame.to_dict(orient="records")
+                }
+            except Exception as error:
+                print(f"akshare stock_hk_spot quote refresh failed: {type(error).__name__}: {error}", file=sys.stderr)
+        return [self._hk_quotes_cache[item["symbol"]] for item in instruments if item["symbol"] in self._hk_quotes_cache]
 
     def _mootdx_quotes(self, instruments: list[dict]) -> list[dict]:
         rows: list[dict] = []

@@ -5,9 +5,41 @@
 #include <cmath>
 #include <ctime>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 namespace provider
 {
+	static std::string LogPythonFailure(const char* source)
+	{
+		if (nullptr == PyErr_Occurred())
+		{
+			std::string failure = std::string("akshare ") + source + " failed: empty or invalid result";
+			std::cerr << failure << std::endl;
+			return failure;
+		}
+		PyObject* errorType = nullptr;
+		PyObject* errorValue = nullptr;
+		PyObject* errorTraceback = nullptr;
+		PyErr_Fetch(&errorType, &errorValue, &errorTraceback);
+		PyErr_NormalizeException(&errorType, &errorValue, &errorTraceback);
+		PyObject* errorText = nullptr != errorValue ? PyObject_Str(errorValue) : nullptr;
+		const char* name = nullptr != errorType ? PyExceptionClass_Name(errorType) : nullptr;
+		const char* message = nullptr != errorText ? PyUnicode_AsUTF8(errorText) : nullptr;
+		std::string failure = std::string("akshare ") + source + " failed: " + (nullptr != name ? name : "invalid result");
+		if (nullptr != message)
+		{
+			failure += ": ";
+			failure += message;
+		}
+		std::cerr << failure << std::endl;
+		Py_XDECREF(errorText);
+		Py_XDECREF(errorTraceback);
+		Py_XDECREF(errorValue);
+		Py_XDECREF(errorType);
+		PyErr_Clear();
+		return failure;
+	}
+
 	constexpr std::int64_t ChinaTimeOffsetMilliseconds = 8LL * 60LL * 60LL * 1000LL;
 
 	static std::string DateString(std::int64_t nMilliseconds)
@@ -162,15 +194,16 @@ namespace provider
 		PyObject* type = nullptr != module ? PyObject_GetAttrString(module, "AkShareProvider") : nullptr;
 		PyObject* instance = nullptr != type ? PyObject_CallNoArgs(type) : nullptr;
 		bool bOk = nullptr != instance;
+		std::string failure;
+		if (!bOk)
+		{
+			failure = LogPythonFailure("provider initialization");
+		}
 		Py_XDECREF(type);
 		Py_XDECREF(module);
 		if (bOk)
 		{
 			m_pProvider = instance;
-		}
-		else
-		{
-			PyErr_Clear();
 		}
 		PyObject* values = bOk ? PyObject_CallMethod(instance, "instruments", nullptr) : nullptr;
 		if ((nullptr != values) && (0 != PyList_Check(values)))
@@ -201,11 +234,16 @@ namespace provider
 				}
 				instrument.m_pinyinFullAliases = StringList(row, "pinyin_full_aliases");
 				instrument.m_pinyinShortAliases = StringList(row, "pinyin_short_aliases");
-				if (instrument.m_security.m_strCode.starts_with('6'))
+				std::string strExchange = String(row, "exchange");
+				if ("HKEX" == strExchange)
+				{
+					instrument.m_security.m_market = market::Exchange::hkex;
+				}
+				else if ("SSE" == strExchange || instrument.m_security.m_strCode.starts_with('6'))
 				{
 					instrument.m_security.m_market = market::Exchange::sse;
 				}
-				else if (instrument.m_security.m_strCode.starts_with('0') || instrument.m_security.m_strCode.starts_with('3'))
+				else if ("SZSE" == strExchange || instrument.m_security.m_strCode.starts_with('0') || instrument.m_security.m_strCode.starts_with('3'))
 				{
 					instrument.m_security.m_market = market::Exchange::szse;
 				}
@@ -216,15 +254,20 @@ namespace provider
 				m_instruments.emplace_back(std::move(instrument));
 			}
 		}
-		if (nullptr == values)
+		if (bOk && (nullptr == values))
 		{
-			PyErr_Clear();
+			failure = LogPythonFailure("stock_info_a_code_name");
+			bOk = false;
+		}
+		else if ((nullptr != values) && (0 == PyList_Check(values)))
+		{
+			failure = LogPythonFailure("stock_info_a_code_name result");
 			bOk = false;
 		}
 		Py_XDECREF(values);
 		PyGILState_Release(gil);
 		std::lock_guard<std::mutex> lck(m_mtx_state);
-		m_status = { bOk, bOk ? "ready" : "initialization failed" };
+		m_status = { bOk, bOk ? "ready" : failure };
 		return bOk;
 	}
 	bool CAkShareProvider::Subscribe(const std::vector<market::CChannelInfo>&)
@@ -248,9 +291,11 @@ namespace provider
 		std::string begin = bMinute ? DateTimeString(nBeginTime) : DateString(nBeginTime);
 		std::string end = bMinute ? DateTimeString(nEndTime) : DateString(nEndTime);
 		PyGILState_STATE gil = PyGILState_Ensure();
-		PyObject* result = PyObject_CallMethod(static_cast<PyObject*>(m_pProvider), bMinute ? "minute_bars" : "daily_bars", "ssss",
-											   security.m_strCode.c_str(), begin.c_str(), end.c_str(), "");
+		std::string strExchange = market::GetMarketString(security.m_market);
+		PyObject* result = PyObject_CallMethod(static_cast<PyObject*>(m_pProvider), bMinute ? "minute_bars" : "daily_bars", "sssss",
+											   security.m_strCode.c_str(), begin.c_str(), end.c_str(), "", strExchange.c_str());
 		bool bOk = (nullptr != result) && (0 != PyList_Check(result));
+		std::string failure;
 		if (bOk)
 		{
 			for (Py_ssize_t i = 0; i < PyList_Size(result); ++i)
@@ -277,11 +322,11 @@ namespace provider
 		}
 		if (!bOk)
 		{
-			PyErr_Clear();
+			failure = LogPythonFailure(bMinute ? "Eastmoney stock_zh_a_hist_min_em / Tencent minute history" : "Eastmoney stock_zh_a_hist / Tencent daily history");
 		}
 		Py_XDECREF(result);
 		PyGILState_Release(gil);
-		m_status = { bOk, bOk ? "ready" : "history request failed" };
+		m_status = { bOk, bOk ? "ready" : failure };
 		return bars;
 	}
 	market::CProviderStatus CAkShareProvider::GetStatus() const
@@ -315,6 +360,7 @@ namespace provider
 		PyGILState_STATE gil = PyGILState_Ensure();
 		PyObject* result = PyObject_CallMethod(static_cast<PyObject*>(m_pProvider), "industry_sectors", nullptr);
 		bool bOk = (nullptr != result) && (0 != PyList_Check(result));
+		std::string failure;
 		std::vector<market::CSector> sectors;
 		if (bOk)
 		{
@@ -349,7 +395,7 @@ namespace provider
 		}
 		if (!bOk)
 		{
-			PyErr_Clear();
+			failure = LogPythonFailure("Eastmoney stock_board_industry_name_em (17.push2.eastmoney.com)");
 		}
 		Py_XDECREF(result);
 		PyGILState_Release(gil);
@@ -358,7 +404,7 @@ namespace provider
 			m_sectors = std::move(sectors);
 			m_sectorExpiry = now + std::chrono::seconds(60);
 		}
-		m_status = { bOk, bOk ? "ready" : "sector request failed" };
+		m_status = { bOk, bOk ? "ready" : failure };
 		return bOk ? m_sectors : std::vector<market::CSector>{};
 	}
 	market::CSectorConstituents CAkShareProvider::QuerySectorConstituents(market::SectorType type, const std::string& strSectorCode)
@@ -386,6 +432,7 @@ namespace provider
 		PyGILState_STATE gil = PyGILState_Ensure();
 		PyObject* result = PyObject_CallMethod(static_cast<PyObject*>(m_pProvider), "industry_constituents", "s", sectorIter->m_strName.c_str());
 		bool bOk = (nullptr != result) && (0 != PyList_Check(result));
+		std::string failure;
 		if (bOk)
 		{
 			value.m_securities.reserve(static_cast<std::size_t>(PyList_Size(result)));
@@ -417,7 +464,7 @@ namespace provider
 		}
 		if (!bOk)
 		{
-			PyErr_Clear();
+			failure = LogPythonFailure("Eastmoney stock_board_industry_cons_em");
 		}
 		Py_XDECREF(result);
 		PyGILState_Release(gil);
@@ -428,7 +475,7 @@ namespace provider
 			m_sectorConstituents.insert_or_assign(strSectorCode, value);
 			m_sectorConstituentExpiry.insert_or_assign(strSectorCode, now + std::chrono::minutes(5));
 		}
-		m_status = { bOk, bOk ? "ready" : "sector constituent request failed" };
+		m_status = { bOk, bOk ? "ready" : failure };
 		return bOk ? value : market::CSectorConstituents{};
 	}
 	void CAkShareProvider::Stop()
