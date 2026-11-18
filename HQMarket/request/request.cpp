@@ -188,7 +188,7 @@ bool CRequest::IsMarket() const
 bool CRequest::IsStrategy() const
 {
 	return (_TyRequest::STRATEGY_ADD <= GetType()) &&
-		   (_TyRequest::STRATEGY_STOP >= GetType());
+		   (_TyRequest::STRATEGY_ACTION >= GetType());
 }
 std::string CRequest::GetTypeName() const
 {
@@ -326,4 +326,9 @@ void CRequest::SetData(const request::BrokerList& value)
 void CRequest::SetEventAccount(const request::TradeAccountInfo& value)
 {
 	m_data->mutable_event_account()->CopyFrom(value);
+}
+
+void CRequest::SetData(const request::ExecutionRules& value)
+{
+	m_data->mutable_execution_rules()->CopyFrom(value);
 }

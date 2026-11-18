@@ -135,6 +135,10 @@ namespace market
 	// 一个时间周期内的K线数据。
 	struct CBar
 	{
+		std::int64_t m_nEndTime{ 0 };
+		bool m_bCompleted{ false };
+		std::uint64_t m_dataVersion{ 0 };
+		std::string m_strBasisVersion;
 		CSecurity m_security;				   // 标的信息。
 		Channel m_channel{ Channel::unknown }; // K线周期，例如一分钟或一天。
 		std::int64_t m_nBeginTime{ 0 };		   // K线周期开始的毫秒时间戳。

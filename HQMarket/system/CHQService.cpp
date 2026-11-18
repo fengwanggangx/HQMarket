@@ -121,6 +121,10 @@ namespace
 		value->mutable_security()->set_exchange(ToWire(bar.m_security.m_market));
 		value->set_channel(static_cast<wire::Channel>(static_cast<int>(bar.m_channel)));
 		value->set_begin_time_ms(bar.m_nBeginTime);
+		value->set_end_time_ms(bar.m_nEndTime);
+		value->set_completed(bar.m_bCompleted);
+		value->set_data_version(bar.m_dataVersion);
+		value->set_basis_version(bar.m_strBasisVersion);
 		value->set_open_price(bar.m_nOpenPrice);
 		value->set_high_price(bar.m_nHighPrice);
 		value->set_low_price(bar.m_nLowPrice);

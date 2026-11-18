@@ -317,6 +317,11 @@ namespace provider
 				bar.m_nVolume = Fixed(row, "volume", 0);
 				bar.m_nTurnover = Fixed(row, "turnover", 2);
 				bar.m_strSource = "akshare";
+				PyObject* completed = PyDict_GetItemString(row, "completed");
+				bar.m_bCompleted = (nullptr != completed) && PyBool_Check(completed) && (1 == PyObject_IsTrue(completed));
+				bar.m_nEndTime = Fixed(row, "end_time_ms", 0);
+				bar.m_strBasisVersion = String(row, "basis_version");
+				bar.m_dataVersion = static_cast<std::uint64_t>(std::max<std::int64_t>(0, Fixed(row, "data_version", 0)));
 				bars.emplace_back(std::move(bar));
 			}
 		}
