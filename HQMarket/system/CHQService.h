@@ -51,9 +51,9 @@ private:
 
 	CHQBroker m_broker;
 	CSubscriptionMgr m_subscriptions;
-	std::atomic_uint64_t m_nDepthSequence{ 0 };
+	std::atomic_uint64_t m_depth_sequence{ 0 };
 	_TyReplyHandler m_handler_reply;
-	CPythonRuntime* m_pPythonRuntime{ nullptr }; // Borrowed from BootLoader; providers stop before Python finalizes.
+	CPythonRuntime* m_python_runtime{ nullptr }; // Borrowed from BootLoader; providers stop before Python finalizes.
 };
 
 #endif

@@ -18,16 +18,17 @@ bool CHQBroker::Initialize(const std::filesystem::path& root)
 				market::CSecurity security = quote.m_security;
 				std::uint64_t sequence = m_cache.Update(std::move(quote));
 				std::optional<market::CQuote> cached = m_cache.GetQuote(security);
-				if (cached.has_value() && m_quoteHandler)
+				if (cached.has_value() && m_quote_handler)
 				{
-					m_quoteHandler(*cached, sequence);
+					m_quote_handler(*cached, sequence);
 				} });
 	m_mootdx.SetDepthHandler([this](market::CDepth&& depth)
-							 {
-				if (m_depthHandler)
-				{
-					m_depthHandler(std::move(depth));
-				} });
+	{
+		if (m_depth_handler)
+		{
+			m_depth_handler(std::move(depth));
+		}
+	});
 	if (!m_mootdx.Initialize())
 	{
 		return false;
@@ -68,11 +69,11 @@ std::vector<market::CBar> CHQBroker::QueryBars(const market::CSecurity& security
 		std::map<std::int64_t, market::CBar> mergedBars;
 		for (const market::CBar& bar : bars)
 		{
-			mergedBars.insert_or_assign(bar.m_nBeginTime, bar);
+			mergedBars.insert_or_assign(bar.m_begin_time, bar);
 		}
 		for (const market::CBar& bar : providerBars)
 		{
-			mergedBars.insert_or_assign(bar.m_nBeginTime, bar);
+			mergedBars.insert_or_assign(bar.m_begin_time, bar);
 		}
 		bars.clear();
 		bars.reserve(mergedBars.size());
@@ -121,10 +122,10 @@ std::size_t CHQBroker::QuoteCount() const
 
 void CHQBroker::SetQuoteHandler(_TyQuoteHandler handler)
 {
-	m_quoteHandler = std::move(handler);
+	m_quote_handler = std::move(handler);
 }
 
 void CHQBroker::SetDepthHandler(_TyDepthHandler handler)
 {
-	m_depthHandler = std::move(handler);
+	m_depth_handler = std::move(handler);
 }

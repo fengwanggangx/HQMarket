@@ -47,11 +47,11 @@ namespace market
 		return strCode + "." + strMarket;
 	}
 
-	CSecurity::CSecurity(const CSecurity& arg) : m_strCode(arg.m_strCode), m_market(arg.m_market)
+	CSecurity::CSecurity(const CSecurity& arg) : m_code(arg.m_code), m_market(arg.m_market)
 	{
 	}
 
-	CSecurity::CSecurity(const std::string& strCode, market::Exchange mk) : m_strCode(strCode), m_market(mk)
+	CSecurity::CSecurity(const std::string& strCode, market::Exchange mk) : m_code(strCode), m_market(mk)
 	{
 	}
 
@@ -59,7 +59,7 @@ namespace market
 	{
 		if (&arg != this)
 		{
-			m_strCode = arg.m_strCode;
+			m_code = arg.m_code;
 			m_market = arg.m_market;
 		}
 		return *this;
@@ -67,17 +67,17 @@ namespace market
 
 	bool CSecurity::IsValid() const
 	{
-		return !m_strCode.empty() && (Exchange::unknown != m_market);
+		return !m_code.empty() && (Exchange::unknown != m_market);
 	}
 
 	std::string CSecurity::String() const
 	{
-		return FmtSecurityString(m_strCode, m_market);
+		return FmtSecurityString(m_code, m_market);
 	}
 
 	bool CSecurity::operator==(const CSecurity& arg) const
 	{
-		return (m_market == arg.m_market) && (m_strCode == arg.m_strCode);
+		return (m_market == arg.m_market) && (m_code == arg.m_code);
 	}
 
 	std::size_t CSecurityHash::operator()(const CSecurity& instrument) const

@@ -22,14 +22,14 @@ namespace net
 {
 	CNet::CNet() = default;
 	CNet::~CNet() = default;
-	CHttpServer::CHttpServer(int nPort) : m_nPort(nPort)
+	CHttpServer::CHttpServer(int nPort) : m_port(nPort)
 	{
 	}
 	CHttpServer::~CHttpServer() = default;
 	void CHttpServer::RegisterHandler(HttpMethod, const std::string&, _TyHandler&& handler)
 	{
 		CHttpRequest request;
-		hqtest::State().m_httpResponse = handler(request);
+		hqtest::State().m_http_response = handler(request);
 	}
 	struct CNetInfo
 	{
@@ -47,7 +47,7 @@ namespace net
 	}
 	bool SendRequest(_TyConnectionId id, const CRequest& req)
 	{
-		if (hqtest::State().m_failedConnection == id)
+		if (hqtest::State().m_failed_connection == id)
 		{
 			return false;
 		}
@@ -109,7 +109,7 @@ namespace provider
 	}
 	bool CMooTdxProvider::Subscribe(const std::vector<market::CChannelInfo>& infos)
 	{
-		++hqtest::State().m_subscribeCalls;
+		++hqtest::State().m_subscribe_calls;
 		for (const auto& info : infos)
 		{
 			hqtest::State().m_subscriptions.emplace(info.String());
@@ -118,7 +118,7 @@ namespace provider
 	}
 	bool CMooTdxProvider::Unsubscribe(const std::vector<market::CChannelInfo>& infos)
 	{
-		++hqtest::State().m_unsubscribeCalls;
+		++hqtest::State().m_unsubscribe_calls;
 		for (const auto& info : infos)
 		{
 			hqtest::State().m_subscriptions.erase(info.String());
@@ -135,16 +135,16 @@ namespace provider
 	}
 	void CMooTdxProvider::SetQuoteHandler(_TyQuoteHandler handler)
 	{
-		hqtest::State().m_quoteHandler = std::move(handler);
+		hqtest::State().m_quote_handler = std::move(handler);
 	}
 	void CMooTdxProvider::SetDepthHandler(_TyDepthHandler handler)
 	{
-		hqtest::State().m_depthHandler = std::move(handler);
+		hqtest::State().m_depth_handler = std::move(handler);
 	}
 	void CMooTdxProvider::Stop()
 	{
-		hqtest::State().m_quoteHandler = {};
-		hqtest::State().m_depthHandler = {};
+		hqtest::State().m_quote_handler = {};
+		hqtest::State().m_depth_handler = {};
 	}
 	CAkShareProvider::~CAkShareProvider()
 	{
@@ -171,8 +171,8 @@ namespace provider
 		market::CBar bar;
 		bar.m_security = security;
 		bar.m_channel = channel;
-		bar.m_nBeginTime = 1700000000000;
-		bar.m_nClosePrice = 123450;
+		bar.m_begin_time = 1700000000000;
+		bar.m_close_price = 123450;
 		return { bar };
 	}
 	market::CProviderStatus CAkShareProvider::GetStatus() const
@@ -192,7 +192,7 @@ namespace provider
 	{
 		market::CInstrument info;
 		info.m_security = { "600519", market::Exchange::sse };
-		info.m_strName = "Sample";
+		info.m_name = "Sample";
 		return { info };
 	}
 	std::vector<market::CSector> CAkShareProvider::QuerySectors(market::SectorType)

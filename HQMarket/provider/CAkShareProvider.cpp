@@ -160,7 +160,7 @@ namespace provider
 	static market::CSecurity Security(const std::string& strCode)
 	{
 		market::CSecurity security;
-		security.m_strCode = strCode;
+		security.m_code = strCode;
 		if (strCode.starts_with('6'))
 		{
 			security.m_market = market::Exchange::sse;
@@ -203,7 +203,7 @@ namespace provider
 		Py_XDECREF(module);
 		if (bOk)
 		{
-			m_pProvider = instance;
+			m_provider = instance;
 		}
 		PyObject* values = bOk ? PyObject_CallMethod(instance, "instruments", nullptr) : nullptr;
 		if ((nullptr != values) && (0 != PyList_Check(values)))
@@ -223,27 +223,27 @@ namespace provider
 					continue;
 				}
 				market::CInstrument instrument;
-				instrument.m_security.m_strCode = symbol;
+				instrument.m_security.m_code = symbol;
 				if (nullptr != nameValue)
 				{
 					const char* pName = PyUnicode_AsUTF8(nameValue);
 					if (nullptr != pName)
 					{
-						instrument.m_strName = pName;
+						instrument.m_name = pName;
 					}
 				}
-				instrument.m_pinyinFullAliases = StringList(row, "pinyin_full_aliases");
-				instrument.m_pinyinShortAliases = StringList(row, "pinyin_short_aliases");
+				instrument.m_pinyin_full_aliases = StringList(row, "pinyin_full_aliases");
+				instrument.m_pinyin_short_aliases = StringList(row, "pinyin_short_aliases");
 				std::string strExchange = String(row, "exchange");
 				if ("HKEX" == strExchange)
 				{
 					instrument.m_security.m_market = market::Exchange::hkex;
 				}
-				else if ("SSE" == strExchange || instrument.m_security.m_strCode.starts_with('6'))
+				else if ("SSE" == strExchange || instrument.m_security.m_code.starts_with('6'))
 				{
 					instrument.m_security.m_market = market::Exchange::sse;
 				}
-				else if ("SZSE" == strExchange || instrument.m_security.m_strCode.starts_with('0') || instrument.m_security.m_strCode.starts_with('3'))
+				else if ("SZSE" == strExchange || instrument.m_security.m_code.starts_with('0') || instrument.m_security.m_code.starts_with('3'))
 				{
 					instrument.m_security.m_market = market::Exchange::szse;
 				}
@@ -266,7 +266,7 @@ namespace provider
 		}
 		Py_XDECREF(values);
 		PyGILState_Release(gil);
-		std::lock_guard<std::mutex> lck(m_mtx_state);
+		std::lock_guard<std::mutex> lck(m_state_mutex);
 		m_status = { bOk, bOk ? "ready" : failure };
 		return bOk;
 	}
@@ -282,8 +282,8 @@ namespace provider
 														  std::int64_t nBeginTime, std::int64_t nEndTime)
 	{
 		std::vector<market::CBar> bars;
-		std::unique_lock<std::mutex> lck(m_mtx_state);
-		if (((market::Channel::bar_1d != channel) && (market::Channel::bar_1m != channel)) || (nullptr == m_pProvider))
+		std::unique_lock<std::mutex> lck(m_state_mutex);
+		if (((market::Channel::bar_1d != channel) && (market::Channel::bar_1m != channel)) || (nullptr == m_provider))
 		{
 			return bars;
 		}
@@ -292,8 +292,8 @@ namespace provider
 		std::string end = bMinute ? DateTimeString(nEndTime) : DateString(nEndTime);
 		PyGILState_STATE gil = PyGILState_Ensure();
 		std::string strExchange = market::GetMarketString(security.m_market);
-		PyObject* result = PyObject_CallMethod(static_cast<PyObject*>(m_pProvider), bMinute ? "minute_bars" : "daily_bars", "sssss",
-											   security.m_strCode.c_str(), begin.c_str(), end.c_str(), "", strExchange.c_str());
+		PyObject* result = PyObject_CallMethod(static_cast<PyObject*>(m_provider), bMinute ? "minute_bars" : "daily_bars", "sssss",
+			security.m_code.c_str(), begin.c_str(), end.c_str(), "", strExchange.c_str());
 		bool bOk = (nullptr != result) && (0 != PyList_Check(result));
 		std::string failure;
 		if (bOk)
@@ -309,19 +309,19 @@ namespace provider
 				bar.m_security = security;
 				bar.m_channel = channel;
 				PyObject* date = PyDict_GetItemString(row, "date");
-				bar.m_nBeginTime = DateMilliseconds(nullptr != date ? PyUnicode_AsUTF8(date) : nullptr);
-				bar.m_nOpenPrice = Fixed(row, "open", 4);
-				bar.m_nHighPrice = Fixed(row, "high", 4);
-				bar.m_nLowPrice = Fixed(row, "low", 4);
-				bar.m_nClosePrice = Fixed(row, "close", 4);
-				bar.m_nVolume = Fixed(row, "volume", 0);
-				bar.m_nTurnover = Fixed(row, "turnover", 2);
-				bar.m_strSource = "akshare";
+				bar.m_begin_time = DateMilliseconds(nullptr != date ? PyUnicode_AsUTF8(date) : nullptr);
+				bar.m_open_price = Fixed(row, "open", 4);
+				bar.m_high_price = Fixed(row, "high", 4);
+				bar.m_low_price = Fixed(row, "low", 4);
+				bar.m_close_price = Fixed(row, "close", 4);
+				bar.m_volume = Fixed(row, "volume", 0);
+				bar.m_turnover = Fixed(row, "turnover", 2);
+				bar.m_source = "akshare";
 				PyObject* completed = PyDict_GetItemString(row, "completed");
-				bar.m_bCompleted = (nullptr != completed) && PyBool_Check(completed) && (1 == PyObject_IsTrue(completed));
-				bar.m_nEndTime = Fixed(row, "end_time_ms", 0);
-				bar.m_strBasisVersion = String(row, "basis_version");
-				bar.m_dataVersion = static_cast<std::uint64_t>(std::max<std::int64_t>(0, Fixed(row, "data_version", 0)));
+				bar.m_completed = (nullptr != completed) && PyBool_Check(completed) && (1 == PyObject_IsTrue(completed));
+				bar.m_end_time = Fixed(row, "end_time_ms", 0);
+				bar.m_basis_version = String(row, "basis_version");
+				bar.m_data_version = static_cast<std::uint64_t>(std::max<std::int64_t>(0, Fixed(row, "data_version", 0)));
 				bars.emplace_back(std::move(bar));
 			}
 		}
@@ -336,7 +336,7 @@ namespace provider
 	}
 	market::CProviderStatus CAkShareProvider::GetStatus() const
 	{
-		std::lock_guard<std::mutex> lck(m_mtx_state);
+		std::lock_guard<std::mutex> lck(m_state_mutex);
 		return m_status;
 	}
 	void CAkShareProvider::SetQuoteHandler(_TyQuoteHandler)
@@ -347,23 +347,23 @@ namespace provider
 	}
 	std::vector<market::CInstrument> CAkShareProvider::QueryInstruments() const
 	{
-		std::lock_guard<std::mutex> lck(m_mtx_state);
+		std::lock_guard<std::mutex> lck(m_state_mutex);
 		return m_instruments;
 	}
 	std::vector<market::CSector> CAkShareProvider::QuerySectors(market::SectorType type)
 	{
-		std::lock_guard<std::mutex> lck(m_mtx_state);
-		if ((market::SectorType::industry != type) || (nullptr == m_pProvider))
+		std::lock_guard<std::mutex> lck(m_state_mutex);
+		if ((market::SectorType::industry != type) || (nullptr == m_provider))
 		{
 			return {};
 		}
 		std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-		if (!m_sectors.empty() && (now < m_sectorExpiry))
+		if (!m_sectors.empty() && (now < m_sector_expiry))
 		{
 			return m_sectors;
 		}
 		PyGILState_STATE gil = PyGILState_Ensure();
-		PyObject* result = PyObject_CallMethod(static_cast<PyObject*>(m_pProvider), "industry_sectors", nullptr);
+		PyObject* result = PyObject_CallMethod(static_cast<PyObject*>(m_provider), "industry_sectors", nullptr);
 		bool bOk = (nullptr != result) && (0 != PyList_Check(result));
 		std::string failure;
 		std::vector<market::CSector> sectors;
@@ -380,20 +380,20 @@ namespace provider
 				}
 				market::CSector sector;
 				sector.m_type = type;
-				sector.m_strCode = String(row, "code");
-				sector.m_strName = String(row, "name");
-				if (sector.m_strCode.empty() || sector.m_strName.empty())
+				sector.m_code = String(row, "code");
+				sector.m_name = String(row, "name");
+				if (sector.m_code.empty() || sector.m_name.empty())
 				{
 					continue;
 				}
-				sector.m_nChangePercent = Fixed(row, "change_percent", sector.m_nPercentScale);
-				sector.m_nRisingCount = Integer(row, "rising_count");
-				sector.m_nFallingCount = Integer(row, "falling_count");
-				sector.m_nFlatCount = Integer(row, "flat_count");
-				sector.m_nMemberCount = Integer(row, "member_count");
-				sector.m_strLeadingName = String(row, "leading_name");
-				sector.m_leadingSecurity = Security(String(row, "leading_symbol"));
-				sector.m_nSnapshotTime = nSnapshotTime;
+				sector.m_change_percent = Fixed(row, "change_percent", sector.m_percent_scale);
+				sector.m_rising_count = Integer(row, "rising_count");
+				sector.m_falling_count = Integer(row, "falling_count");
+				sector.m_flat_count = Integer(row, "flat_count");
+				sector.m_member_count = Integer(row, "member_count");
+				sector.m_leading_name = String(row, "leading_name");
+				sector.m_leading_security = Security(String(row, "leading_symbol"));
+				sector.m_snapshot_time = nSnapshotTime;
 				sectors.emplace_back(std::move(sector));
 			}
 			bOk = !sectors.empty();
@@ -407,35 +407,37 @@ namespace provider
 		if (bOk)
 		{
 			m_sectors = std::move(sectors);
-			m_sectorExpiry = now + std::chrono::seconds(60);
+			m_sector_expiry = now + std::chrono::seconds(60);
 		}
 		m_status = { bOk, bOk ? "ready" : failure };
 		return bOk ? m_sectors : std::vector<market::CSector>{};
 	}
 	market::CSectorConstituents CAkShareProvider::QuerySectorConstituents(market::SectorType type, const std::string& strSectorCode)
 	{
-		std::lock_guard<std::mutex> lck(m_mtx_state);
+		std::lock_guard<std::mutex> lck(m_state_mutex);
 		market::CSectorConstituents value;
-		if ((market::SectorType::industry != type) || strSectorCode.empty() || (nullptr == m_pProvider))
+		if ((market::SectorType::industry != type) || strSectorCode.empty() || (nullptr == m_provider))
 		{
 			return value;
 		}
 		std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-		const auto cacheIter = m_sectorConstituents.find(strSectorCode);
-		const auto expiryIter = m_sectorConstituentExpiry.find(strSectorCode);
-		if ((m_sectorConstituents.end() != cacheIter) && (m_sectorConstituentExpiry.end() != expiryIter) && (now < expiryIter->second))
+		const auto cacheIter = m_sector_constituents.find(strSectorCode);
+		const auto expiryIter = m_sector_constituent_expiry.find(strSectorCode);
+		if ((m_sector_constituents.end() != cacheIter) && (m_sector_constituent_expiry.end() != expiryIter) && (now < expiryIter->second))
 		{
 			return cacheIter->second;
 		}
 		const auto sectorIter = std::find_if(m_sectors.begin(), m_sectors.end(), [&strSectorCode](const market::CSector& sector)
-											 { return strSectorCode == sector.m_strCode; });
+		{
+			return strSectorCode == sector.m_code;
+		});
 		if (m_sectors.end() == sectorIter)
 		{
 			return value;
 		}
 		value.m_sector = *sectorIter;
 		PyGILState_STATE gil = PyGILState_Ensure();
-		PyObject* result = PyObject_CallMethod(static_cast<PyObject*>(m_pProvider), "industry_constituents", "s", sectorIter->m_strName.c_str());
+		PyObject* result = PyObject_CallMethod(static_cast<PyObject*>(m_provider), "industry_constituents", "s", sectorIter->m_name.c_str());
 		bool bOk = (nullptr != result) && (0 != PyList_Check(result));
 		std::string failure;
 		if (bOk)
@@ -450,15 +452,15 @@ namespace provider
 				}
 				market::CInstrument instrument;
 				instrument.m_security = Security(String(row, "symbol"));
-				instrument.m_strName = String(row, "name");
+				instrument.m_name = String(row, "name");
 				const auto instrumentIter = std::find_if(m_instruments.begin(), m_instruments.end(), [&instrument](const market::CInstrument& current)
 				{
 					return current.m_security == instrument.m_security;
 				});
 				if (m_instruments.end() != instrumentIter)
 				{
-					instrument.m_pinyinFullAliases = instrumentIter->m_pinyinFullAliases;
-					instrument.m_pinyinShortAliases = instrumentIter->m_pinyinShortAliases;
+					instrument.m_pinyin_full_aliases = instrumentIter->m_pinyin_full_aliases;
+					instrument.m_pinyin_short_aliases = instrumentIter->m_pinyin_short_aliases;
 				}
 				if (instrument.m_security.IsValid())
 				{
@@ -475,24 +477,24 @@ namespace provider
 		PyGILState_Release(gil);
 		if (bOk)
 		{
-			value.m_nSnapshotTime = NowMilliseconds();
-			value.m_sector.m_nMemberCount = static_cast<int>(value.m_securities.size());
-			m_sectorConstituents.insert_or_assign(strSectorCode, value);
-			m_sectorConstituentExpiry.insert_or_assign(strSectorCode, now + std::chrono::minutes(5));
+			value.m_snapshot_time = NowMilliseconds();
+			value.m_sector.m_member_count = static_cast<int>(value.m_securities.size());
+			m_sector_constituents.insert_or_assign(strSectorCode, value);
+			m_sector_constituent_expiry.insert_or_assign(strSectorCode, now + std::chrono::minutes(5));
 		}
 		m_status = { bOk, bOk ? "ready" : failure };
 		return bOk ? value : market::CSectorConstituents{};
 	}
 	void CAkShareProvider::Stop()
 	{
-		std::lock_guard<std::mutex> lck(m_mtx_state);
-		if ((nullptr == m_pProvider) || (0 == Py_IsInitialized()))
+		std::lock_guard<std::mutex> lck(m_state_mutex);
+		if ((nullptr == m_provider) || (0 == Py_IsInitialized()))
 		{
 			return;
 		}
 		PyGILState_STATE gil = PyGILState_Ensure();
-		Py_DECREF(static_cast<PyObject*>(m_pProvider));
-		m_pProvider = nullptr;
+		Py_DECREF(static_cast<PyObject*>(m_provider));
+		m_provider = nullptr;
 		PyGILState_Release(gil);
 		m_status = { false, "stopped" };
 	}

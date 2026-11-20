@@ -17,9 +17,9 @@ class CPythonRuntime final
 	std::string GetLastError() const;
 
 	private:
-	_ts* m_pMainThreadState{ nullptr };
-	bool m_bInitialized{ false };
-	std::string m_strLastError;
+		_ts* m_main_thread_state{ nullptr };
+		bool m_initialized{ false };
+		std::string m_last_error;
 };
 
 #endif

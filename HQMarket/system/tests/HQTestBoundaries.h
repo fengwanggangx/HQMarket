@@ -15,12 +15,12 @@ namespace hqtest
 		std::unordered_set<net::_TyConnectionId> m_closed;
 		std::unordered_set<std::string> m_subscriptions;
 		std::unordered_map<std::string, std::string> m_query;
-		std::unique_ptr<net::CHttpResponseData> m_httpResponse;
-		market::IMarketProvider::_TyQuoteHandler m_quoteHandler;
-		market::IMarketProvider::_TyDepthHandler m_depthHandler;
-		net::_TyConnectionId m_failedConnection{ -1 };
-		std::size_t m_subscribeCalls{ 0 };
-		std::size_t m_unsubscribeCalls{ 0 };
+		std::unique_ptr<net::CHttpResponseData> m_http_response;
+		market::IMarketProvider::_TyQuoteHandler m_quote_handler;
+		market::IMarketProvider::_TyDepthHandler m_depth_handler;
+		net::_TyConnectionId m_failed_connection{ -1 };
+		std::size_t m_subscribe_calls{ 0 };
+		std::size_t m_unsubscribe_calls{ 0 };
 	};
 
 	CBoundaryState& State();

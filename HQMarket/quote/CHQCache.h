@@ -14,8 +14,8 @@ public:
 	std::size_t QuoteCount() const;
 
 private:
-	mutable std::shared_mutex m_mtx_quotes;
+	mutable std::shared_mutex m_quotes_mutex;
 	std::unordered_map<market::CSecurity, market::CQuote, market::CSecurityHash> m_quotes;
-	std::uint64_t m_nQuoteSequence{ 0 };
+	std::uint64_t m_quote_sequence{ 0 };
 };
 #endif

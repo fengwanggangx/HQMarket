@@ -47,19 +47,19 @@ std::size_t CalcBestPerformanceThreads(pool_type mode)
 CThreadPool::CThreadPool(std::size_t cores)
 {
 	SetWorkersCount(cores, 0);
-	BuildNewThread(m_nCores);
+	BuildNewThread(m_cores);
 }
 
 CThreadPool::CThreadPool(std::size_t cores, std::size_t assistants)
 {
 	SetWorkersCount(cores, assistants);
-	BuildNewThread(m_nCores);
+	BuildNewThread(m_cores);
 }
 
 CThreadPool::CThreadPool(pool_type ty)
 {
-	SetWorkersCount(CalcBestPerformanceThreads(ty), (m_nCores - 1) / 2);
-	BuildNewThread(m_nCores);
+	SetWorkersCount(CalcBestPerformanceThreads(ty), (m_cores - 1) / 2);
+	BuildNewThread(m_cores);
 }
 
 CThreadPool::~CThreadPool()
@@ -69,9 +69,9 @@ CThreadPool::~CThreadPool()
 
 void CThreadPool::SetWorkersCount(std::size_t nCores, std::size_t nAssistants)
 {
-	m_nCores = nCores;
-	m_nAssistants = nAssistants;
-	m_nMaxWorkers = m_nCores + m_nAssistants;
+	m_cores = nCores;
+	m_assistants = nAssistants;
+	m_max_workers = m_cores + m_assistants;
 }
 
 std::mutex g_mtx;
@@ -79,7 +79,7 @@ std::mutex g_mtx;
 void CThreadPool::ShutDown()
 {
 	{
-		std::unique_lock<std::mutex> lck(m_mtx_task);
+		std::unique_lock<std::mutex> lck(m_task_mutex);
 		if (m_stop)
 		{
 			return;
@@ -87,10 +87,10 @@ void CThreadPool::ShutDown()
 		m_stop = true;
 		m_thread_task_queues.clear();
 	}
-	m_cond.notify_all();
+	m_task_ready.notify_all();
 
 	{
-		std::unique_lock<std::mutex> lck(m_mtx_worker);
+		std::unique_lock<std::mutex> lck(m_worker_mutex);
 		for (auto& w : m_workers)
 		{
 			if (w.joinable())
@@ -100,8 +100,8 @@ void CThreadPool::ShutDown()
 		}
 		m_workers.clear();
 	}
-	m_nWorkers.store(0);
-	m_nTasks.store(0);
+	m_worker_count.store(0);
+	m_tasks.store(0);
 	m_busy_workers.store(0);
 }
 
@@ -112,13 +112,13 @@ void CThreadPool::ThreadProc()
 	{
 		std::function<void()> task{nullptr};
 		{
-			std::unique_lock<std::mutex> lck(m_mtx_task);
-			m_cond.wait(lck,
-						[this]
-						{
-							return m_stop || !m_task_queue.empty() ||
-								   ((tid < m_thread_task_queues.size()) && !m_thread_task_queues.at(tid).empty());
-						});
+			std::unique_lock<std::mutex> lck(m_task_mutex);
+			m_task_ready.wait(lck,
+				[this]
+			{
+				return m_stop || !m_task_queue.empty() ||
+					   ((tid < m_thread_task_queues.size()) && !m_thread_task_queues.at(tid).empty());
+			});
 
 			if (m_stop && (m_task_queue.empty() &&
 						   ((tid >= m_thread_task_queues.size()) || m_thread_task_queues.at(tid).empty())))
@@ -131,13 +131,13 @@ void CThreadPool::ThreadProc()
 				auto& queue = m_thread_task_queues.at(tid);
 				task = std::move(queue.top().m_task);
 				queue.pop();
-				--m_nTasks;
+				--m_tasks;
 			}
 			else if (!m_task_queue.empty())
 			{
 				task = std::move(m_task_queue.top().m_task);
 				m_task_queue.pop();
-				--m_nTasks;
+				--m_tasks;
 			}
 		}
 		if (nullptr != task)
@@ -157,38 +157,38 @@ void CThreadPool::ThreadProc()
 
 bool CThreadPool::IsNeedAssistant()
 {
-	if (m_nAssistants <= 0)
+	if (m_assistants <= 0)
 	{
 		return false;
 	}
-	if (m_busy_workers < m_nCores) // 忙碌线程未到最大
+	if (m_busy_workers < m_cores) // 忙碌线程未到最大
 	{
 		return false;
 	}
-	if (m_nWorkers >= m_nMaxWorkers)
+	if (m_worker_count >= m_max_workers)
 	{
 		return false;
 	}
-	std::size_t nTasks = m_nTasks.load();
-	std::size_t nWorkers = m_nWorkers.load();
+	std::size_t nTasks = m_tasks.load();
+	std::size_t nWorkers = m_worker_count.load();
 	return (nTasks > (nWorkers * 2.5)) && (nTasks >= 20);
 }
 
 void CThreadPool::BuildNewThread(std::size_t threads)
 {
-	std::unique_lock<std::mutex> lck(m_mtx_worker);
-	if (m_nWorkers >= m_nMaxWorkers)
+	std::unique_lock<std::mutex> lck(m_worker_mutex);
+	if (m_worker_count >= m_max_workers)
 	{
 		return;
 	}
 	for (std::size_t i = 0; i < threads; ++i)
 	{
 		m_workers.emplace_back(&CThreadPool::ThreadProc, this);
-		if (m_workers.size() >= m_nMaxWorkers)
+		if (m_workers.size() >= m_max_workers)
 		{
 			break;
 		}
 	}
 	std::size_t sz = m_workers.size();
-	m_nWorkers.store(sz);
+	m_worker_count.store(sz);
 }

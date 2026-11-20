@@ -8,8 +8,8 @@ namespace market
 {
 	struct CProviderStatus
 	{
-		bool m_bHealthy{ false };
-		std::string m_strDetail;
+		bool m_healthy{ false };
+		std::string m_detail;
 	};
 	class IMarketProvider
 	{

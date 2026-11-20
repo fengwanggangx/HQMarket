@@ -26,47 +26,47 @@ CBootLoader::~CBootLoader()
 
 bool CBootLoader::Initialize()
 {
-	if (m_bInitialized)
+	if (m_initialized)
 	{
 		return true;
 	}
 
 	m_exec = std::filesystem::current_path();
 
-	m_nErrorCode = 0;
-	m_strLastError.clear();
+	m_error_code = 0;
+	m_last_error.clear();
 	net::EnvInitialize();
 	if (!net::IsThreadEnable())
 	{
-		m_nErrorCode = 1;
-		m_strLastError = "Failed to enable libevent thread support";
+		m_error_code = 1;
+		m_last_error = "Failed to enable libevent thread support";
 		return false;
 	}
 
 	std::string strPyRunTime = ini::CINIHandler::InstanceRef().GetString(ini::Config::System, "System", "py_runtime");
 	if (strPyRunTime.empty())
 	{
-		m_nErrorCode = 2;
-		m_strLastError = "HQMarket py_runtime is required in ini/system.ini";
+		m_error_code = 2;
+		m_last_error = "HQMarket py_runtime is required in ini/system.ini";
 		return false;
 	}
 
 	std::string strPyScripts = ini::CINIHandler::InstanceRef().GetString(ini::Config::System, "System", "py_scripts");
 	if (strPyScripts.empty())
 	{
-		m_nErrorCode = 3;
-		m_strLastError = "HQMarket py_scripts is required in ini/system.ini";
+		m_error_code = 3;
+		m_last_error = "HQMarket py_scripts is required in ini/system.ini";
 		return false;
 	}
 
-	m_pPython = std::make_unique<CPythonRuntime>();
+	m_python = std::make_unique<CPythonRuntime>();
 	std::filesystem::path run = m_exec / strPyRunTime;
 	std::filesystem::path script = m_exec / strPyScripts;
-	if (!m_pPython->Initialize(run, script))
+	if (!m_python->Initialize(run, script))
 	{
-		m_nErrorCode = 4;
-		m_strLastError = "Python initialization failed: " + m_pPython->GetLastError();
-		m_pPython.reset();
+		m_error_code = 4;
+		m_last_error = "Python initialization failed: " + m_python->GetLastError();
+		m_python.reset();
 		return false;
 	}
 
@@ -81,29 +81,29 @@ bool CBootLoader::Initialize()
 	int nMySqlPoolSize = hIni.GetInt(ini::Config::System, cs_mysql, "pool_size");
 	if (strMySqlHost.empty() || (0 >= nMySqlPort) || strMySqlAccount.empty() || strMySqlPassword.empty() || strMySqlDatabase.empty() || (0 >= nMySqlPoolSize))
 	{
-		m_nErrorCode = 5;
-		m_strLastError = "HQMarket mysql param error";
+		m_error_code = 5;
+		m_last_error = "HQMarket mysql param error";
 		return false;
 	}
 
 	db::CConnectParam dbParam(strMySqlHost, static_cast<unsigned int>(nMySqlPort), strMySqlAccount, strMySqlPassword, strMySqlDatabase, "utf8mb4");
 	if (0 != CDBEngine::InstanceRef().Initialize(db::em_database::mysql, dbParam, nMySqlPoolSize))
 	{
-		m_nErrorCode = 6;
-		m_strLastError = "MySQL initialization failed";
+		m_error_code = 6;
+		m_last_error = "MySQL initialization failed";
 		return false;
 	}
 	db::_TyDBPtr db = CDBEngine::InstanceRef().GetDBPtr(db::em_database::mysql);
 	if ((nullptr == db) || (0 != db->ExecSqlFile(m_exec / "sql" / "table_create.sql")))
 	{
-		m_nErrorCode = 7;
-		m_strLastError = "Failed to initialize MySQL tables";
+		m_error_code = 7;
+		m_last_error = "Failed to initialize MySQL tables";
 		return false;
 	}
 	if (0 != db->ExecSqlFile(m_exec / "sql" / "table_init.sql"))
 	{
-		m_nErrorCode = 8;
-		m_strLastError = "Failed to execute sql/table_init.sql";
+		m_error_code = 8;
+		m_last_error = "Failed to execute sql/table_init.sql";
 		return false;
 	}
 
@@ -112,95 +112,95 @@ bool CBootLoader::Initialize()
 
 	if ((nTcpPort <= 0) || (nHttpPort <= 0))
 	{
-		m_nErrorCode = 9;
-		m_strLastError = "Tcp/Http port initialization failed";
+		m_error_code = 9;
+		m_last_error = "Tcp/Http port initialization failed";
 		return false;
 	}
-	m_pTcpServer = std::make_unique<net::CTcpServer>(nTcpPort);
-	m_pHttpServer = std::make_unique<net::CHttpServer>(nHttpPort);
+	m_tcp_server = std::make_unique<net::CTcpServer>(nTcpPort);
+	m_http_server = std::make_unique<net::CHttpServer>(nHttpPort);
 
-	m_pHQService = std::make_unique<CHQService>(m_pPython.get());
-	m_pHQCenter = std::make_unique<CHQCenter>(m_pHQService.get());
-	if (!m_pHQCenter->Initialize() || !m_pHQService->Initialize(m_exec))
+	m_hq_service = std::make_unique<CHQService>(m_python.get());
+	m_hq_center = std::make_unique<CHQCenter>(m_hq_service.get());
+	if (!m_hq_center->Initialize() || !m_hq_service->Initialize(m_exec))
 	{
-		m_nErrorCode = 10;
-		m_strLastError = "HQMarket service initialization failed";
+		m_error_code = 10;
+		m_last_error = "HQMarket service initialization failed";
 		return false;
 	}
-	m_pTcpServer->RegisterHandler(std::bind_front(&CHQCenter::OnClientNetEvent, m_pHQCenter.get()));
-	m_pHttpServer->RegisterHandler(net::HttpMethod::GET, "/health", std::bind_front(&CHQCenter::OnHealthRequest, m_pHQCenter.get()));
-	m_pHttpServer->RegisterHandler(net::HttpMethod::GET, "/metrics", std::bind_front(&CHQCenter::OnMetricsRequest, m_pHQCenter.get()));
-	m_pHttpServer->RegisterHandler(net::HttpMethod::GET, "/v1/instruments", std::bind_front(&CHQCenter::OnInstrumentsRequest, m_pHQCenter.get()));
-	m_pHttpServer->RegisterHandler(net::HttpMethod::GET, "/v1/quotes", std::bind_front(&CHQCenter::OnQuoteRequest, m_pHQCenter.get()));
-	m_pHttpServer->RegisterHandler(net::HttpMethod::GET, "/v1/bars", std::bind_front(&CHQCenter::OnBarsRequest, m_pHQCenter.get()));
-	m_bInitialized = true;
+	m_tcp_server->RegisterHandler(std::bind_front(&CHQCenter::OnClientNetEvent, m_hq_center.get()));
+	m_http_server->RegisterHandler(net::HttpMethod::GET, "/health", std::bind_front(&CHQCenter::OnHealthRequest, m_hq_center.get()));
+	m_http_server->RegisterHandler(net::HttpMethod::GET, "/metrics", std::bind_front(&CHQCenter::OnMetricsRequest, m_hq_center.get()));
+	m_http_server->RegisterHandler(net::HttpMethod::GET, "/v1/instruments", std::bind_front(&CHQCenter::OnInstrumentsRequest, m_hq_center.get()));
+	m_http_server->RegisterHandler(net::HttpMethod::GET, "/v1/quotes", std::bind_front(&CHQCenter::OnQuoteRequest, m_hq_center.get()));
+	m_http_server->RegisterHandler(net::HttpMethod::GET, "/v1/bars", std::bind_front(&CHQCenter::OnBarsRequest, m_hq_center.get()));
+	m_initialized = true;
 	return true;
 }
 
 bool CBootLoader::Run()
 {
-	if (!m_bInitialized || (nullptr == m_pTcpServer) || (nullptr == m_pHttpServer))
+	if (!m_initialized || (nullptr == m_tcp_server) || (nullptr == m_http_server))
 	{
-		m_nErrorCode = 11;
-		m_strLastError = "Boot loader is not initialized";
+		m_error_code = 11;
+		m_last_error = "Boot loader is not initialized";
 		return false;
 	}
-	if (0 != m_pTcpServer->Initialize())
+	if (0 != m_tcp_server->Initialize())
 	{
-		m_nErrorCode = 12;
-		m_strLastError = "TCP server initialization failed";
+		m_error_code = 12;
+		m_last_error = "TCP server initialization failed";
 		return false;
 	}
-	if (0 != m_pHttpServer->Initialize())
+	if (0 != m_http_server->Initialize())
 	{
-		m_nErrorCode = 13;
-		m_strLastError = "HTTP server initialization failed";
+		m_error_code = 13;
+		m_last_error = "HTTP server initialization failed";
 		return false;
 	}
 
 	std::jthread t([this]()
 	{
-		m_pTcpServer->Start(true);
+		m_tcp_server->Start(true);
 	});
-	m_pHttpServer->Start(true);
-	m_pTcpServer->ShutDown();
+	m_http_server->Start(true);
+	m_tcp_server->ShutDown();
 	return true;
 }
 
 void CBootLoader::Finalize()
 {
-	if (nullptr != m_pHttpServer)
+	if (nullptr != m_http_server)
 	{
-		m_pHttpServer->ShutDown();
+		m_http_server->ShutDown();
 	}
-	if (nullptr != m_pTcpServer)
+	if (nullptr != m_tcp_server)
 	{
-		m_pTcpServer->ShutDown();
-		m_pTcpServer->Drain();
+		m_tcp_server->ShutDown();
+		m_tcp_server->Drain();
 	}
-	if (nullptr != m_pHttpServer)
+	if (nullptr != m_http_server)
 	{
-		m_pHttpServer->ClearHandlers();
+		m_http_server->ClearHandlers();
 	}
-	if (nullptr != m_pHQService)
+	if (nullptr != m_hq_service)
 	{
-		m_pHQService->Stop();
+		m_hq_service->Stop();
 	}
-	if (nullptr != m_pHQCenter)
+	if (nullptr != m_hq_center)
 	{
-		m_pHQCenter->Stop();
+		m_hq_center->Stop();
 	}
-	m_pHQCenter.reset();
-	m_pHQService.reset();
-	m_pHttpServer.reset();
-	m_pTcpServer.reset();
+	m_hq_center.reset();
+	m_hq_service.reset();
+	m_http_server.reset();
+	m_tcp_server.reset();
 	CDBEngine::InstanceRef().Close();
-	if (nullptr != m_pPython)
+	if (nullptr != m_python)
 	{
-		m_pPython->Finalize();
-		m_pPython.reset();
+		m_python->Finalize();
+		m_python.reset();
 	}
-	m_bInitialized = false;
+	m_initialized = false;
 }
 
 const std::filesystem::path& CBootLoader::GetRoot() const
@@ -210,25 +210,25 @@ const std::filesystem::path& CBootLoader::GetRoot() const
 
 CPythonRuntime& CBootLoader::GetPythonRuntime()
 {
-	return *m_pPython;
+	return *m_python;
 }
 
 net::CTcpServer& CBootLoader::GetTcpServer()
 {
-	return *m_pTcpServer;
+	return *m_tcp_server;
 }
 
 net::CHttpServer& CBootLoader::GetHttpServer()
 {
-	return *m_pHttpServer;
+	return *m_http_server;
 }
 
 const std::string& CBootLoader::GetLastError() const
 {
-	return m_strLastError;
+	return m_last_error;
 }
 
 int CBootLoader::GetErrorCode() const
 {
-	return m_nErrorCode;
+	return m_error_code;
 }

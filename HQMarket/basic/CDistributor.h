@@ -28,7 +28,7 @@ public:
 	{
 		if constexpr (bAsyn)
 		{
-			std::lock_guard<std::mutex> taskLock(m_mtx_tasks);
+			std::lock_guard<std::mutex> taskLock(m_tasks_mutex);
 			if (m_stopping)
 			{
 				return;
@@ -72,7 +72,7 @@ public:
 		{
 			std::vector<std::future<int>> tasks;
 			{
-				std::lock_guard<std::mutex> lock(m_mtx_tasks);
+				std::lock_guard<std::mutex> lock(m_tasks_mutex);
 				m_stopping = true;
 				tasks.swap(m_tasks);
 			}
@@ -154,7 +154,7 @@ private:
 	std::shared_mutex m_smtx_handler;
 	std::vector<_TyHandler> m_handler;
 
-	std::mutex m_mtx_tasks;
+	std::mutex m_tasks_mutex;
 	std::vector<std::future<int>> m_tasks;
 	bool m_stopping{ false };
 };

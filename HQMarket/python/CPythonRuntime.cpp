@@ -18,16 +18,16 @@ CPythonRuntime::~CPythonRuntime()
 bool CPythonRuntime::Initialize(const std::filesystem::path& runtimeHome, const std::filesystem::path& scriptPath)
 {
 	std::lock_guard<std::mutex> lck(pythonRuntimeMutex);
-	if (m_bInitialized)
+	if (m_initialized)
 	{
 		return true;
 	}
 	if (bPythonRuntimeOwned)
 	{
-		m_strLastError = "Python runtime is already owned by another CPythonRuntime instance";
+		m_last_error = "Python runtime is already owned by another CPythonRuntime instance";
 		return false;
 	}
-	m_strLastError.clear();
+	m_last_error.clear();
 
 	PyStatus status;
 	PyPreConfig preConfig;
@@ -36,7 +36,7 @@ bool CPythonRuntime::Initialize(const std::filesystem::path& runtimeHome, const 
 	status = Py_PreInitialize(&preConfig);
 	if (0 != PyStatus_Exception(status))
 	{
-		m_strLastError = (nullptr != status.err_msg) ? status.err_msg : "Python pre-initialization failed";
+		m_last_error = (nullptr != status.err_msg) ? status.err_msg : "Python pre-initialization failed";
 		return false;
 	}
 
@@ -63,14 +63,14 @@ bool CPythonRuntime::Initialize(const std::filesystem::path& runtimeHome, const 
 	}
 	if (0 != PyStatus_Exception(status))
 	{
-		m_strLastError = (nullptr != status.err_msg) ? status.err_msg : "Python initialization failed";
+		m_last_error = (nullptr != status.err_msg) ? status.err_msg : "Python initialization failed";
 		PyConfig_Clear(&config);
 		return false;
 	}
 	PyConfig_Clear(&config);
 
-	m_pMainThreadState = PyEval_SaveThread();
-	m_bInitialized = true;
+	m_main_thread_state = PyEval_SaveThread();
+	m_initialized = true;
 	bPythonRuntimeOwned = true;
 	return true;
 }
@@ -78,29 +78,29 @@ bool CPythonRuntime::Initialize(const std::filesystem::path& runtimeHome, const 
 void CPythonRuntime::Finalize()
 {
 	std::lock_guard<std::mutex> lck(pythonRuntimeMutex);
-	if (!m_bInitialized)
+	if (!m_initialized)
 	{
 		return;
 	}
-	PyEval_RestoreThread(m_pMainThreadState);
+	PyEval_RestoreThread(m_main_thread_state);
 	int finalizeResult = Py_FinalizeEx();
-	m_pMainThreadState = nullptr;
-	m_bInitialized = false;
+	m_main_thread_state = nullptr;
+	m_initialized = false;
 	bPythonRuntimeOwned = false;
 	if (0 != finalizeResult)
 	{
-		m_strLastError = "Python finalization failed";
+		m_last_error = "Python finalization failed";
 	}
 }
 
 bool CPythonRuntime::IsInitialized() const
 {
 	std::lock_guard<std::mutex> lck(pythonRuntimeMutex);
-	return m_bInitialized;
+	return m_initialized;
 }
 
 std::string CPythonRuntime::GetLastError() const
 {
 	std::lock_guard<std::mutex> lck(pythonRuntimeMutex);
-	return m_strLastError;
+	return m_last_error;
 }

@@ -24,8 +24,8 @@ namespace net
 			void OnConnected(bufferevent* pEvent) override;
 
 		private:
-			std::string m_strAddr;
-			int m_nPort{-1};
+			std::string m_addr;
+			int m_port{ -1 };
 
 			std::vector<char> m_buffer_recv;
 			std::vector<char> m_buffer_send;

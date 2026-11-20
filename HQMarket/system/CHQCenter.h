@@ -56,11 +56,11 @@ private:
 
 	using _TyHandler = std::function<bool(net::_TyConnectionId, const CRequest&)>;
 	std::unordered_map<_TyRequest, _TyHandler> m_handler;
-	mutable std::mutex m_mtx_sessions;
+	mutable std::mutex m_sessions_mutex;
 	std::unordered_set<net::_TyConnectionId> m_auth_clients;
 	std::unordered_map<std::string, std::chrono::steady_clock::time_point> m_client_tokens;
-	CHQService* m_pHQService{ nullptr }; // Borrowed from BootLoader; callback producers stop first.
-	bool m_bInitialized{ false };
+	CHQService* m_hq_service{ nullptr }; // Borrowed from BootLoader; callback producers stop first.
+	bool m_initialized{ false };
 };
 
 #endif

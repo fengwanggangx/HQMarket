@@ -105,7 +105,7 @@ namespace provider
 		}
 		else
 		{
-			m_pProvider = instance;
+			m_provider = instance;
 		}
 		if (!bOk)
 		{
@@ -113,19 +113,19 @@ namespace provider
 		}
 		PyGILState_Release(gil);
 		{
-			std::lock_guard<std::mutex> lck(m_mtx_state);
+			std::lock_guard<std::mutex> lck(m_state_mutex);
 			m_status = { bOk, bOk ? "connected" : "initialization failed" };
 		}
 		if (bOk)
 		{
-			m_bRunning = true;
+			m_running = true;
 			m_thread = std::thread(&CMooTdxProvider::Run, this);
 		}
 		return bOk;
 	}
 	bool CMooTdxProvider::Subscribe(const std::vector<market::CChannelInfo>& values)
 	{
-		std::lock_guard<std::mutex> lck(m_mtx_state);
+		std::lock_guard<std::mutex> lck(m_state_mutex);
 		for (const auto& value : values)
 		{
 			if ((market::Channel::quote == value.m_channel) || (market::Channel::depth == value.m_channel))
@@ -137,7 +137,7 @@ namespace provider
 	}
 	bool CMooTdxProvider::Unsubscribe(const std::vector<market::CChannelInfo>& values)
 	{
-		std::lock_guard<std::mutex> lck(m_mtx_state);
+		std::lock_guard<std::mutex> lck(m_state_mutex);
 		for (const auto& value : values)
 		{
 			m_subscriptions.erase(MakeKey(value));
@@ -151,28 +151,28 @@ namespace provider
 	}
 	market::CProviderStatus CMooTdxProvider::GetStatus() const
 	{
-		std::lock_guard<std::mutex> lck(m_mtx_state);
+		std::lock_guard<std::mutex> lck(m_state_mutex);
 		return m_status;
 	}
 	void CMooTdxProvider::SetQuoteHandler(_TyQuoteHandler handler)
 	{
-		std::lock_guard<std::mutex> lck(m_mtx_state);
-		m_quoteHandler = std::move(handler);
+		std::lock_guard<std::mutex> lck(m_state_mutex);
+		m_quote_handler = std::move(handler);
 	}
 	void CMooTdxProvider::SetDepthHandler(_TyDepthHandler handler)
 	{
-		std::lock_guard<std::mutex> lck(m_mtx_state);
-		m_depthHandler = std::move(handler);
+		std::lock_guard<std::mutex> lck(m_state_mutex);
+		m_depth_handler = std::move(handler);
 	}
 	void CMooTdxProvider::Run()
 	{
 		int nFailures = 0;
 		int waits[] = { 1, 2, 5, 10, 30 };
-		while (m_bRunning)
+		while (m_running)
 		{
 			std::vector<market::CSecurity> securities;
 			{
-				std::lock_guard<std::mutex> lck(m_mtx_state);
+				std::lock_guard<std::mutex> lck(m_state_mutex);
 				std::unordered_map<std::string, market::CSecurity> unique;
 				for (const auto& [key, value] : m_subscriptions)
 				{
@@ -226,12 +226,12 @@ namespace provider
 		PyObject* list = PyList_New(static_cast<Py_ssize_t>(securities.size()));
 		for (std::size_t i = 0; i < securities.size(); ++i)
 		{
-			securityByKey.emplace(securities[i].m_strCode + ":" + ExchangeName(securities[i].m_market), securities[i]);
-			PyObject* item = Py_BuildValue("{s:s,s:s}", "symbol", securities[i].m_strCode.c_str(), "exchange",
-										   ExchangeName(securities[i].m_market));
+			securityByKey.emplace(securities[i].m_code + ":" + ExchangeName(securities[i].m_market), securities[i]);
+			PyObject* item = Py_BuildValue("{s:s,s:s}", "symbol", securities[i].m_code.c_str(), "exchange",
+				ExchangeName(securities[i].m_market));
 			PyList_SET_ITEM(list, static_cast<Py_ssize_t>(i), item);
 		}
-		PyObject* result = PyObject_CallMethod(static_cast<PyObject*>(m_pProvider), "quotes", "O", list);
+		PyObject* result = PyObject_CallMethod(static_cast<PyObject*>(m_provider), "quotes", "O", list);
 		Py_DECREF(list);
 		bool bOk = (nullptr != result) && (0 != PyList_Check(result));
 		if (bOk)
@@ -253,21 +253,21 @@ namespace provider
 				std::int64_t now = NowMs();
 				market::CQuote quote;
 				quote.m_security = securityIter->second;
-				quote.m_nReceiveTime = now;
-				quote.m_nExchangeTime = now;
-				quote.m_nLastPrice = Fixed(row, "price");
-				quote.m_nOpenPrice = Fixed(row, "open");
-				quote.m_nHighPrice = Fixed(row, "high");
-				quote.m_nLowPrice = Fixed(row, "low");
-				quote.m_nPreClose = Fixed(row, "last_close");
-				quote.m_nVolume = Integer(row, "vol");
-				quote.m_nTurnover = Fixed(row, "amount", 2);
-				quote.m_strSource = String(row, "source");
+				quote.m_receive_time = now;
+				quote.m_exchange_time = now;
+				quote.m_last_price = Fixed(row, "price");
+				quote.m_open_price = Fixed(row, "open");
+				quote.m_high_price = Fixed(row, "high");
+				quote.m_low_price = Fixed(row, "low");
+				quote.m_pre_close = Fixed(row, "last_close");
+				quote.m_volume = Integer(row, "vol");
+				quote.m_turnover = Fixed(row, "amount", 2);
+				quote.m_source = String(row, "source");
 				market::CDepth depth;
 				depth.m_security = quote.m_security;
-				depth.m_nReceiveTime = now;
-				depth.m_nExchangeTime = now;
-				depth.m_strSource = quote.m_strSource;
+				depth.m_receive_time = now;
+				depth.m_exchange_time = now;
+				depth.m_source = quote.m_source;
 				for (int level = 1; level <= 5; ++level)
 				{
 					std::string suffix = std::to_string(level);
@@ -279,9 +279,9 @@ namespace provider
 				_TyQuoteHandler quoteHandler;
 				_TyDepthHandler depthHandler;
 				{
-					std::lock_guard<std::mutex> lck(m_mtx_state);
-					quoteHandler = m_quoteHandler;
-					depthHandler = m_depthHandler;
+					std::lock_guard<std::mutex> lck(m_state_mutex);
+					quoteHandler = m_quote_handler;
+					depthHandler = m_depth_handler;
 				}
 				if (nullptr != quoteHandler)
 				{
@@ -307,14 +307,14 @@ namespace provider
 		Py_XDECREF(result);
 		PyGILState_Release(gil);
 		{
-			std::lock_guard<std::mutex> lck(m_mtx_state);
+			std::lock_guard<std::mutex> lck(m_state_mutex);
 			m_status = { bOk, bOk ? "connected" : "quote request failed" };
 		}
 		return bOk;
 	}
 	void CMooTdxProvider::Stop()
 	{
-		if (!m_bRunning.exchange(false))
+		if (!m_running.exchange(false))
 		{
 			return;
 		}
@@ -323,8 +323,8 @@ namespace provider
 			m_thread.join();
 		}
 		PyGILState_STATE gil = PyGILState_Ensure();
-		Py_XDECREF(static_cast<PyObject*>(m_pProvider));
-		m_pProvider = nullptr;
+		Py_XDECREF(static_cast<PyObject*>(m_provider));
+		m_provider = nullptr;
 		PyGILState_Release(gil);
 	}
 } // namespace provider

@@ -38,16 +38,16 @@ private:
 	std::filesystem::path m_exec;
 	std::filesystem::path m_path_py_runtime;
 	std::filesystem::path m_path_py_scripts;
-	std::string m_strLastError;
-	int m_nErrorCode{ 0 };
-	bool m_bInitialized{ false };
+	std::string m_last_error;
+	int m_error_code{ 0 };
+	bool m_initialized{ false };
 
 private:
-	std::unique_ptr<CHQService> m_pHQService;
-	std::unique_ptr<CHQCenter> m_pHQCenter;
-	std::unique_ptr<CPythonRuntime> m_pPython;
-	std::unique_ptr<net::CTcpServer> m_pTcpServer;
-	std::unique_ptr<net::CHttpServer> m_pHttpServer;
+	std::unique_ptr<CHQService> m_hq_service;
+	std::unique_ptr<CHQCenter> m_hq_center;
+	std::unique_ptr<CPythonRuntime> m_python;
+	std::unique_ptr<net::CTcpServer> m_tcp_server;
+	std::unique_ptr<net::CHttpServer> m_http_server;
 };
 
 #endif

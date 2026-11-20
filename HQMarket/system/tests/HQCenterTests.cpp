@@ -35,7 +35,7 @@ class CHQRoutingTests
 	{
 		net::CHttpServer server(0);
 		server.RegisterHandler(net::HttpMethod::GET, "/offline", std::move(handler));
-		return std::move(hqtest::State().m_httpResponse);
+		return std::move(hqtest::State().m_http_response);
 	}
 
 public:
@@ -51,7 +51,7 @@ public:
 		market::CChannelInfo quoteSubscription{ { "600519", market::Exchange::sse }, market::Channel::quote };
 
 		center.OnRequest(Request(1, _TyRequest::MARKET_SUBSCRIBE, 10));
-		Check(1 == state.m_sent.size() && state.m_sent.back().second.GetErrorInfo().has_value() && 0 == state.m_subscribeCalls, "unauthenticated requests never reach subscription service");
+		Check(1 == state.m_sent.size() && state.m_sent.back().second.GetErrorInfo().has_value() && 0 == state.m_subscribe_calls, "unauthenticated requests never reach subscription service");
 		center.m_client_tokens.emplace("valid", std::chrono::steady_clock::now() + std::chrono::hours(1));
 		for (net::_TyConnectionId id : { 1, 2 })
 		{
@@ -68,12 +68,12 @@ public:
 		center.OnRequest(Request(1, _TyRequest::MARKET_SUBSCRIBE, 30));
 		center.OnRequest(Request(2, _TyRequest::MARKET_SUBSCRIBE, 31));
 		Check(2 == state.m_sent.size() && state.m_sent.front().second.GetData().has_subscription_ack() && 30 == state.m_sent.front().second.GetId(), "subscription ACKs preserve original ids");
-		Check(1 == state.m_subscribeCalls && 2 == service.m_subscriptions.GetSubscriptionCount(quoteSubscription), "clients share one upstream subscription");
+		Check(1 == state.m_subscribe_calls && 2 == service.m_subscriptions.GetSubscriptionCount(quoteSubscription), "clients share one upstream subscription");
 		state.m_sent.clear();
 		market::CQuote quote;
 		quote.m_security = quoteSubscription.m_security;
-		quote.m_nLastPrice = 123450;
-		state.m_quoteHandler(std::move(quote));
+		quote.m_last_price = 123450;
+		state.m_quote_handler(std::move(quote));
 		Check(2 == state.m_sent.size() && state.m_sent.front().first != state.m_sent.back().first && 0 == state.m_sent.front().second.GetId() && state.m_sent.front().second.GetData().has_quote(), "source quote travels through broker, center and service to both subscribers");
 		Check("1" == state.m_sent.front().second.GetExtraData("sequence"), "quote sequence preserved");
 		state.m_sent.clear();
@@ -81,16 +81,16 @@ public:
 		Check(1 == state.m_sent.size() && 40 == state.m_sent.back().second.GetId() && state.m_sent.back().second.GetData().query_response().found(), "query response uses cache and original request id");
 		state.m_sent.clear();
 		center.OnRequest(Request(1, _TyRequest::MARKET_SUBSCRIBE, 41));
-		Check(2 == state.m_sent.size() && state.m_sent.front().second.GetData().has_subscription_ack() && state.m_sent.back().second.GetData().has_quote() && 1 == state.m_subscribeCalls, "cached snapshot follows ACK without duplicate upstream subscribe");
+		Check(2 == state.m_sent.size() && state.m_sent.front().second.GetData().has_subscription_ack() && state.m_sent.back().second.GetData().has_quote() && 1 == state.m_subscribe_calls, "cached snapshot follows ACK without duplicate upstream subscribe");
 		center.OnRequest(Request(1, _TyRequest::MARKET_UNSUBSCRIBE, 42));
-		Check(0 == state.m_unsubscribeCalls, "first client unsubscribe retains other client demand");
+		Check(0 == state.m_unsubscribe_calls, "first client unsubscribe retains other client demand");
 		state.m_sent.clear();
 		quote.m_security = quoteSubscription.m_security;
-		state.m_quoteHandler(std::move(quote));
+		state.m_quote_handler(std::move(quote));
 		Check(1 == state.m_sent.size() && 2 == state.m_sent.front().first, "unsubscribed client receives no quote");
 		net::CNetEvent disconnected(net::em_event::disconnected, 2);
 		center.OnClientNetEvent(disconnected);
-		Check(1 == state.m_unsubscribeCalls && state.m_subscriptions.empty() && 0 == service.m_subscriptions.GetSubscriptionCount(quoteSubscription), "last client disconnect releases source subscription");
+		Check(1 == state.m_unsubscribe_calls && state.m_subscriptions.empty() && 0 == service.m_subscriptions.GetSubscriptionCount(quoteSubscription), "last client disconnect releases source subscription");
 
 		CRequest depthRequest = Request(1, _TyRequest::MARKET_SUBSCRIBE, 50);
 		depthRequest.SetExtraData("channel", "depth");
@@ -99,13 +99,13 @@ public:
 		market::CDepth depth;
 		depth.m_security = quoteSubscription.m_security;
 		depth.m_bids.push_back({ 100, 10, 4 });
-		state.m_depthHandler(std::move(depth));
+		state.m_depth_handler(std::move(depth));
 		Check(1 == state.m_sent.size() && state.m_sent.front().second.GetData().has_depth() && "1" == state.m_sent.front().second.GetExtraData("sequence"), "depth callback is routed through center with sequence");
-		state.m_failedConnection = 1;
+		state.m_failed_connection = 1;
 		depth.m_security = quoteSubscription.m_security;
-		state.m_depthHandler(std::move(depth));
+		state.m_depth_handler(std::move(depth));
 		Check(!center.IsAuthenticated(1) && state.m_closed.contains(1) && state.m_subscriptions.empty(), "failed network send clears authentication and subscriptions");
-		state.m_failedConnection = -1;
+		state.m_failed_connection = -1;
 
 		center.m_client_tokens.emplace("expired", std::chrono::steady_clock::now() - std::chrono::seconds(1));
 		CRequest auth = Request(3, _TyRequest::AUTH_LOGIN, 60);
@@ -113,22 +113,22 @@ public:
 		center.OnRequest(auth);
 		Check(state.m_sent.back().second.GetErrorInfo().has_value() && !center.IsAuthenticated(3), "expired token rejected");
 		std::unique_ptr<net::CHttpResponseData> response = Http(std::bind_front(&CHQCenter::OnQuoteRequest, &center));
-		Check(400 == response->m_nStatus, "HTTP instrument validation preserved");
+		Check(400 == response->m_status, "HTTP instrument validation preserved");
 		state.m_query.emplace("instrument", "600519.SSE");
 		response = Http(std::bind_front(&CHQCenter::OnQuoteRequest, &center));
-		Check(200 == response->m_nStatus && std::string::npos != response->m_strBody.find("600519.SSE"), "HTTP quote routes to service cache");
+		Check(200 == response->m_status && std::string::npos != response->m_body.find("600519.SSE"), "HTTP quote routes to service cache");
 		response = Http(std::bind_front(&CHQCenter::OnBarsRequest, &center));
-		Check(200 == response->m_nStatus && std::string::npos != response->m_strBody.find("123450"), "HTTP bars route through history and SQLite recorder");
+		Check(200 == response->m_status && std::string::npos != response->m_body.find("123450"), "HTTP bars route through history and SQLite recorder");
 		response = Http(std::bind_front(&CHQCenter::OnInstrumentsRequest, &center));
-		Check(std::string::npos != response->m_strBody.find("Sample"), "HTTP instrument list preserved");
+		Check(std::string::npos != response->m_body.find("Sample"), "HTTP instrument list preserved");
 		response = Http(std::bind_front(&CHQCenter::OnHealthRequest, &center));
-		Check(std::string::npos != response->m_strBody.find("\"status\":\"ok\""), "HTTP health reflects provider state");
+		Check(std::string::npos != response->m_body.find("\"status\":\"ok\""), "HTTP health reflects provider state");
 		response = Http(std::bind_front(&CHQCenter::OnMetricsRequest, &center));
-		Check(std::string::npos != response->m_strBody.find("hqmarket_clients 123"), "network metric supplied by center");
+		Check(std::string::npos != response->m_body.find("hqmarket_clients 123"), "network metric supplied by center");
 
 		service.Stop();
 		center.Stop();
-		Check(nullptr == state.m_quoteHandler && nullptr == state.m_depthHandler && center.m_auth_clients.empty(), "stop drains source routes before detaching center");
+		Check(nullptr == state.m_quote_handler && nullptr == state.m_depth_handler && center.m_auth_clients.empty(), "stop drains source routes before detaching center");
 		CDBEngine::InstanceRef().Close();
 	}
 };

@@ -12,7 +12,7 @@
 
 namespace net
 {
-	CNetClient::CNetClient(const std::string& strAddr, int nPort) : m_strAddr(strAddr), m_nPort(nPort)
+	CNetClient::CNetClient(const std::string& strAddr, int nPort) : m_addr(strAddr), m_port(nPort)
 	{
 		m_buffer_recv.reserve(4096);
 		m_buffer_send.reserve(4096);
@@ -109,7 +109,7 @@ namespace net
 
 		// 连接服务器
 		struct sockaddr_in svr;
-		bool bRet = net::FmtAddress(svr, m_nPort, m_strAddr);
+		bool bRet = net::FmtAddress(svr, m_port, m_addr);
 		if (!bRet)
 		{
 			bufferevent_free(pEvent);

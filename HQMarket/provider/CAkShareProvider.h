@@ -24,14 +24,14 @@ namespace provider
 		market::CSectorConstituents QuerySectorConstituents(market::SectorType type, const std::string& strSectorCode);
 
 	  private:
-		mutable std::mutex m_mtx_state;
-		market::CProviderStatus m_status;
-		void* m_pProvider{ nullptr };
-		std::vector<market::CInstrument> m_instruments;
-		std::vector<market::CSector> m_sectors;
-		std::unordered_map<std::string, market::CSectorConstituents> m_sectorConstituents;
-		std::chrono::steady_clock::time_point m_sectorExpiry;
-		std::unordered_map<std::string, std::chrono::steady_clock::time_point> m_sectorConstituentExpiry;
+		  mutable std::mutex m_state_mutex;
+		  market::CProviderStatus m_status;
+		  void* m_provider{ nullptr };
+		  std::vector<market::CInstrument> m_instruments;
+		  std::vector<market::CSector> m_sectors;
+		  std::unordered_map<std::string, market::CSectorConstituents> m_sector_constituents;
+		  std::chrono::steady_clock::time_point m_sector_expiry;
+		  std::unordered_map<std::string, std::chrono::steady_clock::time_point> m_sector_constituent_expiry;
 	};
 } // namespace provider
 #endif

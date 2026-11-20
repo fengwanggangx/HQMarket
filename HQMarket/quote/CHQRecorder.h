@@ -21,7 +21,7 @@ private:
 	bool Exec(const std::string& strSQL);
 
 private:
-	mutable std::shared_mutex m_mtx_db;
+	mutable std::shared_mutex m_db_mutex;
 	db::_TyDBPtr m_db;
-	bool m_bOpen{ false };
+	bool m_open{ false };
 };

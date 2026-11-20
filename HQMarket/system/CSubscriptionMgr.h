@@ -27,7 +27,7 @@ private:
 	using _TyClientSubscriptions = std::unordered_map<std::string, market::CChannelInfo>;
 	using _TySubscriberIds = std::unordered_set<net::_TyConnectionId>;
 
-	mutable std::shared_mutex m_mtx_info;
+	mutable std::shared_mutex m_info_mutex;
 	std::unordered_map<std::string, _TySubscriberIds> m_info_ids;
 	std::unordered_map<net::_TyConnectionId, _TyClientSubscriptions> m_id_infos;
 };

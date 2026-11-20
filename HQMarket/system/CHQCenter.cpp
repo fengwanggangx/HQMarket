@@ -67,14 +67,14 @@ namespace
 	std::unique_ptr<net::CHttpResponseData> Response(int nStatus, std::string strBody, const std::string& strContentType)
 	{
 		std::unique_ptr<net::CHttpResponseData> response = std::make_unique<net::CHttpResponseData>();
-		response->m_nStatus = nStatus;
+		response->m_status = nStatus;
 		response->m_headers["Content-Type"] = strContentType;
-		response->m_strBody = std::move(strBody);
+		response->m_body = std::move(strBody);
 		return response;
 	}
 } // namespace
 
-CHQCenter::CHQCenter(CHQService* pHQService) : m_pHQService(pHQService)
+CHQCenter::CHQCenter(CHQService* pHQService) : m_hq_service(pHQService)
 {
 	m_handler = {
 		{ _TyRequest::AUTH_LOGIN, std::bind_front(&CHQCenter::HandleAuth, this) },
@@ -96,34 +96,34 @@ CHQCenter::~CHQCenter()
 
 bool CHQCenter::Initialize()
 {
-	if (m_bInitialized)
+	if (m_initialized)
 	{
 		return true;
 	}
-	if (nullptr == m_pHQService)
+	if (nullptr == m_hq_service)
 	{
 		return false;
 	}
-	m_pHQService->SetReplyHandler(std::bind_front(&CHQCenter::SendRequest, this));
-	m_pHQService->SetQuoteHandler(std::bind_front(&CHQCenter::OnQuote, this));
-	m_pHQService->SetDepthHandler(std::bind_front(&CHQCenter::OnDepth, this));
-	m_bInitialized = true;
+	m_hq_service->SetReplyHandler(std::bind_front(&CHQCenter::SendRequest, this));
+	m_hq_service->SetQuoteHandler(std::bind_front(&CHQCenter::OnQuote, this));
+	m_hq_service->SetDepthHandler(std::bind_front(&CHQCenter::OnDepth, this));
+	m_initialized = true;
 	return true;
 }
 
 void CHQCenter::Stop()
 {
 	// BootLoader drains network requests and provider callbacks before detaching the center.
-	if (nullptr != m_pHQService && m_bInitialized)
+	if (nullptr != m_hq_service && m_initialized)
 	{
-		m_pHQService->SetReplyHandler({});
-		m_pHQService->SetQuoteHandler({});
-		m_pHQService->SetDepthHandler({});
+		m_hq_service->SetReplyHandler({});
+		m_hq_service->SetQuoteHandler({});
+		m_hq_service->SetDepthHandler({});
 	}
-	std::lock_guard<std::mutex> lock(m_mtx_sessions);
+	std::lock_guard<std::mutex> lock(m_sessions_mutex);
 	m_auth_clients.clear();
 	m_client_tokens.clear();
-	m_bInitialized = false;
+	m_initialized = false;
 }
 
 int CHQCenter::OnClientNetEvent(const net::CNetEvent& ev)
@@ -187,7 +187,7 @@ bool CHQCenter::HandleReAuth(net::_TyConnectionId id, const CRequest& req)
 	std::string strToken = req.GetExtraData("token");
 	bool bAccepted = false;
 	{
-		std::lock_guard<std::mutex> lck(m_mtx_sessions);
+		std::lock_guard<std::mutex> lck(m_sessions_mutex);
 		auto mIter = m_client_tokens.find(strToken);
 		bAccepted = (m_client_tokens.end() != mIter) && (std::chrono::steady_clock::now() < mIter->second);
 		if ((m_client_tokens.end() != mIter) && !bAccepted)
@@ -242,7 +242,7 @@ bool CHQCenter::Login(net::_TyConnectionId id, const CRequest& req, std::string&
 	strToken = utility::MakeSaltHex();
 	response.SetExtraData("token", strToken);
 	{
-		std::lock_guard<std::mutex> lck(m_mtx_sessions);
+		std::lock_guard<std::mutex> lck(m_sessions_mutex);
 		m_auth_clients.emplace(id);
 		m_client_tokens.insert_or_assign(strToken, std::chrono::steady_clock::now() + TokenLifetime);
 	}
@@ -287,24 +287,24 @@ bool CHQCenter::HandleHeartbeat(net::_TyConnectionId id, const CRequest& req)
 
 bool CHQCenter::IsAuthenticated(net::_TyConnectionId id) const
 {
-	std::lock_guard<std::mutex> lck(m_mtx_sessions);
+	std::lock_guard<std::mutex> lck(m_sessions_mutex);
 	const auto mIter = m_auth_clients.find(id);
 	return (m_auth_clients.end() != mIter);
 }
 
 bool CHQCenter::HandleMarketRequest(net::_TyConnectionId, const CRequest& req)
 {
-	return m_pHQService->OnRequest(req);
+	return m_hq_service->OnRequest(req);
 }
 
 void CHQCenter::HandleClientDisconnected(net::_TyConnectionId id)
 {
 	net::CNetPool::InstancePtr()->CloseAConnection(id);
 	{
-		std::lock_guard<std::mutex> lock(m_mtx_sessions);
+		std::lock_guard<std::mutex> lock(m_sessions_mutex);
 		m_auth_clients.erase(id);
 	}
-	m_pHQService->HandleClientDisconnected(id);
+	m_hq_service->HandleClientDisconnected(id);
 }
 
 bool CHQCenter::SendRequest(net::_TyConnectionId id, const CRequest& req)
@@ -323,33 +323,33 @@ bool CHQCenter::SendRequest(net::_TyConnectionId id, const CRequest& req)
 
 void CHQCenter::OnDepth(market::CDepth&& depth)
 {
-	m_pHQService->OnDepth(std::move(depth));
+	m_hq_service->OnDepth(std::move(depth));
 }
 
 void CHQCenter::OnQuote(const market::CQuote& quote, std::uint64_t nSequence)
 {
-	m_pHQService->OnQuote(quote, nSequence);
+	m_hq_service->OnQuote(quote, nSequence);
 }
 
 std::unique_ptr<net::CHttpResponseData> CHQCenter::OnHealthRequest(const net::CHttpRequest&)
 {
-	return Response(200, m_pHQService->HealthJson(), "application/json; charset=utf-8");
+	return Response(200, m_hq_service->HealthJson(), "application/json; charset=utf-8");
 }
 
 std::unique_ptr<net::CHttpResponseData> CHQCenter::OnMetricsRequest(const net::CHttpRequest&)
 {
-	return Response(200, m_pHQService->MetricsText(net::CNetPool::InstancePtr()->Count()), "text/plain; charset=utf-8");
+	return Response(200, m_hq_service->MetricsText(net::CNetPool::InstancePtr()->Count()), "text/plain; charset=utf-8");
 }
 
 std::unique_ptr<net::CHttpResponseData> CHQCenter::OnInstrumentsRequest(const net::CHttpRequest&)
 {
-	return Response(200, m_pHQService->InstrumentsJson(), "application/json; charset=utf-8");
+	return Response(200, m_hq_service->InstrumentsJson(), "application/json; charset=utf-8");
 }
 
 std::unique_ptr<net::CHttpResponseData> CHQCenter::OnQuoteRequest(const net::CHttpRequest& req)
 {
 	std::string instrument = req.GetQuery("instrument");
-	return Response(instrument.empty() ? 400 : 200, instrument.empty() ? "{\"error\":\"instrument is required\"}" : m_pHQService->QuoteJson(instrument), "application/json; charset=utf-8");
+	return Response(instrument.empty() ? 400 : 200, instrument.empty() ? "{\"error\":\"instrument is required\"}" : m_hq_service->QuoteJson(instrument), "application/json; charset=utf-8");
 }
 
 std::unique_ptr<net::CHttpResponseData> CHQCenter::OnBarsRequest(const net::CHttpRequest& req)
@@ -359,5 +359,5 @@ std::unique_ptr<net::CHttpResponseData> CHQCenter::OnBarsRequest(const net::CHtt
 	{
 		return Response(400, "{\"error\":\"instrument is required\"}", "application/json; charset=utf-8");
 	}
-	return Response(200, m_pHQService->BarsJson(instrument, market::Channel::bar_1d, 0, (std::numeric_limits<std::int64_t>::max)()), "application/json; charset=utf-8");
+	return Response(200, m_hq_service->BarsJson(instrument, market::Channel::bar_1d, 0, (std::numeric_limits<std::int64_t>::max)()), "application/json; charset=utf-8");
 }

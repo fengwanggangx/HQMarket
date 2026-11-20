@@ -36,7 +36,7 @@ namespace
 		{
 			return result;
 		}
-		result.m_strCode = value.substr(0, dot);
+		result.m_code = value.substr(0, dot);
 		std::string exchange = value.substr(dot + 1);
 		if ("SSE" == exchange)
 		{
@@ -99,70 +99,70 @@ namespace
 
 	void FillQuote(const market::CQuote& quote, wire::QuoteData* value)
 	{
-		value->mutable_security()->set_symbol(quote.m_security.m_strCode);
+		value->mutable_security()->set_symbol(quote.m_security.m_code);
 		value->mutable_security()->set_exchange(ToWire(quote.m_security.m_market));
-		value->set_exchange_time_ms(quote.m_nExchangeTime);
-		value->set_receive_time_ms(quote.m_nReceiveTime);
-		value->set_last_price(quote.m_nLastPrice);
-		value->set_open_price(quote.m_nOpenPrice);
-		value->set_high_price(quote.m_nHighPrice);
-		value->set_low_price(quote.m_nLowPrice);
-		value->set_pre_close(quote.m_nPreClose);
-		value->set_volume(quote.m_nVolume);
-		value->set_turnover(quote.m_nTurnover);
-		value->set_price_scale(quote.m_nPriceScale);
-		value->set_source(quote.m_strSource);
-		value->set_stale(quote.m_bStale);
+		value->set_exchange_time_ms(quote.m_exchange_time);
+		value->set_receive_time_ms(quote.m_receive_time);
+		value->set_last_price(quote.m_last_price);
+		value->set_open_price(quote.m_open_price);
+		value->set_high_price(quote.m_high_price);
+		value->set_low_price(quote.m_low_price);
+		value->set_pre_close(quote.m_pre_close);
+		value->set_volume(quote.m_volume);
+		value->set_turnover(quote.m_turnover);
+		value->set_price_scale(quote.m_price_scale);
+		value->set_source(quote.m_source);
+		value->set_stale(quote.m_stale);
 	}
 
 	void FillBar(const market::CBar& bar, wire::BarData* value)
 	{
-		value->mutable_security()->set_symbol(bar.m_security.m_strCode);
+		value->mutable_security()->set_symbol(bar.m_security.m_code);
 		value->mutable_security()->set_exchange(ToWire(bar.m_security.m_market));
 		value->set_channel(static_cast<wire::Channel>(static_cast<int>(bar.m_channel)));
-		value->set_begin_time_ms(bar.m_nBeginTime);
-		value->set_end_time_ms(bar.m_nEndTime);
-		value->set_completed(bar.m_bCompleted);
-		value->set_data_version(bar.m_dataVersion);
-		value->set_basis_version(bar.m_strBasisVersion);
-		value->set_open_price(bar.m_nOpenPrice);
-		value->set_high_price(bar.m_nHighPrice);
-		value->set_low_price(bar.m_nLowPrice);
-		value->set_close_price(bar.m_nClosePrice);
-		value->set_volume(bar.m_nVolume);
-		value->set_turnover(bar.m_nTurnover);
-		value->set_price_scale(bar.m_nPriceScale);
-		value->set_adjustment(bar.m_strAdjustment);
-		value->set_source(bar.m_strSource);
+		value->set_begin_time_ms(bar.m_begin_time);
+		value->set_end_time_ms(bar.m_end_time);
+		value->set_completed(bar.m_completed);
+		value->set_data_version(bar.m_data_version);
+		value->set_basis_version(bar.m_basis_version);
+		value->set_open_price(bar.m_open_price);
+		value->set_high_price(bar.m_high_price);
+		value->set_low_price(bar.m_low_price);
+		value->set_close_price(bar.m_close_price);
+		value->set_volume(bar.m_volume);
+		value->set_turnover(bar.m_turnover);
+		value->set_price_scale(bar.m_price_scale);
+		value->set_adjustment(bar.m_adjustment);
+		value->set_source(bar.m_source);
 	}
 
 	void FillSector(const market::CSector& sector, wire::SectorInfo* value)
 	{
-		value->set_code(sector.m_strCode);
-		value->set_name(sector.m_strName);
-		value->set_change_percent(sector.m_nChangePercent);
-		value->set_percent_scale(sector.m_nPercentScale);
-		value->set_rising_count(sector.m_nRisingCount);
-		value->set_falling_count(sector.m_nFallingCount);
-		value->set_flat_count(sector.m_nFlatCount);
-		value->set_member_count(sector.m_nMemberCount);
-		value->mutable_leading_security()->set_symbol(sector.m_leadingSecurity.m_strCode);
-		value->mutable_leading_security()->set_exchange(ToWire(sector.m_leadingSecurity.m_market));
-		value->set_leading_name(sector.m_strLeadingName);
-		value->set_snapshot_time_ms(sector.m_nSnapshotTime);
+		value->set_code(sector.m_code);
+		value->set_name(sector.m_name);
+		value->set_change_percent(sector.m_change_percent);
+		value->set_percent_scale(sector.m_percent_scale);
+		value->set_rising_count(sector.m_rising_count);
+		value->set_falling_count(sector.m_falling_count);
+		value->set_flat_count(sector.m_flat_count);
+		value->set_member_count(sector.m_member_count);
+		value->mutable_leading_security()->set_symbol(sector.m_leading_security.m_code);
+		value->mutable_leading_security()->set_exchange(ToWire(sector.m_leading_security.m_market));
+		value->set_leading_name(sector.m_leading_name);
+		value->set_snapshot_time_ms(sector.m_snapshot_time);
 	}
 
 	void FillSecurityInfo(const market::CInstrument& instrument, wire::SecurityInfo* value)
 	{
-		value->mutable_security()->set_symbol(instrument.m_security.m_strCode);
+		value->mutable_security()->set_symbol(instrument.m_security.m_code);
 		value->mutable_security()->set_exchange(ToWire(instrument.m_security.m_market));
-		value->set_name(instrument.m_strName);
-		value->set_status(instrument.m_strStatus);
-		for (const std::string& strAlias : instrument.m_pinyinFullAliases)
+		value->set_name(instrument.m_name);
+		value->set_status(instrument.m_status);
+		for (const std::string& strAlias : instrument.m_pinyin_full_aliases)
 		{
 			value->add_pinyin_full_aliases(strAlias);
 		}
-		for (const std::string& strAlias : instrument.m_pinyinShortAliases)
+		for (const std::string& strAlias : instrument.m_pinyin_short_aliases)
 		{
 			value->add_pinyin_short_aliases(strAlias);
 		}
@@ -203,7 +203,7 @@ namespace
 
 } // namespace
 
-CHQService::CHQService(CPythonRuntime* pPythonRuntime) : m_pPythonRuntime(pPythonRuntime)
+CHQService::CHQService(CPythonRuntime* pPythonRuntime) : m_python_runtime(pPythonRuntime)
 {
 }
 
@@ -214,7 +214,7 @@ CHQService::~CHQService()
 
 bool CHQService::Initialize(const std::filesystem::path& root)
 {
-	return nullptr != m_pPythonRuntime && m_pPythonRuntime->IsInitialized() && m_broker.Initialize(root);
+	return nullptr != m_python_runtime && m_python_runtime->IsInitialized() && m_broker.Initialize(root);
 }
 
 void CHQService::Stop()
@@ -321,7 +321,7 @@ bool CHQService::HandleSubscription(net::_TyConnectionId id, const CRequest& req
 	for (const market::CChannelInfo& subscription : requested)
 	{
 		wire::SubscriptionResult* pResult = ack.add_results();
-		pResult->mutable_security()->set_symbol(subscription.m_security.m_strCode);
+		pResult->mutable_security()->set_symbol(subscription.m_security.m_code);
 		pResult->mutable_security()->set_exchange(ToWire(subscription.m_security.m_market));
 		pResult->set_channel(static_cast<wire::Channel>(static_cast<int>(subscription.m_channel)));
 		pResult->set_accepted(true);
@@ -373,15 +373,15 @@ bool CHQService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 		{
 			wire::SecurityInfo* pInfo = result.add_securities();
 			FillSecurityInfo(instrument, pInfo);
-			HashString(version, instrument.m_security.m_strCode);
+			HashString(version, instrument.m_security.m_code);
 			version = (version ^ static_cast<std::uint64_t>(instrument.m_security.m_market)) * 1099511628211ULL;
-			HashString(version, instrument.m_strName);
-			HashString(version, instrument.m_strStatus);
-			for (const std::string& strAlias : instrument.m_pinyinFullAliases)
+			HashString(version, instrument.m_name);
+			HashString(version, instrument.m_status);
+			for (const std::string& strAlias : instrument.m_pinyin_full_aliases)
 			{
 				HashString(version, strAlias);
 			}
-			for (const std::string& strAlias : instrument.m_pinyinShortAliases)
+			for (const std::string& strAlias : instrument.m_pinyin_short_aliases)
 			{
 				HashString(version, strAlias);
 			}
@@ -408,7 +408,7 @@ bool CHQService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 		}
 		wire::SectorList result;
 		result.set_type(wire::SECTOR_TYPE_INDUSTRY);
-		result.set_snapshot_time_ms(sectors.front().m_nSnapshotTime);
+		result.set_snapshot_time_ms(sectors.front().m_snapshot_time);
 		result.set_source("akshare");
 		for (const auto& sector : sectors)
 		{
@@ -437,7 +437,7 @@ bool CHQService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 		wire::SectorConstituents result;
 		result.set_type(wire::SECTOR_TYPE_INDUSTRY);
 		FillSector(constituents.m_sector, result.mutable_sector());
-		result.set_snapshot_time_ms(constituents.m_nSnapshotTime);
+		result.set_snapshot_time_ms(constituents.m_snapshot_time);
 		result.set_source("akshare");
 		for (const auto& instrument : constituents.m_securities)
 		{
@@ -459,7 +459,7 @@ bool CHQService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 	}
 	wire::QueryResponse result;
 	wire::QueryResponse* pResult = &result;
-	pResult->mutable_security()->set_symbol(security.m_strCode);
+	pResult->mutable_security()->set_symbol(security.m_code);
 	pResult->mutable_security()->set_exchange(ToWire(security.m_market));
 	pResult->set_channel(static_cast<wire::Channel>(static_cast<int>(channel)));
 
@@ -492,10 +492,10 @@ bool CHQService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 		}
 		std::vector<market::CBar> bars = m_broker.QueryBars(security, channel, begin, end);
 		market::CProviderStatus history = m_broker.HistoryStatus();
-		if (bars.empty() && !history.m_bHealthy)
+		if (bars.empty() && !history.m_healthy)
 		{
 			SetError(response, req, StorageUnavailable,
-				history.m_strDetail.empty() ? "history provider is unavailable" : history.m_strDetail);
+				history.m_detail.empty() ? "history provider is unavailable" : history.m_detail);
 			SendResponse(id, response);
 			return false;
 		}
@@ -527,28 +527,28 @@ void CHQService::OnQuote(const market::CQuote& quote, std::uint64_t nSequence)
 
 void CHQService::OnDepth(market::CDepth&& depth)
 {
-	std::uint64_t nSequence = ++m_nDepthSequence;
+	std::uint64_t nSequence = ++m_depth_sequence;
 	wire::DepthData depthData;
 	wire::DepthData* pValue = &depthData;
-	pValue->mutable_security()->set_symbol(depth.m_security.m_strCode);
+	pValue->mutable_security()->set_symbol(depth.m_security.m_code);
 	pValue->mutable_security()->set_exchange(ToWire(depth.m_security.m_market));
-	pValue->set_exchange_time_ms(depth.m_nExchangeTime);
-	pValue->set_receive_time_ms(depth.m_nReceiveTime);
-	pValue->set_source(depth.m_strSource);
-	pValue->set_stale(depth.m_bStale);
+	pValue->set_exchange_time_ms(depth.m_exchange_time);
+	pValue->set_receive_time_ms(depth.m_receive_time);
+	pValue->set_source(depth.m_source);
+	pValue->set_stale(depth.m_stale);
 	for (const market::CPriceLevel& level : depth.m_bids)
 	{
 		wire::PriceLevel* pLevel = pValue->add_bids();
-		pLevel->set_price(level.m_nPrice);
-		pLevel->set_volume(level.m_nVolume);
-		pLevel->set_price_scale(level.m_nPriceScale);
+		pLevel->set_price(level.m_price);
+		pLevel->set_volume(level.m_volume);
+		pLevel->set_price_scale(level.m_price_scale);
 	}
 	for (const market::CPriceLevel& level : depth.m_asks)
 	{
 		wire::PriceLevel* pLevel = pValue->add_asks();
-		pLevel->set_price(level.m_nPrice);
-		pLevel->set_volume(level.m_nVolume);
-		pLevel->set_price_scale(level.m_nPriceScale);
+		pLevel->set_price(level.m_price);
+		pLevel->set_volume(level.m_volume);
+		pLevel->set_price_scale(level.m_price_scale);
 	}
 	CRequest request;
 	request.SetType(_TyRequest::MARKET_DEPTH_PUSH);
@@ -565,11 +565,11 @@ std::string CHQService::HealthJson() const
 	market::CProviderStatus realtime = m_broker.RealtimeStatus();
 	market::CProviderStatus history = m_broker.HistoryStatus();
 	std::ostringstream out;
-	out << "{\"status\":\"" << ((realtime.m_bHealthy && history.m_bHealthy) ? "ok" : "degraded")
-		<< "\",\"python\":" << (((nullptr != m_pPythonRuntime) && m_pPythonRuntime->IsInitialized()) ? "true" : "false")
+	out << "{\"status\":\"" << ((realtime.m_healthy && history.m_healthy) ? "ok" : "degraded")
+		<< "\",\"python\":" << (((nullptr != m_python_runtime) && m_python_runtime->IsInitialized()) ? "true" : "false")
 		<< ",\"sqlite\":" << (m_broker.IsRecorderOpen() ? "true" : "false")
-		<< ",\"mootdx\":" << (realtime.m_bHealthy ? "true" : "false")
-		<< ",\"akshare\":" << (history.m_bHealthy ? "true" : "false") << "}";
+		<< ",\"mootdx\":" << (realtime.m_healthy ? "true" : "false")
+		<< ",\"akshare\":" << (history.m_healthy ? "true" : "false") << "}";
 	return out.str();
 }
 
@@ -589,11 +589,11 @@ std::string CHQService::QuoteJson(const std::string& strInstrument) const
 		return "{}";
 	}
 	std::ostringstream out;
-	out << "{\"security\":\"" << quote->m_security.String() << "\",\"exchange_time_ms\":" << quote->m_nExchangeTime
-		<< ",\"receive_time_ms\":" << quote->m_nReceiveTime << ",\"last_price\":" << quote->m_nLastPrice
-		<< ",\"price_scale\":" << quote->m_nPriceScale << ",\"volume\":" << quote->m_nVolume
-		<< ",\"turnover\":" << quote->m_nTurnover << ",\"source\":\"" << quote->m_strSource
-		<< "\",\"stale\":" << (quote->m_bStale ? "true" : "false") << "}";
+	out << "{\"security\":\"" << quote->m_security.String() << "\",\"exchange_time_ms\":" << quote->m_exchange_time
+		<< ",\"receive_time_ms\":" << quote->m_receive_time << ",\"last_price\":" << quote->m_last_price
+		<< ",\"price_scale\":" << quote->m_price_scale << ",\"volume\":" << quote->m_volume
+		<< ",\"turnover\":" << quote->m_turnover << ",\"source\":\"" << quote->m_source
+		<< "\",\"stale\":" << (quote->m_stale ? "true" : "false") << "}";
 	return out.str();
 }
 
@@ -610,7 +610,7 @@ std::string CHQService::InstrumentsJson() const
 			out << ',';
 		}
 		bFirst = false;
-		out << "{\"security\":\"" << instrument.m_security.String() << "\",\"name\":\"" << instrument.m_strName << "\",\"status\":\"" << instrument.m_strStatus << "\"}";
+		out << "{\"security\":\"" << instrument.m_security.String() << "\",\"name\":\"" << instrument.m_name << "\",\"status\":\"" << instrument.m_status << "\"}";
 	}
 	out << ']';
 	return out.str();
@@ -630,9 +630,9 @@ std::string CHQService::BarsJson(const std::string& strInstrument, market::Chann
 			out << ',';
 		}
 		bFirst = false;
-		out << "{\"begin_time_ms\":" << bar.m_nBeginTime << ",\"open\":" << bar.m_nOpenPrice
-			<< ",\"high\":" << bar.m_nHighPrice << ",\"low\":" << bar.m_nLowPrice << ",\"close\":" << bar.m_nClosePrice
-			<< ",\"volume\":" << bar.m_nVolume << ",\"price_scale\":" << bar.m_nPriceScale << "}";
+		out << "{\"begin_time_ms\":" << bar.m_begin_time << ",\"open\":" << bar.m_open_price
+			<< ",\"high\":" << bar.m_high_price << ",\"low\":" << bar.m_low_price << ",\"close\":" << bar.m_close_price
+			<< ",\"volume\":" << bar.m_volume << ",\"price_scale\":" << bar.m_price_scale << "}";
 	}
 	out << ']';
 	return out.str();

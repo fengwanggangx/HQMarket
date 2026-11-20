@@ -6,7 +6,7 @@ std::vector<market::CChannelInfo> CSubscriptionMgr::Subscribe(net::_TyConnection
 	std::vector<market::CChannelInfo> adds;
 	adds.reserve(channels.size());
 
-	std::lock_guard<std::shared_mutex> lock(m_mtx_info);
+	std::lock_guard<std::shared_mutex> lock(m_info_mutex);
 	_TyClientSubscriptions& infos = m_id_infos[id];
 	for (const auto& info : channels)
 	{
@@ -30,7 +30,7 @@ std::vector<market::CChannelInfo> CSubscriptionMgr::Unsubscribe(net::_TyConnecti
 	std::vector<market::CChannelInfo> removed;
 	removed.reserve(channels.size());
 
-	std::lock_guard<std::shared_mutex> lock(m_mtx_info);
+	std::lock_guard<std::shared_mutex> lock(m_info_mutex);
 	auto mIter = m_id_infos.find(id);
 	if (m_id_infos.end() == mIter)
 	{
@@ -67,7 +67,7 @@ std::vector<market::CChannelInfo> CSubscriptionMgr::RemoveClient(net::_TyConnect
 {
 	std::vector<market::CChannelInfo> removed;
 
-	std::lock_guard<std::shared_mutex> lock(m_mtx_info);
+	std::lock_guard<std::shared_mutex> lock(m_info_mutex);
 	auto mIter = m_id_infos.find(id);
 	if (m_id_infos.end() == mIter)
 	{
@@ -94,7 +94,7 @@ std::vector<market::CChannelInfo> CSubscriptionMgr::RemoveClient(net::_TyConnect
 
 std::size_t CSubscriptionMgr::GetSubscriptionCount(net::_TyConnectionId id) const
 {
-	std::shared_lock<std::shared_mutex> lock(m_mtx_info);
+	std::shared_lock<std::shared_mutex> lock(m_info_mutex);
 	const auto mIter = m_id_infos.find(id);
 	return m_id_infos.end() == mIter ? 0 : mIter->second.size();
 }
@@ -106,21 +106,21 @@ std::size_t CSubscriptionMgr::GetSubscriptionCount(const market::CChannelInfo& i
 	{
 		return 0;
 	}
-	std::shared_lock<std::shared_mutex> lock(m_mtx_info);
+	std::shared_lock<std::shared_mutex> lock(m_info_mutex);
 	const auto mIter = m_info_ids.find(key);
 	return m_info_ids.end() == mIter ? 0 : mIter->second.size();
 }
 
 bool CSubscriptionMgr::IsSubscribed(net::_TyConnectionId id, const market::CChannelInfo& info) const
 {
-	std::shared_lock<std::shared_mutex> lock(m_mtx_info);
+	std::shared_lock<std::shared_mutex> lock(m_info_mutex);
 	const auto mIter = m_id_infos.find(id);
 	return (m_id_infos.end() != mIter) && mIter->second.contains(info.String());
 }
 
 std::vector<net::_TyConnectionId> CSubscriptionMgr::GetSubscriberIds(const market::CChannelInfo& info) const
 {
-	std::shared_lock<std::shared_mutex> lock(m_mtx_info);
+	std::shared_lock<std::shared_mutex> lock(m_info_mutex);
 	const auto mIter = m_info_ids.find(info.String());
 	if (m_info_ids.end() == mIter)
 	{

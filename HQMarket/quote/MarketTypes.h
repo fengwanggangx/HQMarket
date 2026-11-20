@@ -38,7 +38,7 @@ namespace market
 
 	struct CSecurity
 	{
-		std::string m_strCode;
+		std::string m_code;
 		Exchange m_market{ Exchange::unknown };
 
 		CSecurity() = default;
@@ -54,10 +54,10 @@ namespace market
 	struct CInstrument
 	{
 		CSecurity m_security;
-		std::string m_strName;
-		std::string m_strStatus{ "normal" };
-		std::vector<std::string> m_pinyinFullAliases;
-		std::vector<std::string> m_pinyinShortAliases;
+		std::string m_name;
+		std::string m_status{ "normal" };
+		std::vector<std::string> m_pinyin_full_aliases;
+		std::vector<std::string> m_pinyin_short_aliases;
 	};
 
 	enum class SectorType
@@ -71,24 +71,24 @@ namespace market
 	struct CSector
 	{
 		SectorType m_type{ SectorType::unknown };
-		std::string m_strCode;
-		std::string m_strName;
-		std::int64_t m_nChangePercent{ 0 };
-		int m_nPercentScale{ 2 };
-		int m_nRisingCount{ 0 };
-		int m_nFallingCount{ 0 };
-		int m_nFlatCount{ 0 };
-		int m_nMemberCount{ 0 };
-		CSecurity m_leadingSecurity;
-		std::string m_strLeadingName;
-		std::int64_t m_nSnapshotTime{ 0 };
+		std::string m_code;
+		std::string m_name;
+		std::int64_t m_change_percent{ 0 };
+		int m_percent_scale{ 2 };
+		int m_rising_count{ 0 };
+		int m_falling_count{ 0 };
+		int m_flat_count{ 0 };
+		int m_member_count{ 0 };
+		CSecurity m_leading_security;
+		std::string m_leading_name;
+		std::int64_t m_snapshot_time{ 0 };
 	};
 
 	struct CSectorConstituents
 	{
 		CSector m_sector;
 		std::vector<CInstrument> m_securities;
-		std::int64_t m_nSnapshotTime{ 0 };
+		std::int64_t m_snapshot_time{ 0 };
 	};
 
 	std::string GetMarketString(Exchange mk);
@@ -97,60 +97,60 @@ namespace market
 	// 盘口中的一个价格档位；价格采用定点整数表示。
 	struct CPriceLevel
 	{
-		std::int64_t m_nPrice{ 0 };	 // 档位价格，实际值为m_nPrice / 10^m_nPriceScale。
-		std::int64_t m_nVolume{ 0 }; // 档位委托数量，具体单位由数据源约定。
-		int m_nPriceScale{ 4 };		 // 价格的小数位数。
+		std::int64_t m_price{ 0 };	// 档位价格，实际值为m_price / 10^m_price_scale。
+		std::int64_t m_volume{ 0 }; // 档位委托数量，具体单位由数据源约定。
+		int m_price_scale{ 4 };		// 价格的小数位数。
 	};
 
 	// 单个标的的最新行情快照。
 	struct CQuote
 	{
 		CSecurity m_security;			   // 标的信息。
-		std::int64_t m_nExchangeTime{ 0 }; // 交易所生成行情的毫秒时间戳。
-		std::int64_t m_nReceiveTime{ 0 };  // 服务接收行情的毫秒时间戳。
-		std::int64_t m_nLastPrice{ 0 };	   // 最新成交价。
-		std::int64_t m_nOpenPrice{ 0 };	   // 当日开盘价。
-		std::int64_t m_nHighPrice{ 0 };	   // 当日最高价。
-		std::int64_t m_nLowPrice{ 0 };	   // 当日最低价。
-		std::int64_t m_nPreClose{ 0 };	   // 前一交易日收盘价。
-		std::int64_t m_nVolume{ 0 };	   // 累计成交量，具体单位由数据源约定。
-		std::int64_t m_nTurnover{ 0 };	   // 累计成交额，具体单位由数据源约定。
-		int m_nPriceScale{ 4 };			   // 所有价格字段的小数位数。
-		std::string m_strSource;		   // 行情数据来源。
-		bool m_bStale{ false };			   // 行情是否已过期。
+		std::int64_t m_exchange_time{ 0 }; // 交易所生成行情的毫秒时间戳。
+		std::int64_t m_receive_time{ 0 };  // 服务接收行情的毫秒时间戳。
+		std::int64_t m_last_price{ 0 };	   // 最新成交价。
+		std::int64_t m_open_price{ 0 };	   // 当日开盘价。
+		std::int64_t m_high_price{ 0 };	   // 当日最高价。
+		std::int64_t m_low_price{ 0 };	   // 当日最低价。
+		std::int64_t m_pre_close{ 0 };	   // 前一交易日收盘价。
+		std::int64_t m_volume{ 0 };		   // 累计成交量，具体单位由数据源约定。
+		std::int64_t m_turnover{ 0 };	   // 累计成交额，具体单位由数据源约定。
+		int m_price_scale{ 4 };			   // 所有价格字段的小数位数。
+		std::string m_source;			   // 行情数据来源。
+		bool m_stale{ false };			   // 行情是否已过期。
 	};
 
 	// 单个标的的买卖盘口深度。
 	struct CDepth
 	{
 		CSecurity m_security;			   // 标的信息。
-		std::int64_t m_nExchangeTime{ 0 }; // 交易所生成行情的毫秒时间戳。
-		std::int64_t m_nReceiveTime{ 0 };  // 服务接收行情的毫秒时间戳。
+		std::int64_t m_exchange_time{ 0 }; // 交易所生成行情的毫秒时间戳。
+		std::int64_t m_receive_time{ 0 };  // 服务接收行情的毫秒时间戳。
 		std::vector<CPriceLevel> m_bids;   // 买盘档位，通常从买一开始排列。
 		std::vector<CPriceLevel> m_asks;   // 卖盘档位，通常从卖一开始排列。
-		std::string m_strSource;		   // 行情数据来源。
-		bool m_bStale{ false };			   // 盘口数据是否已过期。
+		std::string m_source;			   // 行情数据来源。
+		bool m_stale{ false };			   // 盘口数据是否已过期。
 	};
 
 	// 一个时间周期内的K线数据。
 	struct CBar
 	{
-		std::int64_t m_nEndTime{ 0 };
-		bool m_bCompleted{ false };
-		std::uint64_t m_dataVersion{ 0 };
-		std::string m_strBasisVersion;
+		std::int64_t m_end_time{ 0 };
+		bool m_completed{ false };
+		std::uint64_t m_data_version{ 0 };
+		std::string m_basis_version;
 		CSecurity m_security;				   // 标的信息。
 		Channel m_channel{ Channel::unknown }; // K线周期，例如一分钟或一天。
-		std::int64_t m_nBeginTime{ 0 };		   // K线周期开始的毫秒时间戳。
-		std::int64_t m_nOpenPrice{ 0 };		   // 开盘价。
-		std::int64_t m_nHighPrice{ 0 };		   // 最高价。
-		std::int64_t m_nLowPrice{ 0 };		   // 最低价。
-		std::int64_t m_nClosePrice{ 0 };	   // 收盘价。
-		std::int64_t m_nVolume{ 0 };		   // 周期内成交量，具体单位由数据源约定。
-		std::int64_t m_nTurnover{ 0 };		   // 周期内成交额，具体单位由数据源约定。
-		int m_nPriceScale{ 4 };				   // 所有价格字段的小数位数。
-		std::string m_strAdjustment{ "none" }; // 复权方式，none表示不复权。
-		std::string m_strSource;			   // 行情数据来源。
+		std::int64_t m_begin_time{ 0 };		   // K线周期开始的毫秒时间戳。
+		std::int64_t m_open_price{ 0 };		   // 开盘价。
+		std::int64_t m_high_price{ 0 };		   // 最高价。
+		std::int64_t m_low_price{ 0 };		   // 最低价。
+		std::int64_t m_close_price{ 0 };	   // 收盘价。
+		std::int64_t m_volume{ 0 };			   // 周期内成交量，具体单位由数据源约定。
+		std::int64_t m_turnover{ 0 };		   // 周期内成交额，具体单位由数据源约定。
+		int m_price_scale{ 4 };				   // 所有价格字段的小数位数。
+		std::string m_adjustment{ "none" };	   // 复权方式，none表示不复权。
+		std::string m_source;				   // 行情数据来源。
 	};
 
 	// 客户端对某个标的、某类行情数据的订阅项。

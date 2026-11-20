@@ -27,14 +27,14 @@ namespace provider
 			static std::string MakeKey(const market::CChannelInfo& subscription);
 
 		private:
-			std::atomic_bool m_bRunning{ false };
+			std::atomic_bool m_running{ false };
 			std::thread m_thread;
-			mutable std::mutex m_mtx_state;
+			mutable std::mutex m_state_mutex;
 			std::unordered_map<std::string, market::CChannelInfo> m_subscriptions;
-			_TyQuoteHandler m_quoteHandler;
-			_TyDepthHandler m_depthHandler;
+			_TyQuoteHandler m_quote_handler;
+			_TyDepthHandler m_depth_handler;
 			market::CProviderStatus m_status;
-			void* m_pProvider{ nullptr };
+			void* m_provider{ nullptr };
 	};
 } // namespace provider
 #endif

@@ -40,8 +40,8 @@ class CHQBroker final
 	provider::CAkShareProvider m_akshare;
 	CHQCache m_cache;
 	CHQRecorder m_recorder;
-	_TyQuoteHandler m_quoteHandler;
-	_TyDepthHandler m_depthHandler;
+	_TyQuoteHandler m_quote_handler;
+	_TyDepthHandler m_depth_handler;
 };
 
 #endif
