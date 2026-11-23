@@ -1,3 +1,4 @@
+#include "../log/CLogger.h"
 #include "CAkShareProvider.h"
 #include <Python.h>
 #include <algorithm>
@@ -14,7 +15,7 @@ namespace provider
 		if (nullptr == PyErr_Occurred())
 		{
 			std::string failure = std::string("akshare ") + source + " failed: empty or invalid result";
-			std::cerr << failure << std::endl;
+			CLogger::Write(Level::Error, "provider", failure);
 			return failure;
 		}
 		PyObject* errorType = nullptr;
@@ -31,7 +32,7 @@ namespace provider
 			failure += ": ";
 			failure += message;
 		}
-		std::cerr << failure << std::endl;
+		CLogger::Write(Level::Error, "provider", failure);
 		Py_XDECREF(errorText);
 		Py_XDECREF(errorTraceback);
 		Py_XDECREF(errorValue);

@@ -9,14 +9,14 @@ set(HQMARKET_MODE debug CACHE STRING "Dependency configuration")
 set(depInc "${HQMARKET_DEPS}/include/${HQMARKET_MODE}")
 set(depLib "${HQMARKET_DEPS}/libs/${HQMARKET_MODE}")
 file(GLOB protoSources "${hqRoot}/request/*.cc" "${hqRoot}/request/v1/*.cc")
-add_executable(hqmarket_routing_tests HQCenterTests.cpp HQTestBoundaries.cpp
+add_executable(hqmarket_routing_tests HQCenterTests.cpp HQTestBoundaries.cpp "${hqRoot}/log/CLogger.cpp"
  "${hqRoot}/system/CHQCenter.cpp" "${hqRoot}/system/CHQService.cpp" "${hqRoot}/system/CSubscriptionMgr.cpp"
  "${hqRoot}/quote/CHQBroker.cpp" "${hqRoot}/quote/CHQCache.cpp" "${hqRoot}/quote/CHQRecorder.cpp" "${hqRoot}/quote/MarketTypes.cpp"
  "${hqRoot}/request/request.cpp" ${protoSources}
  "${hqRoot}/common/utility.cpp" "${hqRoot}/database/CDBEngine.cpp" "${hqRoot}/database/CODBC.cpp"
  "${hqRoot}/database/CMySQL.cpp" "${hqRoot}/database/CSQLite3.cpp" "${hqRoot}/database/COracle.cpp"
  "${hqRoot}/database/IDataBase.cpp" "${hqRoot}/database/common_db.cpp")
-target_include_directories(hqmarket_routing_tests PRIVATE "${hqRoot}/request" "${depInc}/protobuf" "${depInc}/libevent" "${depInc}/mysql" "${depInc}/mysql/mysql" "${depInc}/sqlite" "${depInc}/rapidjson")
+target_include_directories(hqmarket_routing_tests PRIVATE "${hqRoot}/request" "${depInc}/spdlog" "${depInc}/protobuf" "${depInc}/libevent" "${depInc}/mysql" "${depInc}/mysql/mysql" "${depInc}/sqlite" "${depInc}/rapidjson")
 target_link_directories(hqmarket_routing_tests PRIVATE "${depLib}")
 target_link_libraries(hqmarket_routing_tests PRIVATE Threads::Threads)
 set(protoSuffix "")

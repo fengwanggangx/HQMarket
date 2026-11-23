@@ -267,7 +267,9 @@
     <ClInclude Include="quote\CHQRecorder.h">
       <Filter>quote</Filter>
     </ClInclude>
-    <ClInclude Include="database\CQueryTable.h" />
+    <ClInclude Include="database\CQueryTable.h">
+      <Filter>database</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="config\hqmarket.json">
@@ -279,5 +281,18 @@
     <None Include="$(OutDir)python\scripts\requirements.lock">
       <Filter>python</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="log">
+      <UniqueIdentifier>{4790BDB4-B14A-4FE7-BBAD-7A9A597E308D}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="log\CLogger.cpp">
+      <Filter>log</Filter>
+    </ClCompile>
+    <ClInclude Include="log\CLogger.h">
+      <Filter>log</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

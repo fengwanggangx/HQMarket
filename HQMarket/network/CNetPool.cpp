@@ -1,3 +1,4 @@
+#include "../log/CLogger.h"
 #include "CNetPool.h"
 #include <iostream>
 #include "common_net.h"
@@ -134,7 +135,7 @@ namespace net
 		struct bufferevent* pBuffer = bufferevent_socket_new(pNet, id, nOptions);
 		if (nullptr == pBuffer)
 		{
-			std::cerr << "Failed to create bufferevent" << std::endl;
+			CLogger::Write(Level::Error, "network", "Failed to create bufferevent");
 			evutil_closesocket(id);
 			return nullptr;
 		}

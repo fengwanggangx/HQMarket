@@ -1,3 +1,4 @@
+#include "../log/CLogger.h"
 #include "CMooTdxProvider.h"
 #include <Python.h>
 #include <algorithm>
@@ -67,7 +68,7 @@ namespace provider
 
 		PyObject* errorText = nullptr != errorValue ? PyObject_Str(errorValue) : nullptr;
 		const char* message = nullptr != errorText ? PyUnicode_AsUTF8(errorText) : nullptr;
-		std::cerr << context << ": " << (nullptr != message ? message : "unknown Python error") << std::endl;
+		CLogger::Write(Level::Error, "provider", context, ": ", (nullptr != message ? message : "unknown Python error"));
 
 		Py_XDECREF(errorText);
 		Py_XDECREF(errorTraceback);
@@ -301,7 +302,7 @@ namespace provider
 			}
 			else
 			{
-				std::cerr << "MooTdxProvider quote request failed: invalid Python result" << std::endl;
+				CLogger::Write(Level::Error, "provider", "MooTdxProvider quote request failed: invalid Python result");
 			}
 		}
 		Py_XDECREF(result);
