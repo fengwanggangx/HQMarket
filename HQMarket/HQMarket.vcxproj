@@ -40,6 +40,7 @@
     <RemoteTargetPath>$(RemoteProjectDir)/exec/debug/$(TargetName)$(TargetExt)</RemoteTargetPath>
     <RemoteDebuggerCommand>$(RemoteTargetPath)</RemoteDebuggerCommand>
     <RemoteDebuggerWorkingDirectory>$(RemoteProjectDir)/exec/debug</RemoteDebuggerWorkingDirectory>
+    <RemoteLinkLocalCopyOutput>false</RemoteLinkLocalCopyOutput>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <RemoteCompileLocalCopyObjectFiles>false</RemoteCompileLocalCopyObjectFiles>
@@ -50,6 +51,7 @@
     <RemoteTargetPath>$(RemoteProjectDir)/exec/release/$(TargetName)$(TargetExt)</RemoteTargetPath>
     <RemoteDebuggerCommand>$(RemoteTargetPath)</RemoteDebuggerCommand>
     <RemoteDebuggerWorkingDirectory>$(RemoteProjectDir)/exec/release</RemoteDebuggerWorkingDirectory>
+    <RemoteLinkLocalCopyOutput>false</RemoteLinkLocalCopyOutput>
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="database\CDBEngine.cpp" />

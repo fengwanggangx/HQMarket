@@ -127,7 +127,7 @@
     <ClCompile Include="system\CHQService.cpp">
       <Filter>system</Filter>
     </ClCompile>
-<ClCompile Include="system\CHQCenter.cpp">
+    <ClCompile Include="system\CHQCenter.cpp">
       <Filter>system</Filter>
     </ClCompile>
     <ClCompile Include="thread\CThreadPool.cpp">
@@ -246,7 +246,7 @@
     <ClInclude Include="system\CHQService.h">
       <Filter>system</Filter>
     </ClInclude>
-<ClInclude Include="system\CHQCenter.h">
+    <ClInclude Include="system\CHQCenter.h">
       <Filter>system</Filter>
     </ClInclude>
     <ClInclude Include="thread\CThreadPool.h">
@@ -267,13 +267,11 @@
     <ClInclude Include="quote\CHQRecorder.h">
       <Filter>quote</Filter>
     </ClInclude>
+    <ClInclude Include="database\CQueryTable.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="config\hqmarket.json">
       <Filter>config</Filter>
-    </None>
-    <None Include="ini\system.ini">
-      <Filter>ini</Filter>
     </None>
     <None Include="request\v1\market.proto">
       <Filter>request\v1</Filter>
