@@ -1,4 +1,5 @@
 #include "CHQBroker.h"
+#include "../log/CLogger.h"
 #include <map>
 #include <utility>
 
@@ -41,6 +42,8 @@ void CHQBroker::Stop()
 {
 	m_mootdx.Stop();
 	m_akshare.Stop();
+	std::lock_guard<std::mutex> lock(m_mtx_history);
+	m_historyRefreshes.clear();
 	m_recorder.Close();
 }
 
@@ -61,11 +64,41 @@ std::optional<market::CQuote> CHQBroker::QueryQuote(const market::CSecurity& sec
 
 std::vector<market::CBar> CHQBroker::QueryBars(const market::CSecurity& security, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime)
 {
+	std::lock_guard<std::mutex> lock(m_mtx_history);
 	std::vector<market::CBar> bars = m_recorder.QueryBars(security, channel, nBeginTime, nEndTime);
+	std::string key = security.String() + ":" + std::to_string(static_cast<int>(channel)) + ":" +
+		std::to_string(nBeginTime) + ":" + std::to_string(nEndTime);
+	auto refreshed = m_historyRefreshes.find(key);
+	if (!bars.empty() && m_historyRefreshes.end() != refreshed && std::chrono::steady_clock::now() < refreshed->second)
+	{
+		return bars;
+	}
 	std::vector<market::CBar> providerBars = m_akshare.QueryBars(security, channel, nBeginTime, nEndTime);
 	if (!providerBars.empty())
 	{
-		m_recorder.UpsertBars(providerBars);
+		if (!m_recorder.UpsertBars(providerBars))
+		{
+			CLogger::Write(Level::Error, "history", "Failed to persist bars for ", security.String());
+		}
+		else
+		{
+			bool primary = true;
+			for (const market::CBar& bar : providerBars)
+			{
+				primary = primary && ("akshare" == bar.m_source);
+			}
+			if (primary)
+			{
+				if (1024 <= m_historyRefreshes.size())
+				{
+					m_historyRefreshes.clear();
+				}
+				std::int64_t nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+					std::chrono::system_clock::now().time_since_epoch()).count();
+				auto ttl = nEndTime < nowMs - 86400000 ? std::chrono::seconds(300) : std::chrono::seconds(5);
+				m_historyRefreshes.insert_or_assign(std::move(key), std::chrono::steady_clock::now() + ttl);
+			}
+		}
 		std::map<std::int64_t, market::CBar> mergedBars;
 		for (const market::CBar& bar : bars)
 		{

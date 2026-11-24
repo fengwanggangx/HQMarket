@@ -134,7 +134,7 @@ namespace
 	{
 		std::string sql = "SELECT begin_time,open,high,low,close,volume,turnover,price_scale,adjustment,source FROM bar WHERE symbol=" +
 						  Quote(security.m_code) + " AND exchange=" + std::to_string(static_cast<int>(security.m_market)) +
-						  " AND channel=" + std::to_string(static_cast<int>(channel)) + " AND begin_time BETWEEN " +
+						  " AND channel=" + std::to_string(static_cast<int>(channel)) + " AND adjustment='' AND begin_time BETWEEN " +
 						  std::to_string(nBeginTime) + " AND " + std::to_string(nEndTime) + " ORDER BY begin_time";
 
 		std::vector<market::CBar> result;
@@ -152,8 +152,7 @@ namespace
 				continue;
 			}
 
-			result.emplace_back();
-			market::CBar& bar = result.back();
+			market::CBar bar;
 			bar.m_security = security;
 			bar.m_channel = channel;
 			if (!utility::to_number(db::QueryValueToString(row[0]), bar.m_begin_time) || !utility::to_number(db::QueryValueToString(row[1]), bar.m_open_price) ||
@@ -165,6 +164,7 @@ namespace
 			}
 			bar.m_adjustment = db::QueryValueToString(row[8]);
 			bar.m_source = db::QueryValueToString(row[9]);
+			result.emplace_back(std::move(bar));
 		}
 		return result;
 	}

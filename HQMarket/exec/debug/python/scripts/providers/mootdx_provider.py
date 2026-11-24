@@ -39,6 +39,7 @@ class MooTdxProvider:
     def __init__(self) -> None:
         self._client = None
         self._use_tencent = False
+        self._retry_mootdx_at = 0.0
         self._hk_quotes_cache = {}
         self._hk_quotes_time = 0.0
 
@@ -66,20 +67,33 @@ class MooTdxProvider:
         mainland = [item for item in values if item["exchange"] != "HKEX"]
         rows = self._hk_quotes(hong_kong) if hong_kong else []
         if mainland:
+            if self._use_tencent and time.monotonic() >= self._retry_mootdx_at:
+                self._retry_mootdx_at = time.monotonic() + 30
+                try:
+                    self.initialize()
+                    self._use_tencent = False
+                except Exception as error:
+                    print(f"MooTDX reconnect failed: {error}", file=sys.stderr)
             if not self._use_tencent:
                 try:
                     rows.extend(self._mootdx_quotes(mainland))
                     return rows
-                except Exception:
-                    self._client.close()
+                except Exception as error:
+                    print(f"MooTDX quote fetch failed: {error}", file=sys.stderr)
+                    try:
+                        self._client.close()
+                    except Exception as close_error:
+                        print(f"MooTDX close failed: {close_error}", file=sys.stderr)
                     self._client = None
                     self._use_tencent = True
+                    self._retry_mootdx_at = time.monotonic() + 30
             rows.extend(self._tencent_quotes(mainland))
         return rows
 
     def _hk_quotes(self, instruments: list[dict]) -> list[dict]:
-        if time.monotonic() - self._hk_quotes_time >= 120:
-            self._hk_quotes_time = time.monotonic()
+        now = time.monotonic()
+        if not self._hk_quotes_time or now - self._hk_quotes_time >= 120:
+            self._hk_quotes_time = now
             try:
                 import akshare as ak
                 frame = ak.stock_hk_spot()
@@ -89,9 +103,11 @@ class MooTdxProvider:
                         return result if math.isfinite(result) else 0.0
                     except (TypeError, ValueError):
                         return 0.0
+                snapshot_time_ms = time.time_ns() // 1_000_000
                 self._hk_quotes_cache = {
                     str(row["代码"]).zfill(5): {
                         "symbol": str(row["代码"]).zfill(5), "exchange": "HKEX", "source": "akshare:sina",
+                        "snapshot_time_ms": snapshot_time_ms,
                         "price": number(row["最新价"]), "last_close": number(row["昨收"]),
                         "open": number(row["今开"]), "high": number(row["最高"]), "low": number(row["最低"]),
                         "vol": int(number(row["成交量"])), "amount": number(row["成交额"]),
@@ -111,7 +127,11 @@ class MooTdxProvider:
             result = self._client.client.get_security_quotes(symbols)
             if not result:
                 raise RuntimeError("MooTDX returned no quote data")
-            for item, row in zip(batch, result):
+            requested = dict(zip(symbols, batch))
+            for row in result:
+                item = requested.get((row.get("market"), row.get("code")))
+                if item is None:
+                    continue
                 row["symbol"] = item["symbol"]
                 row["exchange"] = item["exchange"]
                 row["source"] = "mootdx"

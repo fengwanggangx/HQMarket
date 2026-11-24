@@ -5,6 +5,10 @@
 #include "CHQRecorder.h"
 #include "../provider/CAkShareProvider.h"
 #include "../provider/CMooTdxProvider.h"
+#include <chrono>
+#include <mutex>
+#include <string>
+#include <unordered_map>
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
@@ -40,6 +44,8 @@ class CHQBroker final
 	provider::CAkShareProvider m_akshare;
 	CHQCache m_cache;
 	CHQRecorder m_recorder;
+	std::mutex m_mtx_history;
+	std::unordered_map<std::string, std::chrono::steady_clock::time_point> m_historyRefreshes;
 	_TyQuoteHandler m_quote_handler;
 	_TyDepthHandler m_depth_handler;
 };

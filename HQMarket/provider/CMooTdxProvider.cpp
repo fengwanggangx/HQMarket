@@ -254,8 +254,12 @@ namespace provider
 				std::int64_t now = NowMs();
 				market::CQuote quote;
 				quote.m_security = securityIter->second;
-				quote.m_receive_time = now;
-				quote.m_exchange_time = now;
+				quote.m_receive_time = Integer(row, "snapshot_time_ms");
+				if (0 == quote.m_receive_time)
+				{
+					quote.m_receive_time = now;
+				}
+				quote.m_exchange_time = Integer(row, "exchange_time_ms");
 				quote.m_last_price = Fixed(row, "price");
 				quote.m_open_price = Fixed(row, "open");
 				quote.m_high_price = Fixed(row, "high");
@@ -266,8 +270,8 @@ namespace provider
 				quote.m_source = String(row, "source");
 				market::CDepth depth;
 				depth.m_security = quote.m_security;
-				depth.m_receive_time = now;
-				depth.m_exchange_time = now;
+				depth.m_receive_time = quote.m_receive_time;
+				depth.m_exchange_time = quote.m_exchange_time;
 				depth.m_source = quote.m_source;
 				for (int level = 1; level <= 5; ++level)
 				{

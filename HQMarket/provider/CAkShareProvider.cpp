@@ -317,7 +317,15 @@ namespace provider
 				bar.m_close_price = Fixed(row, "close", 4);
 				bar.m_volume = Fixed(row, "volume", 0);
 				bar.m_turnover = Fixed(row, "turnover", 2);
-				bar.m_source = "akshare";
+				bar.m_source = String(row, "source");
+				if (bar.m_source.empty())
+				{
+					bar.m_source = "akshare";
+				}
+				if (0 == bar.m_begin_time || bar.m_begin_time < nBeginTime || nEndTime < bar.m_begin_time)
+				{
+					continue;
+				}
 				PyObject* completed = PyDict_GetItemString(row, "completed");
 				bar.m_completed = (nullptr != completed) && PyBool_Check(completed) && (1 == PyObject_IsTrue(completed));
 				bar.m_end_time = Fixed(row, "end_time_ms", 0);

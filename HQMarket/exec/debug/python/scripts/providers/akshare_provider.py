@@ -58,14 +58,14 @@ def _tencent_daily_bars(symbol: str, start: str, end: str, exchange: str = "") -
     end = datetime.strptime(end, "%Y%m%d").strftime("%Y-%m-%d")
     response = _tencent_json(
         "/appstock/app/fqkline/get",
-        {"param": f"{code},day,{start},{end},640,qfq"},
+        {"param": f"{code},day,{start},{end},640,"},
     )
     data = response.get("data", {})
     value = data.get(code, {}) if isinstance(data, dict) else {}
-    rows = value.get("qfqday") or value.get("day") or []
+    rows = value.get("day") or []
     return [
         {
-            "date": row[0], "open": row[1], "close": row[2],
+            "source": "tencent", "date": row[0], "open": row[1], "close": row[2],
             "high": row[3], "low": row[4], "volume": row[5], "turnover": 0,
         }
         for row in rows if len(row) >= 6
@@ -94,7 +94,7 @@ def _tencent_minute_bars(symbol: str, exchange: str = "") -> list[dict]:
             cumulative_volume = float(fields[2])
             cumulative_turnover = float(fields[3])
             bars.append({
-                "date": datetime.strptime(date + fields[0], "%Y%m%d%H%M").strftime("%Y-%m-%d %H:%M:%S"),
+                "source": "tencent", "date": datetime.strptime(date + fields[0], "%Y%m%d%H%M").strftime("%Y-%m-%d %H:%M:%S"),
                 "open": price, "high": price, "low": price, "close": price,
                 "volume": max(0.0, cumulative_volume - previous_volume),
                 "turnover": max(0.0, cumulative_turnover - previous_turnover),
@@ -176,7 +176,7 @@ class AkShareProvider:
             except Exception as error:
                 source = "stock_hk_daily" if exchange == "HKEX" else "stock_zh_index_daily"
                 print(f"akshare {source} failed: {type(error).__name__}: {error}; using Tencent daily history", file=sys.stderr)
-            return _tencent_daily_bars(symbol, start, end, exchange)
+            return [] if adjustment else _tencent_daily_bars(symbol, start, end, exchange)
         try:
             import akshare as ak
             frame = ak.stock_zh_a_hist(symbol=symbol, period="daily", start_date=start, end_date=end, adjust=adjustment)
@@ -189,7 +189,7 @@ class AkShareProvider:
                 return frame.to_dict(orient="records")
         except Exception as error:
             print(f"akshare stock_zh_a_hist failed: {type(error).__name__}: {error}; using Tencent daily history", file=sys.stderr)
-        return _tencent_daily_bars(symbol, start, end, exchange)
+        return [] if adjustment else _tencent_daily_bars(symbol, start, end, exchange)
 
     def minute_bars(self, symbol: str, start: str, end: str, adjustment: str = "", exchange: str = "") -> list[dict]:
         is_index = (exchange == "SSE" and symbol.startswith("000")) or (exchange == "SZSE" and symbol.startswith("399"))
@@ -208,7 +208,7 @@ class AkShareProvider:
             except Exception as error:
                 source = "stock_hk_hist_min_em" if exchange == "HKEX" else "index_zh_a_hist_min_em"
                 print(f"akshare {source} failed: {type(error).__name__}: {error}; using Tencent minute history", file=sys.stderr)
-            return _tencent_minute_bars(symbol, exchange)
+            return [] if adjustment else _tencent_minute_bars(symbol, exchange)
         try:
             import akshare as ak
             frame = ak.stock_zh_a_hist_min_em(
@@ -223,7 +223,7 @@ class AkShareProvider:
                 return frame.to_dict(orient="records")
         except Exception as error:
             print(f"akshare stock_zh_a_hist_min_em failed: {type(error).__name__}: {error}; using Tencent minute history", file=sys.stderr)
-        return _tencent_minute_bars(symbol, exchange)
+        return [] if adjustment else _tencent_minute_bars(symbol, exchange)
 
     def industry_sectors(self) -> list[dict]:
         import akshare as ak
