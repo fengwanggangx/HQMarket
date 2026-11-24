@@ -1,6 +1,7 @@
 #include "../log/CLogger.h"
 #include "CNetPool.h"
 #include <iostream>
+#include <atomic>
 #include "common_net.h"
 #include "event2/event.h"
 #include <event2/buffer.h>
@@ -11,6 +12,17 @@
 #include "../request/request.h"
 namespace net
 {
+	namespace
+	{
+		constexpr std::size_t MaxQueuedBytes = 16 * 1024 * 1024;
+		std::atomic<std::uint64_t> queueOverflows{ 0 };
+	}
+
+	std::uint64_t CNetPool::QueueOverflows()
+	{
+		return queueOverflows.load(std::memory_order_relaxed);
+	}
+
 	struct CNetInfo
 	{
 		_TyConnectionId m_fd{ -1 };
@@ -276,7 +288,15 @@ namespace net
 			return false;
 		}
 
-		return evbuffer_add(pBuffer, data, nLength) == 0;
+		evbuffer_lock(pBuffer);
+		bool exceedsLimit = nLength > MaxQueuedBytes || evbuffer_get_length(pBuffer) > MaxQueuedBytes - nLength;
+		bool sent = !exceedsLimit && 0 == evbuffer_add(pBuffer, data, nLength);
+		evbuffer_unlock(pBuffer);
+		if (exceedsLimit)
+		{
+			queueOverflows.fetch_add(1, std::memory_order_relaxed);
+		}
+		return sent;
 	}
 
 	bool CNetPool::SendRequest(net::_TyConnectionId id, const CRequest& request)

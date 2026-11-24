@@ -14,7 +14,11 @@ namespace provider
 		bool Initialize() override;
 		bool Subscribe(const std::vector<market::CChannelInfo>&) override;
 		bool Unsubscribe(const std::vector<market::CChannelInfo>&) override;
-		std::vector<market::CBar> QueryBars(const market::CSecurity& security, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime) override;
+		std::vector<market::CBar> QueryBars(const market::CSecurity& security, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime) override
+		{
+			return QueryBars(security, channel, nBeginTime, nEndTime, nullptr);
+		}
+		std::vector<market::CBar> QueryBars(const market::CSecurity& security, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime, market::CProviderStatus* queryStatus);
 		market::CProviderStatus GetStatus() const override;
 		void SetQuoteHandler(_TyQuoteHandler) override;
 		void SetDepthHandler(_TyDepthHandler) override;
@@ -25,7 +29,9 @@ namespace provider
 
 	  private:
 		  mutable std::mutex m_state_mutex;
+		  mutable std::mutex m_mtx_status;
 		  market::CProviderStatus m_status;
+		  void SetStatus(market::CProviderStatus status);
 		  void* m_provider{ nullptr };
 		  std::vector<market::CInstrument> m_instruments;
 		  std::vector<market::CSector> m_sectors;

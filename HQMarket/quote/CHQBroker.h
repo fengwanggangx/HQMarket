@@ -27,8 +27,8 @@ class CHQBroker final
 	void Stop();
 	bool Subscribe(const std::vector<market::CChannelInfo>& infos);
 	bool Unsubscribe(const std::vector<market::CChannelInfo>& infos);
-	std::optional<market::CQuote> QueryQuote(const market::CSecurity& security) const;
-	std::vector<market::CBar> QueryBars(const market::CSecurity& security, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime);
+	std::optional<market::CQuote> QueryQuote(const market::CSecurity& security, std::uint64_t* sequence = nullptr) const;
+	std::vector<market::CBar> QueryBars(const market::CSecurity& security, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime, market::CProviderStatus* queryStatus = nullptr);
 	std::vector<market::CInstrument> QueryInstruments() const;
 	std::vector<market::CSector> QuerySectors(market::SectorType type);
 	market::CSectorConstituents QuerySectorConstituents(market::SectorType type, const std::string& strSectorCode);
@@ -45,6 +45,7 @@ class CHQBroker final
 	CHQCache m_cache;
 	CHQRecorder m_recorder;
 	std::mutex m_mtx_history;
+	std::mutex m_mtx_historyfetch;
 	std::unordered_map<std::string, std::chrono::steady_clock::time_point> m_historyRefreshes;
 	_TyQuoteHandler m_quote_handler;
 	_TyDepthHandler m_depth_handler;

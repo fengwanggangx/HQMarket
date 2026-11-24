@@ -23,7 +23,7 @@ namespace provider
 
 		private:
 			void Run();
-			bool Poll(const std::vector<market::CSecurity>& securities);
+			std::size_t Poll(const std::vector<market::CSecurity>& securities);
 			static std::string MakeKey(const market::CChannelInfo& subscription);
 
 		private:

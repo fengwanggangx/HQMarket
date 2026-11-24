@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <mutex>
+#include <cstdint>
 #include <shared_mutex>
 #include <memory>
 #include <vector>
@@ -29,6 +30,7 @@ namespace net
 
 		public:
 			std::size_t Count() const;
+			static std::uint64_t QueueOverflows();
 
 			std::pair<RecvFrameResult, std::vector<std::string>> GetRecvFrames(_TyConnectionId id, struct bufferevent* pEvent, const char* data, std::size_t nLength);
 

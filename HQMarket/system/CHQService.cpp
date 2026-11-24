@@ -4,6 +4,8 @@
 #include "../request/request.h"
 #include "../request/request.pb.h"
 #include "../common/defines.h"
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 #include <chrono>
 #include <cctype>
 #include <exception>
@@ -243,6 +245,7 @@ bool CHQService::OnRequest(const CRequest& req)
 
 void CHQService::HandleClientDisconnected(net::_TyConnectionId id)
 {
+	std::lock_guard<std::recursive_mutex> lock(m_mtx_subscriptions);
 	std::vector<market::CChannelInfo> removed = m_subscriptions.RemoveClient(id);
 	if (!removed.empty())
 	{
@@ -304,6 +307,7 @@ bool CHQService::HandleSubscription(net::_TyConnectionId id, const CRequest& req
 		SendError(id, req, 1003, "invalid security or unsupported subscription channel");
 		return false;
 	}
+	std::lock_guard<std::recursive_mutex> lock(m_mtx_subscriptions);
 	std::vector<market::CChannelInfo> changed = bSubscribe ? m_subscriptions.Subscribe(id, requested) : m_subscriptions.Unsubscribe(id, requested);
 	if (!changed.empty())
 	{
@@ -340,14 +344,15 @@ bool CHQService::HandleSubscription(net::_TyConnectionId id, const CRequest& req
 			{
 				continue;
 			}
-			std::optional<market::CQuote> quote = m_broker.QueryQuote(subscription.m_security);
+			std::uint64_t sequence = 0;
+			std::optional<market::CQuote> quote = m_broker.QueryQuote(subscription.m_security, &sequence);
 			if (quote.has_value())
 			{
 				wire::QuoteData quoteData;
 				FillQuote(*quote, &quoteData);
 				CRequest snapshot;
 				snapshot.SetType(_TyRequest::MARKET_QUOTE_PUSH);
-				SetData(snapshot, quoteData);
+				SetData(snapshot, quoteData, 0, sequence);
 				SendResponse(id, snapshot);
 			}
 		}
@@ -483,21 +488,30 @@ bool CHQService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 			SendResponse(id, response);
 			return false;
 		}
-		end = 0 < end ? end : NowMilliseconds();
-		if ((0 > begin) || (end < begin))
+		std::int64_t effectiveEnd = 0 == end ? NowMilliseconds() : end;
+		if ((0 > begin) || (0 > end) || (effectiveEnd < begin))
 		{
 			SetError(response, req, 1004, "invalid query time range");
 			SendResponse(id, response);
 			return false;
 		}
-		std::vector<market::CBar> bars = m_broker.QueryBars(security, channel, begin, end);
-		market::CProviderStatus history = m_broker.HistoryStatus();
+		market::CProviderStatus history{ true, "" };
+		std::vector<market::CBar> bars = m_broker.QueryBars(security, channel, begin, end, &history);
 		if (bars.empty() && !history.m_healthy)
 		{
 			SetError(response, req, StorageUnavailable,
 				history.m_detail.empty() ? "history provider is unavailable" : history.m_detail);
 			SendResponse(id, response);
 			return false;
+		}
+		if (market::Channel::bar_1m == channel)
+		{
+			response.SetExtraData("history_coverage", "unverified");
+			if (!bars.empty())
+			{
+				response.SetExtraData("first_bar_time_ms", std::to_string(bars.front().m_begin_time));
+				response.SetExtraData("last_bar_time_ms", std::to_string(bars.back().m_begin_time));
+			}
 		}
 		pResult->set_found(!bars.empty());
 		for (const market::CBar& bar : bars)
@@ -519,9 +533,10 @@ void CHQService::OnQuote(const market::CQuote& quote, std::uint64_t nSequence)
 	request.SetType(_TyRequest::MARKET_QUOTE_PUSH);
 	SetData(request, quoteData, 0, nSequence);
 	market::CChannelInfo subscription{ quote.m_security, market::Channel::quote };
-	for (net::_TyConnectionId id : m_subscriptions.GetSubscriberIds(subscription))
+	std::lock_guard<std::recursive_mutex> lock(m_mtx_subscriptions);
+	if (m_broadcastHandler)
 	{
-		SendResponse(id, request);
+		m_broadcastHandler(m_subscriptions.GetSubscriberIds(subscription), request);
 	}
 }
 
@@ -554,9 +569,10 @@ void CHQService::OnDepth(market::CDepth&& depth)
 	request.SetType(_TyRequest::MARKET_DEPTH_PUSH);
 	SetData(request, depthData, 0, nSequence);
 	market::CChannelInfo subscription{ depth.m_security, market::Channel::depth };
-	for (net::_TyConnectionId id : m_subscriptions.GetSubscriberIds(subscription))
+	std::lock_guard<std::recursive_mutex> lock(m_mtx_subscriptions);
+	if (m_broadcastHandler)
 	{
-		SendResponse(id, request);
+		m_broadcastHandler(m_subscriptions.GetSubscriberIds(subscription), request);
 	}
 }
 
@@ -600,26 +616,61 @@ std::string CHQService::QuoteJson(const std::string& strInstrument) const
 std::string CHQService::InstrumentsJson() const
 {
 	std::vector<market::CInstrument> values = m_broker.QueryInstruments();
-	std::ostringstream out;
-	out << '[';
-	bool bFirst = true;
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+	writer.StartArray();
 	for (const market::CInstrument& instrument : values)
 	{
-		if (!bFirst)
-		{
-			out << ',';
-		}
-		bFirst = false;
-		out << "{\"security\":\"" << instrument.m_security.String() << "\",\"name\":\"" << instrument.m_name << "\",\"status\":\"" << instrument.m_status << "\"}";
+		std::string security = instrument.m_security.String();
+		writer.StartObject();
+		writer.Key("security");
+		writer.String(security.data(), static_cast<rapidjson::SizeType>(security.size()));
+		writer.Key("name");
+		writer.String(instrument.m_name.data(), static_cast<rapidjson::SizeType>(instrument.m_name.size()));
+		writer.Key("status");
+		writer.String(instrument.m_status.data(), static_cast<rapidjson::SizeType>(instrument.m_status.size()));
+		writer.EndObject();
 	}
-	out << ']';
-	return out.str();
+	writer.EndArray();
+	return buffer.GetString();
 }
 
-std::string CHQService::BarsJson(const std::string& strInstrument, market::Channel channel, std::int64_t nBeginTime, std::int64_t nEndTime)
+std::string CHQService::BarsJson(const std::string& strInstrument, const std::string& strChannel, const std::string& strBeginTime, const std::string& strEndTime, int& status, std::optional<std::pair<std::int64_t, std::int64_t>>& returnedRange)
 {
 	market::CSecurity security = ParseInstrument(strInstrument);
-	std::vector<market::CBar> values = m_broker.QueryBars(security, channel, nBeginTime, nEndTime);
+	market::Channel channel = strChannel.empty() ? market::Channel::bar_1d : ParseChannel(strChannel);
+	if (security.m_code.empty() || market::Exchange::unknown == security.m_market ||
+		(market::Channel::bar_1d != channel && market::Channel::bar_1m != channel))
+	{
+		status = 400;
+		return R"({"error":"invalid instrument or bar channel"})";
+	}
+	std::int64_t begin = 0;
+	std::int64_t end = 0;
+	if ((!strBeginTime.empty() && !ParseMilliseconds(strBeginTime, begin)) ||
+		(!strEndTime.empty() && !ParseMilliseconds(strEndTime, end)))
+	{
+		status = 400;
+		return R"({"error":"invalid query time range"})";
+	}
+	std::int64_t effectiveEnd = 0 == end ? NowMilliseconds() : end;
+	if (0 > begin || 0 > end || effectiveEnd < begin)
+	{
+		status = 400;
+		return R"({"error":"invalid query time range"})";
+	}
+	market::CProviderStatus history{ true, "" };
+	std::vector<market::CBar> values = m_broker.QueryBars(security, channel, begin, end, &history);
+	if (values.empty() && !history.m_healthy)
+	{
+		status = 503;
+		return R"({"error":"history provider is unavailable"})";
+	}
+	status = 200;
+	if (!values.empty())
+	{
+		returnedRange.emplace(values.front().m_begin_time, values.back().m_begin_time);
+	}
 	std::ostringstream out;
 	out << '[';
 	bool bFirst = true;
@@ -636,6 +687,11 @@ std::string CHQService::BarsJson(const std::string& strInstrument, market::Chann
 	}
 	out << ']';
 	return out.str();
+}
+
+void CHQService::SetBroadcastHandler(_TyBroadcastHandler&& handler)
+{
+	m_broadcastHandler = std::move(handler);
 }
 
 void CHQService::SetReplyHandler(_TyReplyHandler&& handler)

@@ -6,6 +6,7 @@
 #include <cmath>
 #include <ctime>
 #include <iomanip>
+#include <limits>
 #include <iostream>
 #include <sstream>
 namespace provider
@@ -73,7 +74,7 @@ namespace provider
 		{
 			return "1990-01-01 00:00:00";
 		}
-		std::time_t value = static_cast<std::time_t>((nMilliseconds + ChinaTimeOffsetMilliseconds) / 1000);
+		std::time_t value = static_cast<std::time_t>(nMilliseconds / 1000 + ChinaTimeOffsetMilliseconds / 1000);
 		std::tm date{};
 #ifdef _WIN32
 		gmtime_s(&date, &value);
@@ -102,8 +103,12 @@ namespace provider
 #endif
 		return bHasTime ? nResult - ChinaTimeOffsetMilliseconds : nResult;
 	}
-	static std::int64_t Fixed(PyObject* row, const char* name, int scale)
+	static std::int64_t Fixed(PyObject* row, const char* name, int scale, bool* available = nullptr)
 	{
+		if (nullptr != available)
+		{
+			*available = false;
+		}
 		PyObject* value = PyDict_GetItemString(row, name);
 		if (nullptr == value)
 		{
@@ -117,7 +122,17 @@ namespace provider
 		}
 		double fValue = PyFloat_AsDouble(number);
 		Py_DECREF(number);
-		return static_cast<std::int64_t>(std::llround(fValue * std::pow(10.0, scale)));
+		double scaled = fValue * std::pow(10.0, scale);
+		double upperBound = static_cast<double>((std::numeric_limits<std::int64_t>::max)());
+		if (!std::isfinite(scaled) || scaled < -upperBound || upperBound <= scaled)
+		{
+			return 0;
+		}
+		if (nullptr != available)
+		{
+			*available = true;
+		}
+		return static_cast<std::int64_t>(std::llround(scaled));
 	}
 	static int Integer(PyObject* row, const char* name)
 	{
@@ -268,7 +283,7 @@ namespace provider
 		Py_XDECREF(values);
 		PyGILState_Release(gil);
 		std::lock_guard<std::mutex> lck(m_state_mutex);
-		m_status = { bOk, bOk ? "ready" : failure };
+		SetStatus({ bOk, bOk ? "ready" : failure });
 		return bOk;
 	}
 	bool CAkShareProvider::Subscribe(const std::vector<market::CChannelInfo>&)
@@ -280,12 +295,16 @@ namespace provider
 		return false;
 	}
 	std::vector<market::CBar> CAkShareProvider::QueryBars(const market::CSecurity& security, market::Channel channel,
-														  std::int64_t nBeginTime, std::int64_t nEndTime)
+														  std::int64_t nBeginTime, std::int64_t nEndTime, market::CProviderStatus* queryStatus)
 	{
 		std::vector<market::CBar> bars;
 		std::unique_lock<std::mutex> lck(m_state_mutex);
 		if (((market::Channel::bar_1d != channel) && (market::Channel::bar_1m != channel)) || (nullptr == m_provider))
 		{
+			if (nullptr != queryStatus)
+			{
+				*queryStatus = { false, "history provider unavailable for this request" };
+			}
 			return bars;
 		}
 		bool bMinute = market::Channel::bar_1m == channel;
@@ -315,8 +334,13 @@ namespace provider
 				bar.m_high_price = Fixed(row, "high", 4);
 				bar.m_low_price = Fixed(row, "low", 4);
 				bar.m_close_price = Fixed(row, "close", 4);
+				if (0 >= bar.m_open_price || 0 >= bar.m_high_price ||
+					0 >= bar.m_low_price || 0 >= bar.m_close_price)
+				{
+					continue;
+				}
 				bar.m_volume = Fixed(row, "volume", 0);
-				bar.m_turnover = Fixed(row, "turnover", 2);
+				bar.m_turnover = Fixed(row, "turnover", 2, &bar.m_hasTurnover);
 				bar.m_source = String(row, "source");
 				if (bar.m_source.empty())
 				{
@@ -336,16 +360,26 @@ namespace provider
 		}
 		if (!bOk)
 		{
-			failure = LogPythonFailure(bMinute ? "Eastmoney stock_zh_a_hist_min_em / Tencent minute history" : "Eastmoney stock_zh_a_hist / Tencent daily history");
+			failure = LogPythonFailure(bMinute ? "Eastmoney minute history" : "Eastmoney stock_zh_a_hist / Tencent daily history");
 		}
 		Py_XDECREF(result);
 		PyGILState_Release(gil);
-		m_status = { bOk, bOk ? "ready" : failure };
+		market::CProviderStatus status{ bOk, bOk ? "ready" : failure };
+		if (nullptr != queryStatus)
+		{
+			*queryStatus = status;
+		}
+		SetStatus(std::move(status));
 		return bars;
+	}
+	void CAkShareProvider::SetStatus(market::CProviderStatus status)
+	{
+		std::lock_guard<std::mutex> lck(m_mtx_status);
+		m_status = std::move(status);
 	}
 	market::CProviderStatus CAkShareProvider::GetStatus() const
 	{
-		std::lock_guard<std::mutex> lck(m_state_mutex);
+		std::lock_guard<std::mutex> lck(m_mtx_status);
 		return m_status;
 	}
 	void CAkShareProvider::SetQuoteHandler(_TyQuoteHandler)
@@ -418,7 +452,7 @@ namespace provider
 			m_sectors = std::move(sectors);
 			m_sector_expiry = now + std::chrono::seconds(60);
 		}
-		m_status = { bOk, bOk ? "ready" : failure };
+		SetStatus({ bOk, bOk ? "ready" : failure });
 		return bOk ? m_sectors : std::vector<market::CSector>{};
 	}
 	market::CSectorConstituents CAkShareProvider::QuerySectorConstituents(market::SectorType type, const std::string& strSectorCode)
@@ -491,7 +525,7 @@ namespace provider
 			m_sector_constituents.insert_or_assign(strSectorCode, value);
 			m_sector_constituent_expiry.insert_or_assign(strSectorCode, now + std::chrono::minutes(5));
 		}
-		m_status = { bOk, bOk ? "ready" : failure };
+		SetStatus({ bOk, bOk ? "ready" : failure });
 		return bOk ? value : market::CSectorConstituents{};
 	}
 	void CAkShareProvider::Stop()
@@ -505,6 +539,6 @@ namespace provider
 		Py_DECREF(static_cast<PyObject*>(m_provider));
 		m_provider = nullptr;
 		PyGILState_Release(gil);
-		m_status = { false, "stopped" };
+		SetStatus({ false, "stopped" });
 	}
 } // namespace provider

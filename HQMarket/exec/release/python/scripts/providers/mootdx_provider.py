@@ -42,6 +42,7 @@ class MooTdxProvider:
         self._retry_mootdx_at = 0.0
         self._hk_quotes_cache = {}
         self._hk_quotes_time = 0.0
+        self._hk_refresh_failed = False
 
     def initialize(self) -> None:
         from mootdx.quotes import Quotes
@@ -84,7 +85,12 @@ class MooTdxProvider:
                     self._client = None
                     self._use_tencent = True
                     self._retry_mootdx_at = time.monotonic() + 30
-            rows.extend(self._tencent_quotes(mainland))
+            try:
+                rows.extend(self._tencent_quotes(mainland))
+            except Exception as error:
+                if not rows:
+                    raise
+                print(f"Tencent quote fetch failed: {error}", file=sys.stderr)
         return rows
 
     def _hk_quotes(self, instruments: list[dict]) -> list[dict]:
@@ -101,7 +107,7 @@ class MooTdxProvider:
                     except (TypeError, ValueError):
                         return 0.0
                 snapshot_time_ms = time.time_ns() // 1_000_000
-                self._hk_quotes_cache = {
+                snapshot = {
                     str(row["代码"]).zfill(5): {
                         "symbol": str(row["代码"]).zfill(5), "exchange": "HKEX", "source": "akshare:sina",
                         "snapshot_time_ms": snapshot_time_ms,
@@ -112,9 +118,16 @@ class MooTdxProvider:
                     }
                     for row in frame.to_dict(orient="records")
                 }
+                self._hk_refresh_failed = not snapshot
+                if snapshot:
+                    self._hk_quotes_cache = snapshot
             except Exception as error:
+                self._hk_refresh_failed = True
                 print(f"akshare stock_hk_spot quote refresh failed: {type(error).__name__}: {error}", file=sys.stderr)
-        return [self._hk_quotes_cache[item["symbol"]] for item in instruments if item["symbol"] in self._hk_quotes_cache]
+        return [
+            dict(self._hk_quotes_cache[item["symbol"]], stale=self._hk_refresh_failed)
+            for item in instruments if item["symbol"] in self._hk_quotes_cache
+        ]
 
     def _mootdx_quotes(self, instruments: list[dict]) -> list[dict]:
         rows: list[dict] = []
@@ -150,7 +163,10 @@ class MooTdxProvider:
             for item, code in zip(batch, codes):
                 fields = values.get(code)
                 if fields is not None:
-                    rows.append(self._tencent_row(item, fields))
+                    try:
+                        rows.append(self._tencent_row(item, fields))
+                    except (ValueError, IndexError, OverflowError) as error:
+                        print(f"Invalid Tencent quote for {code}: {error}", file=sys.stderr)
         if not rows:
             raise RuntimeError("Tencent returned no quote data")
         return rows
@@ -177,24 +193,34 @@ class MooTdxProvider:
     @staticmethod
     def _number(fields: list[str], index: int) -> float:
         try:
-            return float(fields[index])
+            value = float(fields[index])
+            return value if math.isfinite(value) else 0.0
         except (IndexError, TypeError, ValueError):
             return 0.0
 
     @classmethod
     def _tencent_row(cls, item: dict, fields: list[str]) -> dict:
+        if len(fields) <= 6 or fields[2] != item["symbol"]:
+            raise ValueError("missing or mismatched security code")
+        price = float(fields[3])
+        volume = float(fields[6])
+        if not math.isfinite(price) or not math.isfinite(volume) or price < 0 or volume < 0:
+            raise ValueError("invalid price or volume")
         amount_parts = fields[35].split("/") if len(fields) > 35 else []
+        amount = float(amount_parts[2]) if len(amount_parts) > 2 else 0.0
+        if not math.isfinite(amount) or amount < 0:
+            raise ValueError("invalid turnover")
         row = {
             "symbol": item["symbol"],
             "exchange": item["exchange"],
             "source": "tencent",
-            "price": cls._number(fields, 3),
+            "price": price,
             "last_close": cls._number(fields, 4),
             "open": cls._number(fields, 5),
-            "vol": int(cls._number(fields, 6)),
+            "vol": int(volume),
             "high": cls._number(fields, 33),
             "low": cls._number(fields, 34),
-            "amount": float(amount_parts[2]) if len(amount_parts) > 2 else 0.0,
+            "amount": amount,
         }
         for level in range(1, 6):
             bid_index = 9 + (level - 1) * 2

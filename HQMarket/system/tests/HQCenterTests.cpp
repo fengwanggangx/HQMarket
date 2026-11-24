@@ -7,6 +7,11 @@
 #include "HQTestBoundaries.h"
 #include <filesystem>
 #include <iostream>
+#include <limits>
+#include <thread>
+#include <rapidjson/document.h>
+#include "../../database/IDataBase.h"
+#include "../../quote/CHQRecorder.h"
 #include <stdexcept>
 
 class CHQRoutingTests
@@ -47,6 +52,39 @@ public:
 		CHQCenter center(&service);
 		Check(center.Initialize(), "center initialization");
 		std::filesystem::path root = std::filesystem::current_path() / ("routing-runtime-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+		std::filesystem::create_directories(root / "data");
+		db::CConnectParam params("", 0, "", "", (root / "data" / "hqmarket.db").string(), "");
+		Check(0 == CDBEngine::InstancePtr()->Initialize(db::em_database::sqlite, params), "open legacy SQLite fixture");
+		{
+			db::_TyDBPtr sqlite = CDBEngine::InstancePtr()->GetDBPtr(db::em_database::sqlite);
+			Check(0 == sqlite->ExecUpdate("CREATE TABLE bar(symbol TEXT, exchange INTEGER, channel INTEGER, begin_time INTEGER, open INTEGER, high INTEGER, low INTEGER, close INTEGER, volume INTEGER, turnover INTEGER, price_scale INTEGER, adjustment TEXT, source TEXT, PRIMARY KEY(symbol,exchange,channel,begin_time,adjustment))"), "create legacy bars table");
+			CHQRecorder recorder;
+			Check(recorder.Open(root / "data" / "hqmarket.db"), "migrate legacy bars table");
+			market::CBar bar;
+			bar.m_security = { "600519", market::Exchange::sse };
+			bar.m_channel = market::Channel::bar_1m;
+			bar.m_begin_time = 1000;
+			bar.m_end_time = 61000;
+			bar.m_completed = true;
+			bar.m_data_version = std::numeric_limits<std::uint64_t>::max();
+			bar.m_basis_version = "basis'1";
+			bar.m_turnover = 92500;
+			Check(recorder.UpsertBars({ bar }), "persist bar metadata");
+			recorder.Close();
+			Check(recorder.Open(root / "data" / "hqmarket.db"), "reopen migrated bars table");
+			std::vector<market::CBar> bars = recorder.QueryBars(bar.m_security, bar.m_channel, 1000, 1000);
+			Check(1 == bars.size() && bars.front().m_completed && bars.front().m_end_time == bar.m_end_time &&
+				bars.front().m_data_version == bar.m_data_version && bars.front().m_basis_version == bar.m_basis_version, "metadata survives SQLite round trip");
+			bar.m_hasTurnover = false;
+			bar.m_turnover = 0;
+			Check(recorder.UpsertBars({ bar }), "refresh bar without turnover");
+			bars = recorder.QueryBars(bar.m_security, bar.m_channel, 1000, 1000);
+			Check(1 == bars.size() && 92500 == bars.front().m_turnover, "missing turnover preserves stored amount");
+			bar.m_hasTurnover = true;
+			Check(recorder.UpsertBars({ bar }), "refresh bar with known zero turnover");
+			bars = recorder.QueryBars(bar.m_security, bar.m_channel, 1000, 1000);
+			Check(1 == bars.size() && 0 == bars.front().m_turnover, "known zero turnover replaces stored amount");
+		}
 		Check(service.Initialize(root), "service initialization with offline sources and SQLite");
 		market::CChannelInfo quoteSubscription{ { "600519", market::Exchange::sse }, market::Channel::quote };
 
@@ -82,6 +120,14 @@ public:
 		state.m_sent.clear();
 		center.OnRequest(Request(1, _TyRequest::MARKET_SUBSCRIBE, 41));
 		Check(2 == state.m_sent.size() && state.m_sent.front().second.GetData().has_subscription_ack() && state.m_sent.back().second.GetData().has_quote() && 1 == state.m_subscribe_calls, "cached snapshot follows ACK without duplicate upstream subscribe");
+		Check("1" == state.m_sent.back().second.GetExtraData("sequence"), "cached snapshot preserves the source sequence");
+		state.m_sent.clear();
+		CRequest oversized = Request(2, _TyRequest::MARKET_QUOTE_QUERY, 99);
+		oversized.SetExtraData("oversized_fixture", std::string(8 * 1024 * 1024, 'x'));
+		Check(center.SendRequest(2, oversized), "oversized response sends an error frame");
+		Check(1 == state.m_sent.size() && 99 == state.m_sent.back().second.GetId() &&
+			state.m_sent.back().second.GetErrorInfo().has_value() && center.IsAuthenticated(2) &&
+			!state.m_closed.contains(2), "oversized response preserves the authenticated connection");
 		center.OnRequest(Request(1, _TyRequest::MARKET_UNSUBSCRIBE, 42));
 		Check(0 == state.m_unsubscribe_calls, "first client unsubscribe retains other client demand");
 		state.m_sent.clear();
@@ -119,8 +165,34 @@ public:
 		Check(200 == response->m_status && std::string::npos != response->m_body.find("600519.SSE"), "HTTP quote routes to service cache");
 		response = Http(std::bind_front(&CHQCenter::OnBarsRequest, &center));
 		Check(200 == response->m_status && std::string::npos != response->m_body.find("123450"), "HTTP bars route through history and SQLite recorder");
+		std::size_t historyCalls = state.m_historyCalls;
+		std::this_thread::sleep_for(std::chrono::milliseconds(2));
+		response = Http(std::bind_front(&CHQCenter::OnBarsRequest, &center));
+		Check(200 == response->m_status && historyCalls == state.m_historyCalls, "HTTP default end time reuses fresh history");
+		state.m_query["channel"] = "bar_1m";
+		state.m_query["begin_time_ms"] = "1700000000000";
+		state.m_query["end_time_ms"] = "1700000000000";
+		response = Http(std::bind_front(&CHQCenter::OnBarsRequest, &center));
+		Check(200 == response->m_status && std::string::npos != response->m_body.find("123450"), "HTTP minute bars accept an explicit time range");
+		Check("unverified" == response->m_headers.at("X-HQMarket-History-Coverage") &&
+			"1700000000000" == response->m_headers.at("X-HQMarket-First-Bar-Time-Ms") &&
+			"1700000000000" == response->m_headers.at("X-HQMarket-Last-Bar-Time-Ms"), "HTTP minute bars expose returned bounds");
+		state.m_query["end_time_ms"] = "1700000000001";
+		state.m_query["begin_time_ms"] = "1700000000001";
+		response = Http(std::bind_front(&CHQCenter::OnBarsRequest, &center));
+		Check(200 == response->m_status && "[]" == response->m_body, "HTTP empty range succeeds");
+		state.m_query["end_time_ms"] = "invalid";
+		response = Http(std::bind_front(&CHQCenter::OnBarsRequest, &center));
+		Check(400 == response->m_status, "HTTP rejects invalid time");
+		state.m_query["end_time_ms"] = "1700000000001";
+		state.m_query["instrument"] = "600000.SSE";
+		response = Http(std::bind_front(&CHQCenter::OnBarsRequest, &center));
+		Check(503 == response->m_status, "HTTP reports an unavailable upstream");
 		response = Http(std::bind_front(&CHQCenter::OnInstrumentsRequest, &center));
-		Check(std::string::npos != response->m_body.find("Sample"), "HTTP instrument list preserved");
+		rapidjson::Document instruments;
+		instruments.Parse(response->m_body.c_str());
+		Check(instruments.IsArray() && 1 == instruments.Size() &&
+			std::string("Sample \"name\" \\ exchange") == instruments[0]["name"].GetString(), "HTTP instruments preserve escaped names");
 		response = Http(std::bind_front(&CHQCenter::OnHealthRequest, &center));
 		Check(std::string::npos != response->m_body.find("\"status\":\"ok\""), "HTTP health reflects provider state");
 		response = Http(std::bind_front(&CHQCenter::OnMetricsRequest, &center));

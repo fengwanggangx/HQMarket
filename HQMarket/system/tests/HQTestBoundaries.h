@@ -19,6 +19,7 @@ namespace hqtest
 		market::IMarketProvider::_TyQuoteHandler m_quote_handler;
 		market::IMarketProvider::_TyDepthHandler m_depth_handler;
 		net::_TyConnectionId m_failed_connection{ -1 };
+		std::size_t m_historyCalls{ 0 };
 		std::size_t m_subscribe_calls{ 0 };
 		std::size_t m_unsubscribe_calls{ 0 };
 	};

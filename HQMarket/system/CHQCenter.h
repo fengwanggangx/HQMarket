@@ -44,6 +44,7 @@ private:
 	void OnDepth(market::CDepth&& depth);
 	void OnQuote(const market::CQuote& quote, std::uint64_t nSequence);
 	bool SendRequest(net::_TyConnectionId id, const CRequest& req);
+	void Broadcast(const std::vector<net::_TyConnectionId>& ids, const CRequest& req);
 
 	bool IsAuthenticated(net::_TyConnectionId id) const;
 	void HandleClientDisconnected(net::_TyConnectionId id);

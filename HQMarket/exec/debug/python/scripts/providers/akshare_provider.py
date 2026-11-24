@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 from time import sleep
@@ -54,54 +54,32 @@ def _tencent_json(path: str, parameters: dict[str, str]) -> dict:
 
 def _tencent_daily_bars(symbol: str, start: str, end: str, exchange: str = "") -> list[dict]:
     code = _tencent_code(symbol, exchange)
-    start = datetime.strptime(start, "%Y%m%d").strftime("%Y-%m-%d")
-    end = datetime.strptime(end, "%Y%m%d").strftime("%Y-%m-%d")
-    response = _tencent_json(
-        "/appstock/app/fqkline/get",
-        {"param": f"{code},day,{start},{end},640,"},
-    )
-    data = response.get("data", {})
-    value = data.get(code, {}) if isinstance(data, dict) else {}
-    rows = value.get("day") or []
-    return [
-        {
-            "source": "tencent", "date": row[0], "open": row[1], "close": row[2],
-            "high": row[3], "low": row[4], "volume": row[5], "turnover": 0,
-        }
-        for row in rows if len(row) >= 6
-    ]
-
-
-def _tencent_minute_bars(symbol: str, exchange: str = "") -> list[dict]:
-    code = _tencent_code(symbol, exchange)
-    response = _tencent_json(
-        "/appstock/app/day/query", {"code": code}
-    )
-    data = response.get("data", {})
-    value = data.get(code, {}).get("data", []) if isinstance(data, dict) else []
-    bars: list[dict] = []
-    for day in value:
-        date = str(day.get("date", ""))
-        if len(date) != 8:
-            continue
-        previous_volume = 0.0
-        previous_turnover = 0.0
-        for text in day.get("data", []):
-            fields = str(text).split()
-            if len(fields) < 4:
-                continue
-            price = float(fields[1])
-            cumulative_volume = float(fields[2])
-            cumulative_turnover = float(fields[3])
-            bars.append({
-                "source": "tencent", "date": datetime.strptime(date + fields[0], "%Y%m%d%H%M").strftime("%Y-%m-%d %H:%M:%S"),
-                "open": price, "high": price, "low": price, "close": price,
-                "volume": max(0.0, cumulative_volume - previous_volume),
-                "turnover": max(0.0, cumulative_turnover - previous_turnover),
-            })
-            previous_volume = cumulative_volume
-            previous_turnover = cumulative_turnover
-    return bars
+    first = datetime.strptime(start, "%Y%m%d").date()
+    last = datetime.strptime(end, "%Y%m%d").date()
+    bars = {}
+    while first <= last:
+        page_end = first + timedelta(days=min(639, (last - first).days))
+        response = _tencent_json(
+            "/appstock/app/fqkline/get",
+            {"param": f"{code},day,{first},{page_end},640,"},
+        )
+        if not isinstance(response, dict) or response.get("code") not in (0, "0"):
+            raise RuntimeError(f"Tencent daily history failed for {code} on {first}")
+        data = response.get("data")
+        series = data.get(code) if isinstance(data, dict) else None
+        rows = series.get("day") if isinstance(series, dict) else None
+        if not isinstance(rows, list):
+            raise RuntimeError(f"Invalid Tencent daily history page for {code} on {first}")
+        for row in rows:
+            if len(row) >= 6 and first.isoformat() <= row[0] <= page_end.isoformat():
+                bars[row[0]] = {
+                    "source": "tencent", "date": row[0], "open": row[1], "close": row[2],
+                    "high": row[3], "low": row[4], "volume": row[5],
+                }
+        if page_end == last:
+            break
+        first = page_end + timedelta(days=1)
+    return [bars[date] for date in sorted(bars)]
 
 
 def _normalize_pinyin(values: list[str]) -> str:
@@ -171,7 +149,6 @@ class AkShareProvider:
                     frame["date"] = frame["date"].astype(str)
                     frame = frame[(frame["date"] >= start[:4] + "-" + start[4:6] + "-" + start[6:]) &
                                   (frame["date"] <= end[:4] + "-" + end[4:6] + "-" + end[6:])]
-                    frame["turnover"] = 0
                     return frame.to_dict(orient="records")
             except Exception as error:
                 source = "stock_hk_daily" if exchange == "HKEX" else "stock_zh_index_daily"
@@ -207,8 +184,9 @@ class AkShareProvider:
                     return frame.to_dict(orient="records")
             except Exception as error:
                 source = "stock_hk_hist_min_em" if exchange == "HKEX" else "index_zh_a_hist_min_em"
-                print(f"akshare {source} failed: {type(error).__name__}: {error}; using Tencent minute history", file=sys.stderr)
-            return [] if adjustment else _tencent_minute_bars(symbol, exchange)
+                print(f"akshare {source} failed: {type(error).__name__}: {error}", file=sys.stderr)
+                raise
+            return []
         try:
             import akshare as ak
             frame = ak.stock_zh_a_hist_min_em(
@@ -222,8 +200,9 @@ class AkShareProvider:
                 frame["date"] = frame["date"].astype(str)
                 return frame.to_dict(orient="records")
         except Exception as error:
-            print(f"akshare stock_zh_a_hist_min_em failed: {type(error).__name__}: {error}; using Tencent minute history", file=sys.stderr)
-        return [] if adjustment else _tencent_minute_bars(symbol, exchange)
+            print(f"akshare stock_zh_a_hist_min_em failed: {type(error).__name__}: {error}", file=sys.stderr)
+            raise
+        return []
 
     def industry_sectors(self) -> list[dict]:
         import akshare as ak

@@ -9,7 +9,7 @@ set(HQMARKET_MODE debug CACHE STRING "Dependency configuration")
 set(depInc "${HQMARKET_DEPS}/include/${HQMARKET_MODE}")
 set(depLib "${HQMARKET_DEPS}/libs/${HQMARKET_MODE}")
 file(GLOB protoSources "${hqRoot}/request/*.cc" "${hqRoot}/request/v1/*.cc")
-add_executable(hqmarket_routing_tests HQCenterTests.cpp HQTestBoundaries.cpp "${hqRoot}/log/CLogger.cpp"
+add_executable(hqmarket_routing_tests HQCenterTests.cpp HQTestBoundaries.cpp "${hqRoot}/log/CLogger.cpp" "${hqRoot}/network/CFrameBuffer.cpp"
  "${hqRoot}/system/CHQCenter.cpp" "${hqRoot}/system/CHQService.cpp" "${hqRoot}/system/CSubscriptionMgr.cpp"
  "${hqRoot}/quote/CHQBroker.cpp" "${hqRoot}/quote/CHQCache.cpp" "${hqRoot}/quote/CHQRecorder.cpp" "${hqRoot}/quote/MarketTypes.cpp"
  "${hqRoot}/request/request.cpp" ${protoSources}

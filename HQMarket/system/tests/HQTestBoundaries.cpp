@@ -45,6 +45,16 @@ namespace net
 		hqtest::State().m_closed.emplace(id);
 		return id;
 	}
+	std::uint64_t CNetPool::QueueOverflows()
+	{
+		return 0;
+	}
+	bool CNetPool::Send(_TyConnectionId id, const char* data, std::size_t length)
+	{
+		CRequest req;
+		return length > sizeof(std::uint32_t) &&
+			req.Deserialize(std::string(data + sizeof(std::uint32_t), length - sizeof(std::uint32_t))) && net::SendRequest(id, req);
+	}
 	bool SendRequest(_TyConnectionId id, const CRequest& req)
 	{
 		if (hqtest::State().m_failed_connection == id)
@@ -166,13 +176,27 @@ namespace provider
 	{
 		return false;
 	}
-	std::vector<market::CBar> CAkShareProvider::QueryBars(const market::CSecurity& security, market::Channel channel, std::int64_t, std::int64_t)
+	std::vector<market::CBar> CAkShareProvider::QueryBars(const market::CSecurity& security, market::Channel channel, std::int64_t begin, std::int64_t end, market::CProviderStatus* status)
 	{
+		++hqtest::State().m_historyCalls;
+		if ("600000" == security.m_code)
+		{
+			if (nullptr != status)
+			{
+				*status = { false, "offline fixture failure" };
+			}
+			return {};
+		}
+		if (begin > 1700000000000 || end < 1700000000000)
+		{
+			return {};
+		}
 		market::CBar bar;
 		bar.m_security = security;
 		bar.m_channel = channel;
 		bar.m_begin_time = 1700000000000;
 		bar.m_close_price = 123450;
+		bar.m_source = "akshare";
 		return { bar };
 	}
 	market::CProviderStatus CAkShareProvider::GetStatus() const
@@ -192,7 +216,7 @@ namespace provider
 	{
 		market::CInstrument info;
 		info.m_security = { "600519", market::Exchange::sse };
-		info.m_name = "Sample";
+		info.m_name = "Sample \"name\" \\ exchange";
 		return { info };
 	}
 	std::vector<market::CSector> CAkShareProvider::QuerySectors(market::SectorType)

@@ -149,6 +149,7 @@ namespace market
 		std::int64_t m_volume{ 0 };			   // 周期内成交量，具体单位由数据源约定。
 		std::int64_t m_turnover{ 0 };		   // 周期内成交额，具体单位由数据源约定。
 		int m_price_scale{ 4 };				   // 所有价格字段的小数位数。
+		bool m_hasTurnover{ true };
 		std::string m_adjustment{ "none" };	   // 复权方式，none表示不复权。
 		std::string m_source;				   // 行情数据来源。
 	};

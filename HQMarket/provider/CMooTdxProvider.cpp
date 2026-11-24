@@ -194,19 +194,20 @@ namespace provider
 			}
 			constexpr std::size_t BatchSize = 1000;
 			std::size_t nSize = securities.size();
-			bool bOk = true;
+			std::size_t validCount = 0;
 			for (std::size_t nOffset = 0; nSize > nOffset; nOffset += BatchSize)
 			{
 				std::size_t nEnd = (std::min)(nSize, nOffset + BatchSize);
 				std::vector<market::CSecurity> batch(securities.begin() + static_cast<std::ptrdiff_t>(nOffset),
 					securities.begin() + static_cast<std::ptrdiff_t>(nEnd));
-				if (!Poll(batch))
-				{
-					bOk = false;
-					break;
-				}
+				validCount += Poll(batch);
 			}
-			if (bOk)
+			{
+				std::lock_guard<std::mutex> lck(m_state_mutex);
+				bool bComplete = validCount == nSize;
+				m_status = { bComplete, bComplete ? "connected" : "missing, stale or unavailable quotes" };
+			}
+			if (0 != validCount)
 			{
 				nFailures = 0;
 				std::this_thread::sleep_for(std::chrono::milliseconds(800));
@@ -219,7 +220,7 @@ namespace provider
 			}
 		}
 	}
-	bool CMooTdxProvider::Poll(const std::vector<market::CSecurity>& securities)
+	std::size_t CMooTdxProvider::Poll(const std::vector<market::CSecurity>& securities)
 	{
 		PyGILState_STATE gil = PyGILState_Ensure();
 		std::unordered_map<std::string, market::CSecurity> securityByKey;
@@ -235,6 +236,7 @@ namespace provider
 		PyObject* result = PyObject_CallMethod(static_cast<PyObject*>(m_provider), "quotes", "O", list);
 		Py_DECREF(list);
 		bool bOk = (nullptr != result) && (0 != PyList_Check(result));
+		std::size_t validCount = 0;
 		if (bOk)
 		{
 			for (Py_ssize_t i = 0; i < PyList_Size(result); ++i)
@@ -251,9 +253,15 @@ namespace provider
 				{
 					continue;
 				}
+				bool stale = Py_True == PyDict_GetItemString(row, "stale");
+				if (!stale)
+				{
+					++validCount;
+				}
 				std::int64_t now = NowMs();
 				market::CQuote quote;
 				quote.m_security = securityIter->second;
+				securityByKey.erase(securityIter);
 				quote.m_receive_time = Integer(row, "snapshot_time_ms");
 				if (0 == quote.m_receive_time)
 				{
@@ -268,11 +276,13 @@ namespace provider
 				quote.m_volume = Integer(row, "vol");
 				quote.m_turnover = Fixed(row, "amount", 2);
 				quote.m_source = String(row, "source");
+				quote.m_stale = stale;
 				market::CDepth depth;
 				depth.m_security = quote.m_security;
 				depth.m_receive_time = quote.m_receive_time;
 				depth.m_exchange_time = quote.m_exchange_time;
 				depth.m_source = quote.m_source;
+				depth.m_stale = stale;
 				for (int level = 1; level <= 5; ++level)
 				{
 					std::string suffix = std::to_string(level);
@@ -311,11 +321,7 @@ namespace provider
 		}
 		Py_XDECREF(result);
 		PyGILState_Release(gil);
-		{
-			std::lock_guard<std::mutex> lck(m_state_mutex);
-			m_status = { bOk, bOk ? "connected" : "quote request failed" };
-		}
-		return bOk;
+		return validCount;
 	}
 	void CMooTdxProvider::Stop()
 	{

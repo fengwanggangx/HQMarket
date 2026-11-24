@@ -5,6 +5,7 @@
 #include "../database/IDataBase.h"
 #include "../network/CHttpServer.h"
 #include "../network/CNetPool.h"
+#include "../network/CFrameBuffer.h"
 #include "../network/CNetTools.h"
 #include <cctype>
 #include <exception>
@@ -105,6 +106,7 @@ bool CHQCenter::Initialize()
 		return false;
 	}
 	m_hq_service->SetReplyHandler(std::bind_front(&CHQCenter::SendRequest, this));
+	m_hq_service->SetBroadcastHandler(std::bind_front(&CHQCenter::Broadcast, this));
 	m_hq_service->SetQuoteHandler(std::bind_front(&CHQCenter::OnQuote, this));
 	m_hq_service->SetDepthHandler(std::bind_front(&CHQCenter::OnDepth, this));
 	m_initialized = true;
@@ -117,6 +119,7 @@ void CHQCenter::Stop()
 	if (nullptr != m_hq_service && m_initialized)
 	{
 		m_hq_service->SetReplyHandler({});
+		m_hq_service->SetBroadcastHandler({});
 		m_hq_service->SetQuoteHandler({});
 		m_hq_service->SetDepthHandler({});
 	}
@@ -307,13 +310,48 @@ void CHQCenter::HandleClientDisconnected(net::_TyConnectionId id)
 	m_hq_service->HandleClientDisconnected(id);
 }
 
+void CHQCenter::Broadcast(const std::vector<net::_TyConnectionId>& ids, const CRequest& req)
+{
+	std::string payload;
+	if (ids.empty() || !req.Serialize(&payload))
+	{
+		return;
+	}
+	std::optional<std::string> frame = net::CFrameBuffer::Encode(payload);
+	if (!frame.has_value())
+	{
+		return;
+	}
+	for (net::_TyConnectionId id : ids)
+	{
+		if (IsAuthenticated(id) && !net::CNetPool::InstancePtr()->Send(id, frame->data(), frame->size()))
+		{
+			HandleClientDisconnected(id);
+		}
+	}
+}
+
 bool CHQCenter::SendRequest(net::_TyConnectionId id, const CRequest& req)
 {
 	if (!IsAuthenticated(id))
 	{
 		return false;
 	}
-	if (!net::SendRequest(id, req))
+	std::string payload;
+	if (!req.Serialize(&payload))
+	{
+		return false;
+	}
+	std::optional<std::string> frame = net::CFrameBuffer::Encode(payload);
+	if (!frame.has_value())
+	{
+		CRequest error;
+		error.SetId(req.GetId());
+		error.SetType(req.GetType());
+		error.SetErrorInfo(1005, "response exceeds the TCP frame limit");
+		return SendRequest(id, error);
+	}
+	if (!net::CNetPool::InstancePtr()->Send(id, frame->data(), frame->size()))
 	{
 		HandleClientDisconnected(id);
 		return false;
@@ -338,7 +376,8 @@ std::unique_ptr<net::CHttpResponseData> CHQCenter::OnHealthRequest(const net::CH
 
 std::unique_ptr<net::CHttpResponseData> CHQCenter::OnMetricsRequest(const net::CHttpRequest&)
 {
-	return Response(200, m_hq_service->MetricsText(net::CNetPool::InstancePtr()->Count()), "text/plain; charset=utf-8");
+	return Response(200, m_hq_service->MetricsText(net::CNetPool::InstancePtr()->Count()) +
+		"hqmarket_tcp_send_queue_overflows_total " + std::to_string(net::CNetPool::QueueOverflows()) + "\n", "text/plain; charset=utf-8");
 }
 
 std::unique_ptr<net::CHttpResponseData> CHQCenter::OnInstrumentsRequest(const net::CHttpRequest&)
@@ -359,5 +398,20 @@ std::unique_ptr<net::CHttpResponseData> CHQCenter::OnBarsRequest(const net::CHtt
 	{
 		return Response(400, "{\"error\":\"instrument is required\"}", "application/json; charset=utf-8");
 	}
-	return Response(200, m_hq_service->BarsJson(instrument, market::Channel::bar_1d, 0, (std::numeric_limits<std::int64_t>::max)()), "application/json; charset=utf-8");
+	int status = 200;
+	std::string channel = req.GetQuery("channel");
+	std::optional<std::pair<std::int64_t, std::int64_t>> returnedRange;
+	std::string body = m_hq_service->BarsJson(instrument, channel,
+		req.GetQuery("begin_time_ms"), req.GetQuery("end_time_ms"), status, returnedRange);
+	std::unique_ptr<net::CHttpResponseData> response = Response(status, std::move(body), "application/json; charset=utf-8");
+	if (200 == status && "bar_1m" == channel)
+	{
+		response->m_headers["X-HQMarket-History-Coverage"] = "unverified";
+		if (returnedRange.has_value())
+		{
+			response->m_headers["X-HQMarket-First-Bar-Time-Ms"] = std::to_string(returnedRange->first);
+			response->m_headers["X-HQMarket-Last-Bar-Time-Ms"] = std::to_string(returnedRange->second);
+		}
+	}
+	return response;
 }
