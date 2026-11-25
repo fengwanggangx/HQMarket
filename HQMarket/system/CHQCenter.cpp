@@ -376,8 +376,7 @@ std::unique_ptr<net::CHttpResponseData> CHQCenter::OnHealthRequest(const net::CH
 
 std::unique_ptr<net::CHttpResponseData> CHQCenter::OnMetricsRequest(const net::CHttpRequest&)
 {
-	return Response(200, m_hq_service->MetricsText(net::CNetPool::InstancePtr()->Count()) +
-		"hqmarket_tcp_send_queue_overflows_total " + std::to_string(net::CNetPool::QueueOverflows()) + "\n", "text/plain; charset=utf-8");
+	return Response(200, m_hq_service->MetricsText(net::CNetPool::InstancePtr()->Count()) + "hqmarket_tcp_send_queue_overflows_total " + std::to_string(net::CNetPool::QueueOverflows()) + "\n", "text/plain; charset=utf-8");
 }
 
 std::unique_ptr<net::CHttpResponseData> CHQCenter::OnInstrumentsRequest(const net::CHttpRequest&)

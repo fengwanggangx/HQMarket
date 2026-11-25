@@ -2,7 +2,7 @@
 #define __COMMON_DEFINES_H__
 
 #define RETURN_EMTPTY_IFNULLPTR(...) \
-	if ((__VA_ARGS__) == nullptr)    \
+	if (nullptr == (__VA_ARGS__))    \
 	{                                \
 		return {};                   \
 	}
@@ -14,14 +14,14 @@
 	}
 
 #define RETURN_IFNULLPTR(...)     \
-	if ((__VA_ARGS__) == nullptr) \
+	if (nullptr == (__VA_ARGS__)) \
 	{                             \
 		return;                   \
 	}
 
-#define IS_NOT_NULLPTR(...) ((__VA_ARGS__) != nullptr)
+#define IS_NOT_NULLPTR(...) (nullptr != (__VA_ARGS__))
 
-#define IS_NULLPTR(...) ((__VA_ARGS__) == nullptr)
+#define IS_NULLPTR(...) (nullptr == (__VA_ARGS__))
 
 #define DECLARE_DELETE_COPY_CONSTRUCT(ClassName)     \
 private:                                             \

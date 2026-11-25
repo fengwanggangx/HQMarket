@@ -6,34 +6,34 @@ namespace market
 	{
 		switch (mk)
 		{
-			case Exchange::sse:
-				return "SSE";
-			case Exchange::szse:
-				return "SZSE";
-			case Exchange::bse:
-				return "BSE";
-			case Exchange::hkex:
-				return "HKEX";
-			case Exchange::cffex:
-				return "CFFEX";
-			case Exchange::shfe:
-				return "SHFE";
-			case Exchange::dce:
-				return "DCE";
-			case Exchange::czce:
-				return "CZCE";
-			case Exchange::ine:
-				return "INE";
-			case Exchange::gfex:
-				return "GFEX";
-			case Exchange::nasdaq:
-				return "NASDAQ";
-			case Exchange::nyse:
-				return "NYSE";
-			case Exchange::crypto:
-				return "CRYPTO";
-			default:
-				return "";
+		case Exchange::sse:
+			return "SSE";
+		case Exchange::szse:
+			return "SZSE";
+		case Exchange::bse:
+			return "BSE";
+		case Exchange::hkex:
+			return "HKEX";
+		case Exchange::cffex:
+			return "CFFEX";
+		case Exchange::shfe:
+			return "SHFE";
+		case Exchange::dce:
+			return "DCE";
+		case Exchange::czce:
+			return "CZCE";
+		case Exchange::ine:
+			return "INE";
+		case Exchange::gfex:
+			return "GFEX";
+		case Exchange::nasdaq:
+			return "NASDAQ";
+		case Exchange::nyse:
+			return "NYSE";
+		case Exchange::crypto:
+			return "CRYPTO";
+		default:
+			return "";
 		}
 	}
 

@@ -146,7 +146,7 @@ namespace provider
 		return true;
 	}
 	std::vector<market::CBar> CMooTdxProvider::QueryBars(const market::CSecurity&, market::Channel, std::int64_t,
-														 std::int64_t)
+		std::int64_t)
 	{
 		return {};
 	}

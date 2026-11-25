@@ -8,7 +8,7 @@ struct _ts;
 
 class CPythonRuntime final
 {
-	public:
+public:
 	CPythonRuntime() = default;
 	~CPythonRuntime();
 	bool Initialize(const std::filesystem::path& runtimeHome, const std::filesystem::path& scriptPath);
@@ -16,10 +16,10 @@ class CPythonRuntime final
 	bool IsInitialized() const;
 	std::string GetLastError() const;
 
-	private:
-		_ts* m_main_thread_state{ nullptr };
-		bool m_initialized{ false };
-		std::string m_last_error;
+private:
+	_ts* m_main_thread_state{ nullptr };
+	bool m_initialized{ false };
+	std::string m_last_error;
 };
 
 #endif

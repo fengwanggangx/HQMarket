@@ -74,7 +74,8 @@ public:
 			Check(recorder.Open(root / "data" / "hqmarket.db"), "reopen migrated bars table");
 			std::vector<market::CBar> bars = recorder.QueryBars(bar.m_security, bar.m_channel, 1000, 1000);
 			Check(1 == bars.size() && bars.front().m_completed && bars.front().m_end_time == bar.m_end_time &&
-				bars.front().m_data_version == bar.m_data_version && bars.front().m_basis_version == bar.m_basis_version, "metadata survives SQLite round trip");
+					  bars.front().m_data_version == bar.m_data_version && bars.front().m_basis_version == bar.m_basis_version,
+				"metadata survives SQLite round trip");
 			bar.m_hasTurnover = false;
 			bar.m_turnover = 0;
 			Check(recorder.UpsertBars({ bar }), "refresh bar without turnover");
@@ -126,8 +127,9 @@ public:
 		oversized.SetExtraData("oversized_fixture", std::string(8 * 1024 * 1024, 'x'));
 		Check(center.SendRequest(2, oversized), "oversized response sends an error frame");
 		Check(1 == state.m_sent.size() && 99 == state.m_sent.back().second.GetId() &&
-			state.m_sent.back().second.GetErrorInfo().has_value() && center.IsAuthenticated(2) &&
-			!state.m_closed.contains(2), "oversized response preserves the authenticated connection");
+				  state.m_sent.back().second.GetErrorInfo().has_value() && center.IsAuthenticated(2) &&
+				  !state.m_closed.contains(2),
+			"oversized response preserves the authenticated connection");
 		center.OnRequest(Request(1, _TyRequest::MARKET_UNSUBSCRIBE, 42));
 		Check(0 == state.m_unsubscribe_calls, "first client unsubscribe retains other client demand");
 		state.m_sent.clear();
@@ -175,8 +177,9 @@ public:
 		response = Http(std::bind_front(&CHQCenter::OnBarsRequest, &center));
 		Check(200 == response->m_status && std::string::npos != response->m_body.find("123450"), "HTTP minute bars accept an explicit time range");
 		Check("unverified" == response->m_headers.at("X-HQMarket-History-Coverage") &&
-			"1700000000000" == response->m_headers.at("X-HQMarket-First-Bar-Time-Ms") &&
-			"1700000000000" == response->m_headers.at("X-HQMarket-Last-Bar-Time-Ms"), "HTTP minute bars expose returned bounds");
+				  "1700000000000" == response->m_headers.at("X-HQMarket-First-Bar-Time-Ms") &&
+				  "1700000000000" == response->m_headers.at("X-HQMarket-Last-Bar-Time-Ms"),
+			"HTTP minute bars expose returned bounds");
 		state.m_query["end_time_ms"] = "1700000000001";
 		state.m_query["begin_time_ms"] = "1700000000001";
 		response = Http(std::bind_front(&CHQCenter::OnBarsRequest, &center));
@@ -192,7 +195,8 @@ public:
 		rapidjson::Document instruments;
 		instruments.Parse(response->m_body.c_str());
 		Check(instruments.IsArray() && 1 == instruments.Size() &&
-			std::string("Sample \"name\" \\ exchange") == instruments[0]["name"].GetString(), "HTTP instruments preserve escaped names");
+				  std::string("Sample \"name\" \\ exchange") == instruments[0]["name"].GetString(),
+			"HTTP instruments preserve escaped names");
 		response = Http(std::bind_front(&CHQCenter::OnHealthRequest, &center));
 		Check(std::string::npos != response->m_body.find("\"status\":\"ok\""), "HTTP health reflects provider state");
 		response = Http(std::bind_front(&CHQCenter::OnMetricsRequest, &center));

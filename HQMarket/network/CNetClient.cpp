@@ -52,7 +52,6 @@ namespace net
 			}
 		}
 
-		
 		bufferevent* pBuffer = CNetPool::InstancePtr()->RegisterAConnection(fd, pEvent, &addr);
 	}
 
@@ -84,7 +83,7 @@ namespace net
 		}
 
 		// 释放bufferevent资源
-		if (pEvent != nullptr)
+		if (nullptr != pEvent)
 		{
 			_TyConnectionID fd = bufferevent_getfd(pEvent);
 			CNetPool::InstancePtr()->CloseAConnection(fd);
@@ -116,7 +115,7 @@ namespace net
 			return -1;
 		}
 		int nRet = bufferevent_socket_connect(pEvent, (struct sockaddr*)&svr, sizeof(svr));
-		if (nRet != 0)
+		if (0 != nRet)
 		{
 			bufferevent_free(pEvent);
 			return nRet;
@@ -124,7 +123,7 @@ namespace net
 
 		bufferevent_setcb(pEvent, CNetClient::Read_Callback, nullptr, CNetClient::Event_Callback, this);
 		nRet = bufferevent_enable(pEvent, EV_READ | EV_WRITE);
-		if (nRet != 0)
+		if (0 != nRet)
 		{
 			bufferevent_free(pEvent);
 			return nRet;

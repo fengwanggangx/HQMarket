@@ -295,7 +295,7 @@ namespace provider
 		return false;
 	}
 	std::vector<market::CBar> CAkShareProvider::QueryBars(const market::CSecurity& security, market::Channel channel,
-														  std::int64_t nBeginTime, std::int64_t nEndTime, market::CProviderStatus* queryStatus)
+		std::int64_t nBeginTime, std::int64_t nEndTime, market::CProviderStatus* queryStatus)
 	{
 		std::vector<market::CBar> bars;
 		std::unique_lock<std::mutex> lck(m_state_mutex);

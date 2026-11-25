@@ -18,7 +18,7 @@
 
 class CHQBroker final
 {
-  public:
+public:
 	using _TyQuoteHandler = std::function<void(const market::CQuote&, std::uint64_t)>;
 	using _TyDepthHandler = std::function<void(market::CDepth&&)>;
 
@@ -39,7 +39,7 @@ class CHQBroker final
 	void SetQuoteHandler(_TyQuoteHandler handler);
 	void SetDepthHandler(_TyDepthHandler handler);
 
-  private:
+private:
 	provider::CMooTdxProvider m_mootdx;
 	provider::CAkShareProvider m_akshare;
 	CHQCache m_cache;

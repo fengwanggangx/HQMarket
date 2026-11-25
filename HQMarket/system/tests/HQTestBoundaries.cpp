@@ -53,7 +53,7 @@ namespace net
 	{
 		CRequest req;
 		return length > sizeof(std::uint32_t) &&
-			req.Deserialize(std::string(data + sizeof(std::uint32_t), length - sizeof(std::uint32_t))) && net::SendRequest(id, req);
+			   req.Deserialize(std::string(data + sizeof(std::uint32_t), length - sizeof(std::uint32_t))) && net::SendRequest(id, req);
 	}
 	bool SendRequest(_TyConnectionId id, const CRequest& req)
 	{

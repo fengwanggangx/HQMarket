@@ -7,7 +7,7 @@ namespace traits
 	template <typename... _Ty>
 	struct void_t_impl
 	{
-			using type = void;
+		using type = void;
 	};
 
 	template <typename... _Ty>

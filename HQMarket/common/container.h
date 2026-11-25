@@ -16,33 +16,33 @@ namespace container
 {
 	// ɾ��������������
 	template <class _TyContainer, class _TyIdx,
-			  typename std::enable_if_t<traits::is_sequence_container<_TyIdx>::value, int> = 0>
+		typename std::enable_if_t<traits::is_sequence_container<_TyIdx>::value, int> = 0>
 	void remove_idx(_TyContainer& container, const _TyIdx& idx)
 	{
 		using _TyItem = _TyContainer::value_type;
 		const auto& vIter = std::remove_if(container.begin(), container.end(),
-										   [&, i = 0](const _TyItem&) mutable
-										   {
-											   return std::find(idx.begin(), idx.end(), i++) != idx.end();
-										   });
+			[&, i = 0](const _TyItem&) mutable
+		{
+			return std::find(idx.begin(), idx.end(), i++) != idx.end();
+		});
 		container.erase(vIter, container.end());
 	}
 
 	template <class _TyContainer, class _TyIdx,
-			  typename std::enable_if_t<traits::is_associative_container<_TyIdx>::value, int> = 0>
+		typename std::enable_if_t<traits::is_associative_container<_TyIdx>::value, int> = 0>
 	void remove_idx(_TyContainer& container, const _TyIdx& idx)
 	{
 		using _TyItem = _TyContainer::value_type;
 		const auto& vIter = std::remove_if(container.begin(), container.end(),
-										   [&, i = 0](const _TyItem&) mutable
-										   {
-											   return idx.find(i++) != idx.end();
-										   });
+			[&, i = 0](const _TyItem&) mutable
+		{
+			return idx.find(i++) != idx.end();
+		});
 		container.erase(vIter, container.end());
 	}
 
 	template <class _TyContainer, class _Deletor,
-			  typename std::enable_if_t<traits::is_container<_TyContainer>::value, int> = 0>
+		typename std::enable_if_t<traits::is_container<_TyContainer>::value, int> = 0>
 	void remove_at(_TyContainer& container, _Deletor&& del)
 	{
 		const auto& vIter = std::remove_if(container.begin(), container.end(), std::forward<_Deletor>(del));
@@ -50,7 +50,7 @@ namespace container
 	}
 
 	template <class _TyContainer, class _TyKey,
-			  typename std::enable_if_t<traits::is_associative_container<_TyContainer>::value, int> = 0>
+		typename std::enable_if_t<traits::is_associative_container<_TyContainer>::value, int> = 0>
 	bool with(const _TyContainer& container, const _TyKey& key)
 	{
 		const auto& mIter = container.find(key);
@@ -58,7 +58,7 @@ namespace container
 	}
 
 	template <class _TyContainer, class _TyKey,
-			  typename std::enable_if_t<traits::is_sequence_container<_TyContainer>::value, int> = 0>
+		typename std::enable_if_t<traits::is_sequence_container<_TyContainer>::value, int> = 0>
 	bool with(const _TyContainer& container, const _TyKey& key)
 	{
 		const auto& mIter = std::find(container.begin(), container.end(), key);
@@ -79,14 +79,14 @@ namespace container
 	}
 
 	template <class _TyContainer, class _TyKey = typename _TyContainer::key_type,
-			  typename std::enable_if_t<traits::is_associative_container<_TyContainer>::value, int> = 0>
+		typename std::enable_if_t<traits::is_associative_container<_TyContainer>::value, int> = 0>
 	const auto& vfind(const _TyContainer& container, const _TyKey& key)
 	{
 		return FindMappedValue(container, key);
 	}
 
 	template <class _TyContainer, class _TyVal = typename _TyContainer::value_type,
-			  typename std::enable_if_t<traits::is_sequence_container<_TyContainer>::value, int> = 0>
+		typename std::enable_if_t<traits::is_sequence_container<_TyContainer>::value, int> = 0>
 	const auto& vfind(const _TyContainer& container, const _TyVal& key)
 	{
 		const auto& mIter = std::find(container.begin(), container.end(), key);
@@ -100,7 +100,7 @@ namespace container
 	}
 
 	template <class _TyContainer, class _TyKey, class _TyVal = typename _TyContainer::mapped_type,
-			  typename std::enable_if_t<traits::is_associative_container<_TyContainer>::value, int> = 0>
+		typename std::enable_if_t<traits::is_associative_container<_TyContainer>::value, int> = 0>
 	const auto& vfind(const _TyContainer& container, const _TyKey& key, const _TyVal& def)
 	{
 		const auto& mIter = container.find(key);
@@ -114,7 +114,7 @@ namespace container
 	}
 
 	template <class _TyContainer, class _TyKey, class _TyVal = typename _TyContainer::value_type,
-			  typename std::enable_if_t<traits::is_sequence_container<_TyContainer>::value, int> = 0>
+		typename std::enable_if_t<traits::is_sequence_container<_TyContainer>::value, int> = 0>
 	const auto& vfind(const _TyContainer& container, const _TyKey& key, const _TyVal& def)
 	{
 		const auto& mIter = std::find(container.begin(), container.end(), key);
@@ -129,7 +129,7 @@ namespace container
 	}
 
 	template <class _TyContainer, class _TyKey, class _TyVal = typename _TyContainer::mapped_type,
-			  typename std::enable_if_t<traits::is_associative_container<_TyContainer>::value, int> = 0>
+		typename std::enable_if_t<traits::is_associative_container<_TyContainer>::value, int> = 0>
 	bool try_vfind(const _TyContainer& container, const _TyKey& key, _TyVal& val)
 	{
 		const auto& mIter = container.find(key);
@@ -145,7 +145,7 @@ namespace container
 	}
 
 	template <class _TyContainer, class _TyKey, class _TyVal = typename _TyContainer::value_type,
-			  typename std::enable_if_t<traits::is_sequence_container<_TyContainer>::value, int> = 0>
+		typename std::enable_if_t<traits::is_sequence_container<_TyContainer>::value, int> = 0>
 	bool try_vfind(const _TyContainer& container, const _TyKey& key, _TyVal& val)
 	{
 		const auto& mIter = std::find(container.begin(), container.end(), key);
@@ -160,9 +160,9 @@ namespace container
 	}
 
 	template <class _TyContainer, class _TyKey, class _Creator,
-			  typename std::enable_if_t<traits::is_associative_container<_TyContainer>::value &&
-											traits::is_invocable_v<typename _TyContainer::mapped_type, _Creator>,
-										int> = 0>
+		typename std::enable_if_t<traits::is_associative_container<_TyContainer>::value &&
+									  traits::is_invocable_v<typename _TyContainer::mapped_type, _Creator>,
+			int> = 0>
 	const auto& vfind(_TyContainer& container, const _TyKey& key, _Creator&& creator)
 	{
 		const auto& mIter = container.find(key);
@@ -178,9 +178,9 @@ namespace container
 	}
 
 	template <class _TyContainer, class _TyKey, class _Creator,
-			  typename std::enable_if_t<traits::is_sequence_container<_TyContainer>::value &&
-											traits::is_invocable_v<typename _TyContainer::mapped_type, _Creator>,
-										int> = 0>
+		typename std::enable_if_t<traits::is_sequence_container<_TyContainer>::value &&
+									  traits::is_invocable_v<typename _TyContainer::mapped_type, _Creator>,
+			int> = 0>
 	auto& vfind(_TyContainer& container, const _TyKey& key, _Creator&& creator)
 	{
 		typename _TyContainer::iterator iter = std::find(container.begin(), container.end(), key);
@@ -209,9 +209,9 @@ namespace container
 	}
 
 	template <class _TyContainer0, class _TyContainer1,
-			  typename std::enable_if_t<traits::is_sequence_container<_TyContainer0>::value &&
-											traits::is_associative_container<_TyContainer1>::value,
-										int> = 0>
+		typename std::enable_if_t<traits::is_sequence_container<_TyContainer0>::value &&
+									  traits::is_associative_container<_TyContainer1>::value,
+			int> = 0>
 	void vcopy(_TyContainer0& dest, const _TyContainer1& src, bool bCopyKey)
 	{
 		for (const auto& v : src)

@@ -22,7 +22,7 @@ namespace db
 
 	class CQueryTable final
 	{
-	  public:
+	public:
 		using _TyColumns = std::vector<CQueryColumn>;
 		using _TyRows = std::vector<_TyQueryRow>;
 		void Clear()

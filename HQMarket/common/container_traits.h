@@ -32,43 +32,43 @@ namespace traits
 	template <class _Ty>
 	struct is_container
 	{
-			static constexpr bool value = false;
+		static constexpr bool value = false;
 	};
 
 	template <class _Ty, class _Alloc>
 	struct is_container<std::vector<_Ty, _Alloc>>
 	{
-			static constexpr bool value = true;
+		static constexpr bool value = true;
 	};
 
 	template <class _Kty, class _Ty, class _Pr, class _Alloc>
 	struct is_container<std::map<_Kty, _Ty, _Pr, _Alloc>>
 	{
-			static constexpr bool value = true;
+		static constexpr bool value = true;
 	};
 
 	template <class _K, class _Ty>
 	struct is_container<std::unordered_map<_K, _Ty>>
 	{
-			static constexpr bool value = true;
+		static constexpr bool value = true;
 	};
 
 	template <class _Ty, class _Alloc>
 	struct is_container<std::list<_Ty, _Alloc>>
 	{
-			static constexpr bool value = true;
+		static constexpr bool value = true;
 	};
 
 	template <class _Kty, class _Pr, class _Alloc>
 	struct is_container<std::set<_Kty, _Pr, _Alloc>>
 	{
-			static constexpr bool value = true;
+		static constexpr bool value = true;
 	};
 
 	template <class _Ty, class _Alloc>
 	struct is_container<std::deque<_Ty, _Alloc>>
 	{
-			static constexpr bool value = true;
+		static constexpr bool value = true;
 	};
 
 	template <typename T>

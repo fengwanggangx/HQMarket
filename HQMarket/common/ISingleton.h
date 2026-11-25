@@ -27,29 +27,29 @@ private:                                             \
 template <typename _Ty>
 class ISingleton
 {
-	public:
-		template <typename... _TyArg>
-		static _Ty* InstancePtr(_TyArg&&... args)
-		{
-			static _Ty* pInstance = new _Ty(std::forward<_TyArg>(args)...);
-			return pInstance;
-		}
+public:
+	template <typename... _TyArg>
+	static _Ty* InstancePtr(_TyArg&&... args)
+	{
+		static _Ty* pInstance = new _Ty(std::forward<_TyArg>(args)...);
+		return pInstance;
+	}
 
-		template <typename... _TyArg>
-		static _Ty& InstanceRef(_TyArg&&... args)
-		{
-			return *InstancePtr(std::forward<_TyArg>(args)...);
-		}
+	template <typename... _TyArg>
+	static _Ty& InstanceRef(_TyArg&&... args)
+	{
+		return *InstancePtr(std::forward<_TyArg>(args)...);
+	}
 
-		// 禁止拷贝继承
-	protected:
-		ISingleton() = default;
-		~ISingleton() = default;
+	// 禁止拷贝继承
+protected:
+	ISingleton() = default;
+	~ISingleton() = default;
 
-	private:
-		ISingleton(const ISingleton&) = delete;
-		ISingleton(ISingleton&&) = delete;
-		ISingleton& operator=(const ISingleton&) = delete;
-		ISingleton& operator=(ISingleton&&) = delete;
+private:
+	ISingleton(const ISingleton&) = delete;
+	ISingleton(ISingleton&&) = delete;
+	ISingleton& operator=(const ISingleton&) = delete;
+	ISingleton& operator=(ISingleton&&) = delete;
 };
 #endif

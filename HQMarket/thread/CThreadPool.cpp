@@ -110,7 +110,7 @@ void CThreadPool::ThreadProc()
 	thread_local size_t tid = m_thread_id.fetch_add(1, std::memory_order_relaxed);
 	while (true)
 	{
-		std::function<void()> task{nullptr};
+		std::function<void()> task{ nullptr };
 		{
 			std::unique_lock<std::mutex> lck(m_task_mutex);
 			m_task_ready.wait(lck,
@@ -121,7 +121,7 @@ void CThreadPool::ThreadProc()
 			});
 
 			if (m_stop && (m_task_queue.empty() &&
-						   ((tid >= m_thread_task_queues.size()) || m_thread_task_queues.at(tid).empty())))
+							  ((tid >= m_thread_task_queues.size()) || m_thread_task_queues.at(tid).empty())))
 			{
 				return;
 			}

@@ -15,14 +15,15 @@ bool CHQBroker::Initialize(const std::filesystem::path& root)
 		return false;
 	}
 	m_mootdx.SetQuoteHandler([this](market::CQuote&& quote)
-							 {
-				market::CSecurity security = quote.m_security;
-				std::uint64_t sequence = m_cache.Update(std::move(quote));
-				std::optional<market::CQuote> cached = m_cache.GetQuote(security);
-				if (cached.has_value() && m_quote_handler)
-				{
-					m_quote_handler(*cached, sequence);
-				} });
+	{
+		market::CSecurity security = quote.m_security;
+		std::uint64_t sequence = m_cache.Update(std::move(quote));
+		std::optional<market::CQuote> cached = m_cache.GetQuote(security);
+		if (cached.has_value() && m_quote_handler)
+		{
+			m_quote_handler(*cached, sequence);
+		}
+	});
 	m_mootdx.SetDepthHandler([this](market::CDepth&& depth)
 	{
 		if (m_depth_handler)
@@ -67,11 +68,12 @@ std::vector<market::CBar> CHQBroker::QueryBars(const market::CSecurity& security
 {
 
 	std::string key = security.String() + ":" + std::to_string(static_cast<int>(channel)) + ":" +
-		std::to_string(nBeginTime) + ":" + std::to_string(nEndTime);
+					  std::to_string(nBeginTime) + ":" + std::to_string(nEndTime);
 	if (0 == nEndTime)
 	{
 		nEndTime = std::chrono::duration_cast<std::chrono::milliseconds>(
-			std::chrono::system_clock::now().time_since_epoch()).count();
+			std::chrono::system_clock::now().time_since_epoch())
+					   .count();
 	}
 	auto isFresh = [this, &key]()
 	{
@@ -125,7 +127,8 @@ std::vector<market::CBar> CHQBroker::QueryBars(const market::CSecurity& security
 					m_historyRefreshes.clear();
 				}
 				std::int64_t nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-					std::chrono::system_clock::now().time_since_epoch()).count();
+					std::chrono::system_clock::now().time_since_epoch())
+										 .count();
 				auto ttl = nEndTime < nowMs - 86400000 ? std::chrono::seconds(300) : std::chrono::seconds(5);
 				m_historyRefreshes.insert_or_assign(std::move(key), std::chrono::steady_clock::now() + ttl);
 			}

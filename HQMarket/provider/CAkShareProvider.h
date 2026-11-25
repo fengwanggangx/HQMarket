@@ -8,7 +8,7 @@ namespace provider
 {
 	class CAkShareProvider final : public market::IMarketProvider
 	{
-	  public:
+	public:
 		~CAkShareProvider() override;
 		const char* Name() const override;
 		bool Initialize() override;
@@ -27,17 +27,17 @@ namespace provider
 		std::vector<market::CSector> QuerySectors(market::SectorType type);
 		market::CSectorConstituents QuerySectorConstituents(market::SectorType type, const std::string& strSectorCode);
 
-	  private:
-		  mutable std::mutex m_state_mutex;
-		  mutable std::mutex m_mtx_status;
-		  market::CProviderStatus m_status;
-		  void SetStatus(market::CProviderStatus status);
-		  void* m_provider{ nullptr };
-		  std::vector<market::CInstrument> m_instruments;
-		  std::vector<market::CSector> m_sectors;
-		  std::unordered_map<std::string, market::CSectorConstituents> m_sector_constituents;
-		  std::chrono::steady_clock::time_point m_sector_expiry;
-		  std::unordered_map<std::string, std::chrono::steady_clock::time_point> m_sector_constituent_expiry;
+	private:
+		mutable std::mutex m_state_mutex;
+		mutable std::mutex m_mtx_status;
+		market::CProviderStatus m_status;
+		void SetStatus(market::CProviderStatus status);
+		void* m_provider{ nullptr };
+		std::vector<market::CInstrument> m_instruments;
+		std::vector<market::CSector> m_sectors;
+		std::unordered_map<std::string, market::CSectorConstituents> m_sector_constituents;
+		std::chrono::steady_clock::time_point m_sector_expiry;
+		std::unordered_map<std::string, std::chrono::steady_clock::time_point> m_sector_constituent_expiry;
 	};
 } // namespace provider
 #endif

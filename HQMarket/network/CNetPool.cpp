@@ -16,7 +16,7 @@ namespace net
 	{
 		constexpr std::size_t MaxQueuedBytes = 16 * 1024 * 1024;
 		std::atomic<std::uint64_t> queueOverflows{ 0 };
-	}
+	} // namespace
 
 	std::uint64_t CNetPool::QueueOverflows()
 	{
@@ -29,7 +29,7 @@ namespace net
 
 		int m_port{ -1 };
 		std::string m_address;
-		struct sockaddr_storage m_addr { 0 };
+		struct sockaddr_storage m_addr{ 0 };
 		struct bufferevent* m_event{ nullptr };
 
 		CFrameBuffer m_frames;
@@ -37,7 +37,7 @@ namespace net
 		void Empty()
 		{
 			m_fd = -1;
-			if (m_event != nullptr)
+			if (nullptr != m_event)
 			{
 				bufferevent_free(m_event);
 				m_event = nullptr;
@@ -46,7 +46,7 @@ namespace net
 			m_port = -1;
 			m_address.clear();
 			memset(&m_addr, 0, sizeof(m_addr));
-			
+
 			m_frames.Reset();
 		}
 
@@ -201,7 +201,7 @@ namespace net
 
 	net::_TyConnectionId CNetPool::CloseAConnection(struct bufferevent* pEvent)
 	{
-		if (pEvent == nullptr)
+		if (nullptr == pEvent)
 		{
 			return -1;
 		}
