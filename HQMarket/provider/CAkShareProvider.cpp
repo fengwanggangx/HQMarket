@@ -221,7 +221,25 @@ namespace provider
 		{
 			m_provider = instance;
 		}
-		PyObject* values = bOk ? PyObject_CallMethod(instance, "instruments", nullptr) : nullptr;
+		PyGILState_Release(gil);
+		if (!bOk)
+		{
+			SetStatus({ false, failure });
+			return false;
+		}
+		return RefreshInstruments();
+	}
+
+	bool CAkShareProvider::RefreshInstruments()
+	{
+		if (nullptr == m_provider)
+		{
+			return false;
+		}
+		PyGILState_STATE gil = PyGILState_Ensure();
+		PyObject* values = PyObject_CallMethod(static_cast<PyObject*>(m_provider), "instruments", nullptr);
+		std::vector<market::CInstrument> instruments;
+		std::string failure;
 		if ((nullptr != values) && (0 != PyList_Check(values)))
 		{
 			for (Py_ssize_t i = 0; i < PyList_Size(values); ++i)
@@ -251,9 +269,30 @@ namespace provider
 				instrument.m_pinyin_full_aliases = StringList(row, "pinyin_full_aliases");
 				instrument.m_pinyin_short_aliases = StringList(row, "pinyin_short_aliases");
 				std::string strExchange = String(row, "exchange");
+				std::string kind = String(row, "kind");
+				if ("a_share" == kind)
+				{
+					instrument.m_kind = market::InstrumentKind::aShare;
+				}
+				else if ("index" == kind)
+				{
+					instrument.m_kind = market::InstrumentKind::index;
+				}
+				else if ("fund" == kind)
+				{
+					instrument.m_kind = market::InstrumentKind::fund;
+				}
+				else if ("convertible_bond" == kind)
+				{
+					instrument.m_kind = market::InstrumentKind::convertibleBond;
+				}
 				if ("HKEX" == strExchange)
 				{
 					instrument.m_security.m_market = market::Exchange::hkex;
+				}
+				else if ("BSE" == strExchange)
+				{
+					instrument.m_security.m_market = market::Exchange::bse;
 				}
 				else if ("SSE" == strExchange || instrument.m_security.m_code.starts_with('6'))
 				{
@@ -267,24 +306,27 @@ namespace provider
 				{
 					instrument.m_security.m_market = market::Exchange::bse;
 				}
-				m_instruments.emplace_back(std::move(instrument));
+				instruments.emplace_back(std::move(instrument));
 			}
 		}
-		if (bOk && (nullptr == values))
+		if (instruments.empty())
 		{
-			failure = LogPythonFailure("stock_info_a_code_name");
-			bOk = false;
-		}
-		else if ((nullptr != values) && (0 == PyList_Check(values)))
-		{
-			failure = LogPythonFailure("stock_info_a_code_name result");
-			bOk = false;
+			failure = LogPythonFailure("instrument directory refresh");
 		}
 		Py_XDECREF(values);
 		PyGILState_Release(gil);
 		std::lock_guard<std::mutex> lck(m_state_mutex);
-		SetStatus({ bOk, bOk ? "ready" : failure });
-		return bOk;
+		if (instruments.empty())
+		{
+			if (m_instruments.empty())
+			{
+				SetStatus({ false, failure });
+			}
+			return false;
+		}
+		m_instruments = std::move(instruments);
+		SetStatus({ true, "ready" });
+		return true;
 	}
 	bool CAkShareProvider::Subscribe(const std::vector<market::CChannelInfo>&)
 	{

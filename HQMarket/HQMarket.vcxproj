@@ -142,9 +142,11 @@
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DataFilesToCopyRemotely Include="libs\debug\**\*" />
+    <DataFilesToCopyRemotely Include="exec\debug\python\scripts\providers\*.py;exec\debug\python\scripts\requirements.lock" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DataFilesToCopyRemotely Include="libs\release\**\*" />
+    <DataFilesToCopyRemotely Include="exec\release\python\scripts\providers\*.py;exec\release\python\scripts\requirements.lock" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <RemoteDeploy Include="ini\system.ini">

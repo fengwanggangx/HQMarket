@@ -6,6 +6,8 @@
 #include "../common/defines.h"
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+#include <algorithm>
+#include <unordered_set>
 #include <chrono>
 #include <cctype>
 #include <exception>
@@ -364,6 +366,47 @@ bool CHQService::HandleQuery(net::_TyConnectionId id, const CRequest& req)
 {
 	std::uint64_t requestId = req.GetId();
 	_TyRequest type = req.GetType();
+	if (_TyRequest::MARKET_QUOTE_QUERY == type && req.GetData().has_market_snapshot_query())
+	{
+		const wire::MarketSnapshotQuery& query = req.GetData().market_snapshot_query();
+		std::uint32_t limit = query.has_limit() ? query.limit() : 100;
+		const std::string& board = query.board();
+		const std::string& scope = query.scope();
+		bool validBoard = board.empty() || "gainers" == board || "losers" == board || "turnover" == board;
+		bool validScope = scope.empty() || "a_share" == scope || "index" == scope || "fund" == scope || "convertible_bond" == scope || "hk" == scope;
+		if (0 == limit || 500 < limit || (0 != query.offset() && 0 == query.version()) || !validBoard || !validScope)
+		{
+			SendError(id, req, 1003, "invalid snapshot query");
+			return false;
+		}
+		_TyMarketSnapshotPage page;
+		MarketSnapshotJson(query.version(), query.offset(), limit, board, scope, query.allow_partial(), &page);
+		CRequest response;
+		response.SetType(type);
+		SetData(response, page, requestId);
+		return SendResponse(id, response);
+	}
+	if (_TyRequest::MARKET_QUOTE_QUERY == type && "market_snapshot" == req.GetExtraData("view"))
+	{
+		std::int64_t version = 0;
+		std::int64_t offset = 0;
+		std::int64_t limit = 100;
+		std::string limitValue = req.GetExtraData("limit");
+		std::string board = req.GetExtraData("board");
+		std::string scope = req.GetExtraData("scope");
+		bool validBoard = board.empty() || "gainers" == board || "losers" == board || "turnover" == board;
+		bool validScope = scope.empty() || "a_share" == scope || "index" == scope || "fund" == scope || "convertible_bond" == scope || "hk" == scope;
+		if (!ParseMilliseconds(req.GetExtraData("version"), version) || !ParseMilliseconds(req.GetExtraData("offset"), offset) || (!limitValue.empty() && !ParseMilliseconds(limitValue, limit)) || 0 > version || 0 > offset || 0 >= limit || 500 < limit || (0 != offset && 0 == version) || !validBoard || !validScope)
+		{
+			SendError(id, req, 1003, "invalid snapshot query");
+			return false;
+		}
+		CRequest response;
+		response.SetType(type);
+		response.SetId(requestId);
+		response.SetExtraData("market_snapshot", MarketSnapshotJson(version, offset, limit, board, scope, "1" == req.GetExtraData("partial")));
+		return SendResponse(id, response);
+	}
 	if (_TyRequest::MARKET_SECURITIES_QUERY == type)
 	{
 		wire::SecurityList result;
@@ -594,6 +637,7 @@ std::string CHQService::MetricsText(std::size_t nClients) const
 	std::ostringstream out;
 	out << "hqmarket_clients " << nClients
 		<< "\nhqmarket_quotes_cached " << m_broker.QuoteCount() << "\n";
+	out << m_broker.MarketMetrics();
 	return out.str();
 }
 
@@ -611,6 +655,208 @@ std::string CHQService::QuoteJson(const std::string& strInstrument) const
 		<< ",\"turnover\":" << quote->m_turnover << ",\"source\":\"" << quote->m_source
 		<< "\",\"stale\":" << (quote->m_stale ? "true" : "false") << "}";
 	return out.str();
+}
+
+std::string CHQService::MarketSnapshotJson(std::uint64_t version, std::size_t offset, std::size_t limit, const std::string& board, const std::string& scope, bool allowPartial, _TyMarketSnapshotPage* page) const
+{
+	std::optional<CHQBroker::_TyMarketSnapshot> snapshot = m_broker.QueryMarketSnapshot(version, "hk" == scope, !board.empty() && !allowPartial);
+	if (!snapshot.has_value())
+	{
+		if (nullptr != page)
+		{
+			page->set_status(0 == version ? "preparing" : "version_expired");
+			return {};
+		}
+		return 0 == version ? "{\"status\":\"preparing\"}" : "{\"status\":\"version_expired\"}";
+	}
+	std::unordered_set<market::CSecurity, market::CSecurityHash> halted;
+	if (!scope.empty() || !board.empty())
+	{
+		std::string selected = scope.empty() ? "a_share" : scope;
+		std::unordered_set<market::CSecurity, market::CSecurityHash> securities;
+		for (const auto& instrument : snapshot->m_instruments)
+		{
+			bool matches = ("a_share" == selected && market::InstrumentKind::aShare == instrument.m_kind) || ("index" == selected && market::InstrumentKind::index == instrument.m_kind) || ("fund" == selected && market::InstrumentKind::fund == instrument.m_kind) || ("convertible_bond" == selected && market::InstrumentKind::convertibleBond == instrument.m_kind) || ("hk" == selected && market::Exchange::hkex == instrument.m_security.m_market && (board.empty() || market::InstrumentKind::hkStock == instrument.m_kind));
+			if (matches)
+			{
+				securities.emplace(instrument.m_security);
+				if ("halted" == instrument.m_status)
+				{
+					halted.emplace(instrument.m_security);
+				}
+			}
+		}
+		snapshot->m_expected = securities.size();
+		std::erase_if(snapshot->m_quotes, [&securities](const market::CQuote& quote)
+		{
+			return !securities.contains(quote.m_security);
+		});
+	}
+	else
+	{
+		for (const auto& instrument : snapshot->m_instruments)
+		{
+			if ("halted" == instrument.m_status)
+			{
+				halted.emplace(instrument.m_security);
+			}
+		}
+	}
+	std::size_t covered = halted.size();
+	for (const auto& quote : snapshot->m_quotes)
+	{
+		if (!halted.contains(quote.m_security))
+		{
+			++covered;
+		}
+	}
+	bool partial = 0 == snapshot->m_expected || covered < snapshot->m_expected;
+	bool priorDate = market::MarketDateIndex(snapshot->m_finished_at) != market::MarketDateIndex(NowMilliseconds());
+	bool boardPreparing = !board.empty() && (0 == snapshot->m_expected || priorDate || ("hk" == scope && !snapshot->m_directory_verified) || ((partial || !snapshot->m_directory_verified) && !allowPartial));
+	std::size_t received = snapshot->m_quotes.size();
+	std::vector<market::CQuote>& quotes = snapshot->m_quotes;
+	std::size_t unknownExchangeTime = std::ranges::count_if(quotes, [](const market::CQuote& quote)
+	{
+		return 0 == quote.m_exchange_time;
+	});
+	if (boardPreparing)
+	{
+		quotes.clear();
+	}
+	else if (!board.empty())
+	{
+		std::erase_if(quotes, [&board, &halted](const market::CQuote& quote)
+		{
+			if (0 >= quote.m_last_price || halted.contains(quote.m_security))
+			{
+				return true;
+			}
+			if ("turnover" == board)
+			{
+				return 0 >= quote.m_turnover;
+			}
+			return 0 >= quote.m_pre_close || ("gainers" == board ? quote.m_last_price <= quote.m_pre_close : quote.m_last_price >= quote.m_pre_close);
+		});
+	}
+	std::ranges::sort(quotes, [&board](const market::CQuote& left, const market::CQuote& right)
+	{
+		if ("turnover" == board && left.m_turnover != right.m_turnover)
+		{
+			return left.m_turnover > right.m_turnover;
+		}
+		if ("gainers" == board || "losers" == board)
+		{
+			long double leftRatio = static_cast<long double>(left.m_last_price) / left.m_pre_close;
+			long double rightRatio = static_cast<long double>(right.m_last_price) / right.m_pre_close;
+			if (leftRatio != rightRatio)
+			{
+				return "gainers" == board ? leftRatio > rightRatio : leftRatio < rightRatio;
+			}
+		}
+		return left.m_security.m_market != right.m_security.m_market ? left.m_security.m_market < right.m_security.m_market : left.m_security.m_code < right.m_security.m_code;
+	});
+
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+	writer.StartObject();
+	writer.Key("version");
+	writer.Uint64(snapshot->m_version);
+	writer.Key("expected");
+	writer.Uint64(snapshot->m_expected);
+	writer.Key("received");
+	writer.Uint64(received);
+	writer.Key("missing");
+	writer.Uint64(snapshot->m_expected - (std::min)(covered, snapshot->m_expected));
+	writer.Key("confirmed_halted");
+	writer.Uint64(halted.size());
+	writer.Key("unknown_exchange_time");
+	writer.Uint64(unknownExchangeTime);
+	writer.Key("started_at_ms");
+	writer.Int64(snapshot->m_started_at);
+	writer.Key("finished_at_ms");
+	writer.Int64(snapshot->m_finished_at);
+	writer.Key("partial");
+	writer.Bool(partial);
+	writer.Key("directory_verified");
+	writer.Bool(snapshot->m_directory_verified);
+	writer.Key("prior_date");
+	writer.Bool(priorDate);
+	writer.Key("status");
+	writer.String(boardPreparing ? "preparing" : "ready");
+	std::size_t start = (std::min)(offset, quotes.size());
+	std::size_t end = start + (std::min)(limit, quotes.size() - start);
+	if (nullptr != page)
+	{
+		page->set_status(boardPreparing ? "preparing" : "ready");
+		page->set_version(snapshot->m_version);
+		page->set_expected(snapshot->m_expected);
+		page->set_received(received);
+		page->set_missing(snapshot->m_expected - (std::min)(covered, snapshot->m_expected));
+		page->set_confirmed_halted(halted.size());
+		page->set_unknown_exchange_time(unknownExchangeTime);
+		page->set_started_at_ms(snapshot->m_started_at);
+		page->set_finished_at_ms(snapshot->m_finished_at);
+		page->set_partial(partial);
+		page->set_directory_verified(snapshot->m_directory_verified);
+		page->set_prior_date(priorDate);
+		page->set_turnover_scale(2);
+		if (end < quotes.size())
+		{
+			page->set_next_offset(end);
+		}
+		for (std::size_t index = start; index < end; ++index)
+		{
+			FillQuote(quotes[index], page->add_quotes());
+		}
+		return {};
+	}
+	writer.Key("next_offset");
+	if (end < quotes.size())
+	{
+		writer.Uint64(end);
+	}
+	else
+	{
+		writer.Null();
+	}
+	writer.Key("quotes");
+	writer.StartArray();
+	for (std::size_t index = start; index < end; ++index)
+	{
+		const market::CQuote& quote = quotes[index];
+		std::string security = quote.m_security.String();
+		writer.StartObject();
+		writer.Key("security");
+		writer.String(security.c_str());
+		writer.Key("last_price");
+		writer.Int64(quote.m_last_price);
+		writer.Key("pre_close");
+		writer.Int64(quote.m_pre_close);
+		writer.Key("price_scale");
+		writer.Int(quote.m_price_scale);
+		writer.Key("open_price");
+		writer.Int64(quote.m_open_price);
+		writer.Key("high_price");
+		writer.Int64(quote.m_high_price);
+		writer.Key("low_price");
+		writer.Int64(quote.m_low_price);
+		writer.Key("volume");
+		writer.Int64(quote.m_volume);
+		writer.Key("turnover");
+		writer.Int64(quote.m_turnover);
+		writer.Key("turnover_scale");
+		writer.Int(2);
+		writer.Key("exchange_time_ms");
+		writer.Int64(quote.m_exchange_time);
+		writer.Key("receive_time_ms");
+		writer.Int64(quote.m_receive_time);
+		writer.Key("source");
+		writer.String(quote.m_source.c_str());
+		writer.EndObject();
+	}
+	writer.EndArray();
+	writer.EndObject();
+	return buffer.GetString();
 }
 
 std::string CHQService::InstrumentsJson() const

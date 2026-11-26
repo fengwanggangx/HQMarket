@@ -94,6 +94,11 @@ void CRequest::SetData(const _TyQueryResponse& value)
 	m_data->mutable_query_response()->CopyFrom(value);
 }
 
+void CRequest::SetData(const _TyMarketSnapshotPage& value)
+{
+	m_data->mutable_market_snapshot_page()->CopyFrom(value);
+}
+
 void CRequest::SetData(const _TySecurityList& value)
 {
 	m_data->mutable_security_list()->CopyFrom(value);

@@ -3,8 +3,11 @@ from __future__ import annotations
 
 import json
 import math
+import os
+import ssl
 import sys
 import time
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Iterable
 from urllib.request import Request, urlopen
@@ -43,8 +46,17 @@ class MooTdxProvider:
         self._hk_quotes_cache = {}
         self._hk_quotes_time = 0.0
         self._hk_refresh_failed = False
+        self._tencent_tls = None
 
     def initialize(self) -> None:
+        try:
+            self._connect_primary()
+        except Exception as error:
+            self._use_tencent = True
+            self._retry_mootdx_at = time.monotonic() + 30
+            print(f"MooTDX startup connection failed: {error}", file=sys.stderr)
+
+    def _connect_primary(self) -> None:
         from mootdx.quotes import Quotes
         self._client = Quotes.factory(
             market="std",
@@ -55,7 +67,7 @@ class MooTdxProvider:
             raise_exception=True,
         )
 
-    def quotes(self, instruments: Iterable[dict]) -> list[dict]:
+    def quotes(self, instruments: Iterable[dict], fill_missing: bool = False) -> list[dict]:
         values = list(instruments)
         if not values:
             return []
@@ -68,14 +80,20 @@ class MooTdxProvider:
             if self._use_tencent and time.monotonic() >= self._retry_mootdx_at:
                 self._retry_mootdx_at = time.monotonic() + 30
                 try:
-                    self.initialize()
+                    self._connect_primary()
                     self._use_tencent = False
                 except Exception as error:
                     print(f"MooTDX reconnect failed: {error}", file=sys.stderr)
             if not self._use_tencent:
                 try:
-                    rows.extend(self._mootdx_quotes(mainland))
-                    return rows
+                    primary = self._mootdx_quotes(mainland)
+                    rows.extend(primary)
+                    if not fill_missing:
+                        return rows
+                    found = {(row["exchange"], row["symbol"]) for row in primary}
+                    mainland = [item for item in mainland if (item["exchange"], item["symbol"]) not in found]
+                    if not mainland:
+                        return rows
                 except Exception as error:
                     print(f"MooTDX quote fetch failed: {error}", file=sys.stderr)
                     try:
@@ -106,11 +124,19 @@ class MooTdxProvider:
                         return result if math.isfinite(result) else 0.0
                     except (TypeError, ValueError):
                         return 0.0
+                def exchange_time_ms(value: object) -> int:
+                    try:
+                        timestamp = datetime.strptime(str(value), "%Y/%m/%d %H:%M:%S")
+                        return int(timestamp.replace(tzinfo=timezone(timedelta(hours=8))).timestamp() * 1000)
+                    except ValueError:
+                        return 0
+
                 snapshot_time_ms = time.time_ns() // 1_000_000
                 snapshot = {
                     str(row["代码"]).zfill(5): {
                         "symbol": str(row["代码"]).zfill(5), "exchange": "HKEX", "source": "akshare:sina",
                         "snapshot_time_ms": snapshot_time_ms,
+                        "exchange_time_ms": exchange_time_ms(row.get("日期时间")),
                         "price": number(row["最新价"]), "last_close": number(row["昨收"]),
                         "open": number(row["今开"]), "high": number(row["最高"]), "low": number(row["最低"]),
                         "vol": int(number(row["成交量"])), "amount": number(row["成交额"]),
@@ -149,6 +175,15 @@ class MooTdxProvider:
         return rows
 
     def _tencent_quotes(self, instruments: list[dict]) -> list[dict]:
+        if self._tencent_tls is None:
+            context = ssl.create_default_context()
+            paths = ssl.get_default_verify_paths()
+            if not os.environ.get(paths.openssl_cafile_env):
+                for path in ("/etc/pki/tls/certs/ca-bundle.crt", "/etc/ssl/certs/ca-certificates.crt"):
+                    if Path(path).is_file():
+                        context.load_verify_locations(cafile=path)
+                        break
+            self._tencent_tls = context
         rows: list[dict] = []
         for offset in range(0, len(instruments), _TENCENT_BATCH_SIZE):
             batch = instruments[offset:offset + _TENCENT_BATCH_SIZE]
@@ -157,7 +192,7 @@ class MooTdxProvider:
                 "https://qt.gtimg.cn/q=" + ",".join(codes),
                 headers={"Referer": "https://gu.qq.com/", "User-Agent": "Mozilla/5.0"},
             )
-            with urlopen(request, timeout=8) as response:
+            with urlopen(request, timeout=8, context=self._tencent_tls) as response:
                 content = response.read().decode("gb18030")
             values = self._parse_tencent(content)
             for item, code in zip(batch, codes):
@@ -222,6 +257,12 @@ class MooTdxProvider:
             "low": cls._number(fields, 34),
             "amount": amount,
         }
+        if len(fields) > 30 and len(fields[30]) == 14 and fields[30].isascii() and fields[30].isdigit():
+            try:
+                exchange_time = datetime.strptime(fields[30], "%Y%m%d%H%M%S")
+                row["exchange_time_ms"] = int(exchange_time.replace(tzinfo=timezone(timedelta(hours=8))).timestamp() * 1000)
+            except ValueError:
+                pass
         for level in range(1, 6):
             bid_index = 9 + (level - 1) * 2
             ask_index = 19 + (level - 1) * 2

@@ -9,6 +9,7 @@
 class CHQCache final
 {
 public:
+	// 返回 0 表示拒绝覆盖已有报价。
 	std::uint64_t Update(const market::CQuote& quote);
 	std::uint64_t Update(market::CQuote&& quote);
 	std::optional<market::CQuote> GetQuote(const market::CSecurity& security, std::uint64_t* sequence = nullptr) const;

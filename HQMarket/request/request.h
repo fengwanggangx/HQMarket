@@ -9,6 +9,7 @@ namespace hqmarket::market::v1
 	class QuoteData;
 	class DepthData;
 	class QueryResponse;
+	class MarketSnapshotPage;
 	class SecurityList;
 	class SectorList;
 	class SectorConstituents;
@@ -17,6 +18,7 @@ using _TySubscriptionAck = hqmarket::market::v1::SubscriptionAck;
 using _TyQuoteData = hqmarket::market::v1::QuoteData;
 using _TyDepthData = hqmarket::market::v1::DepthData;
 using _TyQueryResponse = hqmarket::market::v1::QueryResponse;
+using _TyMarketSnapshotPage = hqmarket::market::v1::MarketSnapshotPage;
 using _TySecurityList = hqmarket::market::v1::SecurityList;
 using _TySectorList = hqmarket::market::v1::SectorList;
 using _TySectorConstituents = hqmarket::market::v1::SectorConstituents;
@@ -142,6 +144,7 @@ public:
 	void SetData(const _TyQuoteData& value);
 	void SetData(const _TyDepthData& value);
 	void SetData(const _TyQueryResponse& value);
+	void SetData(const _TyMarketSnapshotPage& value);
 	void SetData(const _TySecurityList& value);
 	void SetData(const _TySectorList& value);
 	void SetData(const _TySectorConstituents& value);

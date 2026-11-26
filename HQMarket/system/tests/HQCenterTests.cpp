@@ -70,8 +70,43 @@ public:
 			bar.m_basis_version = "basis'1";
 			bar.m_turnover = 92500;
 			Check(recorder.UpsertBars({ bar }), "persist bar metadata");
+			CHQRecorder::CMarketSnapshot snapshot;
+			snapshot.m_version = 42;
+			snapshot.m_expected = 1;
+			snapshot.m_finished_at = 2000;
+			snapshot.m_directory_verified = true;
+			market::CQuote quote;
+			quote.m_security = bar.m_security;
+			quote.m_source = "source'1";
+			quote.m_last_price = 20000;
+			quote.m_pre_close = 18000;
+			snapshot.m_quotes.push_back(quote);
+			Check(recorder.SaveMarketSnapshot(snapshot), "persist market snapshot");
+			Check(recorder.SaveMarketSnapshot(snapshot, false, true), "persist complete mainland market snapshot");
+			snapshot.m_version = 43;
+			snapshot.m_quotes.front().m_security = { "00700", market::Exchange::hkex };
+			market::CInstrument instrument;
+			instrument.m_security = snapshot.m_quotes.front().m_security;
+			instrument.m_kind = market::InstrumentKind::hkStock;
+			instrument.m_status = "halted";
+			snapshot.m_instruments.push_back(instrument);
+			Check(recorder.SaveMarketSnapshot(snapshot, true), "persist Hong Kong snapshot independently");
 			recorder.Close();
 			Check(recorder.Open(root / "data" / "hqmarket.db"), "reopen migrated bars table");
+			std::optional<CHQRecorder::CMarketSnapshot> restored = recorder.LoadMarketSnapshot();
+			std::optional<CHQRecorder::CMarketSnapshot> complete = recorder.LoadMarketSnapshot(false, true);
+			Check(complete.has_value() && 42 == complete->m_version && complete->m_directory_verified,
+				"complete market snapshot survives restart independently of latest snapshots");
+			Check(restored.has_value() && 1 == restored->m_quotes.size() && 18000 == restored->m_quotes.front().m_pre_close,
+				"snapshot restores the reference previous close used by rankings");
+			std::optional<CHQRecorder::CMarketSnapshot> restoredHongKong = recorder.LoadMarketSnapshot(true);
+			Check(restoredHongKong.has_value() && 1 == restoredHongKong->m_instruments.size()
+				&& market::InstrumentKind::hkStock == restoredHongKong->m_instruments.front().m_kind
+				&& "halted" == restoredHongKong->m_instruments.front().m_status, "snapshot restores stock classification and halt status");
+			Check(restoredHongKong.has_value() && 43 == restoredHongKong->m_version && 1 == restoredHongKong->m_quotes.size() && market::Exchange::hkex == restoredHongKong->m_quotes.front().m_security.m_market,
+				"Hong Kong snapshot restores separately from the mainland snapshot");
+			Check(restored.has_value() && restored->m_directory_verified && 42 == restored->m_version && 1 == restored->m_quotes.size() && quote.m_source == restored->m_quotes.front().m_source && quote.m_last_price == restored->m_quotes.front().m_last_price,
+				"market snapshot survives SQLite round trip");
 			std::vector<market::CBar> bars = recorder.QueryBars(bar.m_security, bar.m_channel, 1000, 1000);
 			Check(1 == bars.size() && bars.front().m_completed && bars.front().m_end_time == bar.m_end_time &&
 					  bars.front().m_data_version == bar.m_data_version && bars.front().m_basis_version == bar.m_basis_version,
@@ -119,6 +154,18 @@ public:
 		center.OnRequest(Request(1, _TyRequest::MARKET_QUOTE_QUERY, 40));
 		Check(1 == state.m_sent.size() && 40 == state.m_sent.back().second.GetId() && state.m_sent.back().second.GetData().query_response().found(), "query response uses cache and original request id");
 		state.m_sent.clear();
+		request::RequestData snapshotQuery;
+		snapshotQuery.set_type(request::MARKET_QUOTE_QUERY);
+		snapshotQuery.set_id(140);
+		snapshotQuery.mutable_market_snapshot_query()->set_scope("hk");
+		CRequest snapshotRequest;
+		Check(snapshotRequest.Deserialize(snapshotQuery.SerializeAsString()), "decode typed market snapshot request");
+		snapshotRequest.SetConnectionId(1);
+		center.OnRequest(snapshotRequest);
+		Check(1 == state.m_sent.size() && 140 == state.m_sent.back().second.GetId()
+			&& "preparing" == state.m_sent.back().second.GetData().market_snapshot_page().status(),
+			"typed market snapshot request routes through the center and returns a typed page");
+		state.m_sent.clear();
 		center.OnRequest(Request(1, _TyRequest::MARKET_SUBSCRIBE, 41));
 		Check(2 == state.m_sent.size() && state.m_sent.front().second.GetData().has_subscription_ack() && state.m_sent.back().second.GetData().has_quote() && 1 == state.m_subscribe_calls, "cached snapshot follows ACK without duplicate upstream subscribe");
 		Check("1" == state.m_sent.back().second.GetExtraData("sequence"), "cached snapshot preserves the source sequence");
@@ -162,6 +209,12 @@ public:
 		Check(state.m_sent.back().second.GetErrorInfo().has_value() && !center.IsAuthenticated(3), "expired token rejected");
 		std::unique_ptr<net::CHttpResponseData> response = Http(std::bind_front(&CHQCenter::OnQuoteRequest, &center));
 		Check(400 == response->m_status, "HTTP instrument validation preserved");
+		response = Http(std::bind_front(&CHQCenter::OnMarketSnapshotRequest, &center));
+		Check(200 == response->m_status && std::string::npos != response->m_body.find("preparing"), "market snapshot reports preparing before publication");
+		state.m_query["offset"] = "1";
+		response = Http(std::bind_front(&CHQCenter::OnMarketSnapshotRequest, &center));
+		Check(400 == response->m_status, "market snapshot continuation requires a version");
+		state.m_query.erase("offset");
 		state.m_query.emplace("instrument", "600519.SSE");
 		response = Http(std::bind_front(&CHQCenter::OnQuoteRequest, &center));
 		Check(200 == response->m_status && std::string::npos != response->m_body.find("600519.SSE"), "HTTP quote routes to service cache");
@@ -201,6 +254,9 @@ public:
 		Check(std::string::npos != response->m_body.find("\"status\":\"ok\""), "HTTP health reflects provider state");
 		response = Http(std::bind_front(&CHQCenter::OnMetricsRequest, &center));
 		Check(std::string::npos != response->m_body.find("hqmarket_clients 123"), "network metric supplied by center");
+		Check(std::string::npos != response->m_body.find("hqmarket_snapshot_available{market=\"CN\"}")
+			&& std::string::npos != response->m_body.find("hqmarket_snapshot_available{market=\"HK\"}"),
+			"snapshot availability metrics distinguish mainland and Hong Kong markets");
 
 		service.Stop();
 		center.Stop();

@@ -4,6 +4,9 @@
 #include <charconv>
 #include <system_error>
 #include <unordered_set>
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 
 namespace
 {
@@ -116,6 +119,135 @@ bool CHQRecorder::IsOpen() const
 {
 	std::shared_lock<std::shared_mutex> lck(m_db_mutex);
 	return m_open && (nullptr != m_db);
+}
+
+bool CHQRecorder::SaveMarketSnapshot(const CMarketSnapshot& snapshot, bool hongKong, bool complete)
+{
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+	writer.StartArray();
+	writer.Uint64(snapshot.m_version);
+	writer.Uint64(snapshot.m_expected);
+	writer.Int64(snapshot.m_started_at);
+	writer.Int64(snapshot.m_finished_at);
+	writer.StartArray();
+	for (const auto& instrument : snapshot.m_instruments)
+	{
+		writer.StartArray();
+		writer.String(instrument.m_security.m_code.c_str());
+		writer.Int(static_cast<int>(instrument.m_security.m_market));
+		writer.Int(static_cast<int>(instrument.m_kind));
+		writer.String(instrument.m_status.c_str());
+		writer.EndArray();
+	}
+	writer.EndArray();
+	writer.StartArray();
+	for (const auto& quote : snapshot.m_quotes)
+	{
+		writer.StartArray();
+		writer.String(quote.m_security.m_code.c_str());
+		writer.Int(static_cast<int>(quote.m_security.m_market));
+		writer.String(quote.m_source.c_str());
+		for (std::int64_t value : { quote.m_exchange_time, quote.m_receive_time, quote.m_last_price, quote.m_open_price,
+				 quote.m_high_price, quote.m_low_price, quote.m_pre_close, quote.m_volume, quote.m_turnover,
+				 static_cast<std::int64_t>(quote.m_price_scale) })
+		{
+			writer.Int64(value);
+		}
+		writer.EndArray();
+	}
+	writer.EndArray();
+	writer.Bool(snapshot.m_directory_verified);
+	writer.EndArray();
+	std::string key = hongKong ? "market_snapshot_hk_v2" : "market_snapshot_cn_v2";
+	if (complete)
+	{
+		key += "_complete";
+	}
+	std::string sql = "INSERT OR REPLACE INTO sync_state(dataset,cursor,updated_at) VALUES(" + Quote(key) + "," +
+					  Quote(buffer.GetString()) + "," + std::to_string(snapshot.m_finished_at) + ");";
+	std::unique_lock<std::shared_mutex> lock(m_db_mutex);
+	return m_open && Exec(sql);
+}
+
+std::optional<CHQRecorder::CMarketSnapshot> CHQRecorder::LoadMarketSnapshot(bool hongKong, bool complete)
+{
+	std::string payload;
+	{
+		std::unique_lock<std::shared_mutex> lock(m_db_mutex);
+		if (!m_open)
+		{
+			return std::nullopt;
+		}
+		std::string key = hongKong ? "market_snapshot_hk_v2" : "market_snapshot_cn_v2";
+		if (complete)
+		{
+			key += "_complete";
+		}
+		const db::CQueryTable::_TyRows& rows = m_db->ExecQuery("SELECT cursor FROM sync_state WHERE dataset=" + Quote(key) + ";").m_rows;
+		if (rows.empty() || rows.front().empty())
+		{
+			return std::nullopt;
+		}
+		payload = db::QueryValueToString(rows.front().front());
+	}
+	rapidjson::Document data;
+	data.Parse(payload.c_str());
+	if (!data.IsArray() || (6 != data.Size() && 7 != data.Size()) || !data[0].IsUint64() || !data[1].IsUint64() ||
+		!data[2].IsInt64() || !data[3].IsInt64() || !data[4].IsArray() || !data[5].IsArray())
+	{
+		return std::nullopt;
+	}
+	CMarketSnapshot snapshot;
+	snapshot.m_version = data[0].GetUint64();
+	snapshot.m_expected = data[1].GetUint64();
+	snapshot.m_started_at = data[2].GetInt64();
+	snapshot.m_finished_at = data[3].GetInt64();
+	snapshot.m_directory_verified = 7 == data.Size() && data[6].IsTrue();
+	for (const auto& row : data[4].GetArray())
+	{
+		if (!row.IsArray() || (3 != row.Size() && 4 != row.Size()) || !row[0].IsString() || !row[1].IsInt() || !row[2].IsInt() || (4 == row.Size() && !row[3].IsString()))
+		{
+			return std::nullopt;
+		}
+		market::CInstrument instrument;
+		instrument.m_security = market::CSecurity(row[0].GetString(), static_cast<market::Exchange>(row[1].GetInt()));
+		instrument.m_kind = static_cast<market::InstrumentKind>(row[2].GetInt());
+		if (4 == row.Size())
+		{
+			instrument.m_status = row[3].GetString();
+		}
+		snapshot.m_instruments.emplace_back(std::move(instrument));
+	}
+	for (const auto& row : data[5].GetArray())
+	{
+		if (!row.IsArray() || 13 != row.Size() || !row[0].IsString() || !row[1].IsInt() || !row[2].IsString() || !row[12].IsInt())
+		{
+			return std::nullopt;
+		}
+		for (rapidjson::SizeType field = 3; field < 12; ++field)
+		{
+			if (!row[field].IsInt64())
+			{
+				return std::nullopt;
+			}
+		}
+		market::CQuote quote;
+		quote.m_security = market::CSecurity(row[0].GetString(), static_cast<market::Exchange>(row[1].GetInt()));
+		quote.m_source = row[2].GetString();
+		quote.m_exchange_time = row[3].GetInt64();
+		quote.m_receive_time = row[4].GetInt64();
+		quote.m_last_price = row[5].GetInt64();
+		quote.m_open_price = row[6].GetInt64();
+		quote.m_high_price = row[7].GetInt64();
+		quote.m_low_price = row[8].GetInt64();
+		quote.m_pre_close = row[9].GetInt64();
+		quote.m_volume = row[10].GetInt64();
+		quote.m_turnover = row[11].GetInt64();
+		quote.m_price_scale = row[12].GetInt();
+		snapshot.m_quotes.emplace_back(std::move(quote));
+	}
+	return snapshot;
 }
 
 bool CHQRecorder::UpsertBars(const std::vector<market::CBar>& bars)

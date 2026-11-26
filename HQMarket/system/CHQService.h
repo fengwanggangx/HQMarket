@@ -44,6 +44,7 @@ public:
 	std::string InstrumentsJson() const;
 	std::string MetricsText(std::size_t nClients) const;
 	std::string QuoteJson(const std::string& strInstrument) const;
+	std::string MarketSnapshotJson(std::uint64_t version, std::size_t offset, std::size_t limit, const std::string& board, const std::string& scope, bool allowPartial, _TyMarketSnapshotPage* page = nullptr) const;
 	std::string BarsJson(const std::string& strInstrument, const std::string& strChannel, const std::string& strBeginTime, const std::string& strEndTime, int& status, std::optional<std::pair<std::int64_t, std::int64_t>>& returnedRange);
 
 private:

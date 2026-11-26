@@ -24,6 +24,7 @@ namespace provider
 		void SetDepthHandler(_TyDepthHandler) override;
 		void Stop() override;
 		std::vector<market::CInstrument> QueryInstruments() const;
+		bool RefreshInstruments();
 		std::vector<market::CSector> QuerySectors(market::SectorType type);
 		market::CSectorConstituents QuerySectorConstituents(market::SectorType type, const std::string& strSectorCode);
 

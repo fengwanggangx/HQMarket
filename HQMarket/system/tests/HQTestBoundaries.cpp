@@ -168,6 +168,10 @@ namespace provider
 	{
 		return true;
 	}
+	bool CAkShareProvider::RefreshInstruments()
+	{
+		return true;
+	}
 	bool CAkShareProvider::Subscribe(const std::vector<market::CChannelInfo>&)
 	{
 		return false;

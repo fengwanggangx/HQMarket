@@ -7577,6 +7577,8 @@ class RequestData final : public ::google::protobuf::Message
     kMarketStatus = 18,
     kProviderStatus = 19,
     kQueryResponse = 21,
+    kMarketSnapshotQuery = 45,
+    kMarketSnapshotPage = 46,
     kStrategy = 22,
     kStrategyList = 23,
     kSecurityList = 25,
@@ -7700,6 +7702,8 @@ class RequestData final : public ::google::protobuf::Message
     kMarketStatusFieldNumber = 18,
     kProviderStatusFieldNumber = 19,
     kQueryResponseFieldNumber = 21,
+    kMarketSnapshotQueryFieldNumber = 45,
+    kMarketSnapshotPageFieldNumber = 46,
     kStrategyFieldNumber = 22,
     kStrategyListFieldNumber = 23,
     kSecurityListFieldNumber = 25,
@@ -7943,6 +7947,44 @@ class RequestData final : public ::google::protobuf::Message
   private:
   const ::hqmarket::market::v1::QueryResponse& _internal_query_response() const;
   ::hqmarket::market::v1::QueryResponse* _internal_mutable_query_response();
+
+  public:
+  // .hqmarket.market.v1.MarketSnapshotQuery market_snapshot_query = 45;
+  bool has_market_snapshot_query() const;
+  private:
+  bool _internal_has_market_snapshot_query() const;
+
+  public:
+  void clear_market_snapshot_query() ;
+  const ::hqmarket::market::v1::MarketSnapshotQuery& market_snapshot_query() const;
+  PROTOBUF_NODISCARD ::hqmarket::market::v1::MarketSnapshotQuery* release_market_snapshot_query();
+  ::hqmarket::market::v1::MarketSnapshotQuery* mutable_market_snapshot_query();
+  void set_allocated_market_snapshot_query(::hqmarket::market::v1::MarketSnapshotQuery* value);
+  void unsafe_arena_set_allocated_market_snapshot_query(::hqmarket::market::v1::MarketSnapshotQuery* value);
+  ::hqmarket::market::v1::MarketSnapshotQuery* unsafe_arena_release_market_snapshot_query();
+
+  private:
+  const ::hqmarket::market::v1::MarketSnapshotQuery& _internal_market_snapshot_query() const;
+  ::hqmarket::market::v1::MarketSnapshotQuery* _internal_mutable_market_snapshot_query();
+
+  public:
+  // .hqmarket.market.v1.MarketSnapshotPage market_snapshot_page = 46;
+  bool has_market_snapshot_page() const;
+  private:
+  bool _internal_has_market_snapshot_page() const;
+
+  public:
+  void clear_market_snapshot_page() ;
+  const ::hqmarket::market::v1::MarketSnapshotPage& market_snapshot_page() const;
+  PROTOBUF_NODISCARD ::hqmarket::market::v1::MarketSnapshotPage* release_market_snapshot_page();
+  ::hqmarket::market::v1::MarketSnapshotPage* mutable_market_snapshot_page();
+  void set_allocated_market_snapshot_page(::hqmarket::market::v1::MarketSnapshotPage* value);
+  void unsafe_arena_set_allocated_market_snapshot_page(::hqmarket::market::v1::MarketSnapshotPage* value);
+  ::hqmarket::market::v1::MarketSnapshotPage* unsafe_arena_release_market_snapshot_page();
+
+  private:
+  const ::hqmarket::market::v1::MarketSnapshotPage& _internal_market_snapshot_page() const;
+  ::hqmarket::market::v1::MarketSnapshotPage* _internal_mutable_market_snapshot_page();
 
   public:
   // .request.StrategyInfo strategy = 22;
@@ -8262,6 +8304,8 @@ class RequestData final : public ::google::protobuf::Message
   void set_has_market_status();
   void set_has_provider_status();
   void set_has_query_response();
+  void set_has_market_snapshot_query();
+  void set_has_market_snapshot_page();
   void set_has_strategy();
   void set_has_strategy_list();
   void set_has_security_list();
@@ -8282,8 +8326,8 @@ class RequestData final : public ::google::protobuf::Message
   inline void clear_has_payload();
   friend class ::google::protobuf::internal::TcParser;
   static const ::google::protobuf::internal::TcParseTable<
-      3, 30, 26,
-      70, 7>
+      3, 32, 28,
+      78, 7>
       _table_;
 
   friend class ::google::protobuf::MessageLite;
@@ -8322,6 +8366,8 @@ class RequestData final : public ::google::protobuf::Message
       ::hqmarket::market::v1::MarketStatusData* market_status_;
       ::hqmarket::market::v1::ProviderStatusData* provider_status_;
       ::hqmarket::market::v1::QueryResponse* query_response_;
+      ::hqmarket::market::v1::MarketSnapshotQuery* market_snapshot_query_;
+      ::hqmarket::market::v1::MarketSnapshotPage* market_snapshot_page_;
       ::request::StrategyInfo* strategy_;
       ::request::StrategyList* strategy_list_;
       ::hqmarket::market::v1::SecurityList* security_list_;
@@ -15398,6 +15444,142 @@ inline ::hqmarket::market::v1::QueryResponse* RequestData::_internal_mutable_que
 inline ::hqmarket::market::v1::QueryResponse* RequestData::mutable_query_response() ABSL_ATTRIBUTE_LIFETIME_BOUND {
   ::hqmarket::market::v1::QueryResponse* _msg = _internal_mutable_query_response();
   // @@protoc_insertion_point(field_mutable:request.RequestData.query_response)
+  return _msg;
+}
+
+// .hqmarket.market.v1.MarketSnapshotQuery market_snapshot_query = 45;
+inline bool RequestData::has_market_snapshot_query() const {
+  return payload_case() == kMarketSnapshotQuery;
+}
+inline bool RequestData::_internal_has_market_snapshot_query() const {
+  return payload_case() == kMarketSnapshotQuery;
+}
+inline void RequestData::set_has_market_snapshot_query() {
+  _impl_._oneof_case_[0] = kMarketSnapshotQuery;
+}
+inline ::hqmarket::market::v1::MarketSnapshotQuery* RequestData::release_market_snapshot_query() {
+  // @@protoc_insertion_point(field_release:request.RequestData.market_snapshot_query)
+  if (payload_case() == kMarketSnapshotQuery) {
+    clear_has_payload();
+    auto* temp = _impl_.payload_.market_snapshot_query_;
+    if (GetArena() != nullptr) {
+      temp = ::google::protobuf::internal::DuplicateIfNonNull(temp);
+    }
+    _impl_.payload_.market_snapshot_query_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline const ::hqmarket::market::v1::MarketSnapshotQuery& RequestData::_internal_market_snapshot_query() const {
+  return payload_case() == kMarketSnapshotQuery ? *_impl_.payload_.market_snapshot_query_ : reinterpret_cast<::hqmarket::market::v1::MarketSnapshotQuery&>(::hqmarket::market::v1::_MarketSnapshotQuery_default_instance_);
+}
+inline const ::hqmarket::market::v1::MarketSnapshotQuery& RequestData::market_snapshot_query() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:request.RequestData.market_snapshot_query)
+  return _internal_market_snapshot_query();
+}
+inline ::hqmarket::market::v1::MarketSnapshotQuery* RequestData::unsafe_arena_release_market_snapshot_query() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:request.RequestData.market_snapshot_query)
+  if (payload_case() == kMarketSnapshotQuery) {
+    clear_has_payload();
+    auto* temp = _impl_.payload_.market_snapshot_query_;
+    _impl_.payload_.market_snapshot_query_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline void RequestData::unsafe_arena_set_allocated_market_snapshot_query(::hqmarket::market::v1::MarketSnapshotQuery* value) {
+  // We rely on the oneof clear method to free the earlier contents
+  // of this oneof. We can directly use the pointer we're given to
+  // set the new value.
+  clear_payload();
+  if (value) {
+    set_has_market_snapshot_query();
+    _impl_.payload_.market_snapshot_query_ = value;
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:request.RequestData.market_snapshot_query)
+}
+inline ::hqmarket::market::v1::MarketSnapshotQuery* RequestData::_internal_mutable_market_snapshot_query() {
+  if (payload_case() != kMarketSnapshotQuery) {
+    clear_payload();
+    set_has_market_snapshot_query();
+    _impl_.payload_.market_snapshot_query_ =
+        ::google::protobuf::Message::DefaultConstruct<::hqmarket::market::v1::MarketSnapshotQuery>(GetArena());
+  }
+  return _impl_.payload_.market_snapshot_query_;
+}
+inline ::hqmarket::market::v1::MarketSnapshotQuery* RequestData::mutable_market_snapshot_query() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  ::hqmarket::market::v1::MarketSnapshotQuery* _msg = _internal_mutable_market_snapshot_query();
+  // @@protoc_insertion_point(field_mutable:request.RequestData.market_snapshot_query)
+  return _msg;
+}
+
+// .hqmarket.market.v1.MarketSnapshotPage market_snapshot_page = 46;
+inline bool RequestData::has_market_snapshot_page() const {
+  return payload_case() == kMarketSnapshotPage;
+}
+inline bool RequestData::_internal_has_market_snapshot_page() const {
+  return payload_case() == kMarketSnapshotPage;
+}
+inline void RequestData::set_has_market_snapshot_page() {
+  _impl_._oneof_case_[0] = kMarketSnapshotPage;
+}
+inline ::hqmarket::market::v1::MarketSnapshotPage* RequestData::release_market_snapshot_page() {
+  // @@protoc_insertion_point(field_release:request.RequestData.market_snapshot_page)
+  if (payload_case() == kMarketSnapshotPage) {
+    clear_has_payload();
+    auto* temp = _impl_.payload_.market_snapshot_page_;
+    if (GetArena() != nullptr) {
+      temp = ::google::protobuf::internal::DuplicateIfNonNull(temp);
+    }
+    _impl_.payload_.market_snapshot_page_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline const ::hqmarket::market::v1::MarketSnapshotPage& RequestData::_internal_market_snapshot_page() const {
+  return payload_case() == kMarketSnapshotPage ? *_impl_.payload_.market_snapshot_page_ : reinterpret_cast<::hqmarket::market::v1::MarketSnapshotPage&>(::hqmarket::market::v1::_MarketSnapshotPage_default_instance_);
+}
+inline const ::hqmarket::market::v1::MarketSnapshotPage& RequestData::market_snapshot_page() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:request.RequestData.market_snapshot_page)
+  return _internal_market_snapshot_page();
+}
+inline ::hqmarket::market::v1::MarketSnapshotPage* RequestData::unsafe_arena_release_market_snapshot_page() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:request.RequestData.market_snapshot_page)
+  if (payload_case() == kMarketSnapshotPage) {
+    clear_has_payload();
+    auto* temp = _impl_.payload_.market_snapshot_page_;
+    _impl_.payload_.market_snapshot_page_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline void RequestData::unsafe_arena_set_allocated_market_snapshot_page(::hqmarket::market::v1::MarketSnapshotPage* value) {
+  // We rely on the oneof clear method to free the earlier contents
+  // of this oneof. We can directly use the pointer we're given to
+  // set the new value.
+  clear_payload();
+  if (value) {
+    set_has_market_snapshot_page();
+    _impl_.payload_.market_snapshot_page_ = value;
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:request.RequestData.market_snapshot_page)
+}
+inline ::hqmarket::market::v1::MarketSnapshotPage* RequestData::_internal_mutable_market_snapshot_page() {
+  if (payload_case() != kMarketSnapshotPage) {
+    clear_payload();
+    set_has_market_snapshot_page();
+    _impl_.payload_.market_snapshot_page_ =
+        ::google::protobuf::Message::DefaultConstruct<::hqmarket::market::v1::MarketSnapshotPage>(GetArena());
+  }
+  return _impl_.payload_.market_snapshot_page_;
+}
+inline ::hqmarket::market::v1::MarketSnapshotPage* RequestData::mutable_market_snapshot_page() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  ::hqmarket::market::v1::MarketSnapshotPage* _msg = _internal_mutable_market_snapshot_page();
+  // @@protoc_insertion_point(field_mutable:request.RequestData.market_snapshot_page)
   return _msg;
 }
 

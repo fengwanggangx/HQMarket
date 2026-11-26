@@ -58,6 +58,25 @@ ctest --test-dir build-routing --output-on-failure
 
 依赖目录结构为 `include/debug` 和 `libs/debug`，可通过 `HQMARKET_MODE` 选择其他配置；Windows 运行时还需将对应依赖 DLL 所在目录加入 PATH。
 
+## 全市场扫描试运行
+
+在测试实例的进程环境设置 `HQMARKET_ENABLE_MARKET_SCAN=1` 后启动 HQMarket。服务会批量扫描已加载的证券目录，在 SQLite 保存最近一次发布的轮次。快照返回实际采集起止时间、有效报价数和目录标的数，供调用方判断覆盖情况。
+
+启用扫描后，后台每五分钟检查是否需要刷新目录，每个北京时间自然日成功刷新一次。失败时保留原目录并在下一次检查时重试。新目录在扫描轮次边界生效。
+
+深圳 ETF 和 LOF 可使用交易所清单导出的 `ini/szse_etf.csv` 和 `ini/szse_lof.csv`。每个文件用 UTF-8 编码，不含表头，每行依次填写六位证券代码和证券简称。有效文件优先用于对应的深圳基金类别；缺失或校验失败时尝试东方财富目录。部署方负责更新这两个文件。
+
+- HTTP 使用 `GET /v1/market/snapshot`。TCP 使用 `MARKET_QUOTE_QUERY`，请求 `extra.view=market_snapshot`，响应从 `extra.market_snapshot` 读取同结构的 JSON。
+- TCP 客户端也可在 `MARKET_QUOTE_QUERY` 的请求中填入 Protobuf `market_snapshot_query`，并从响应的 `market_snapshot_page` 读取分页和行情。两种 TCP 请求形式使用相同的筛选、分榜和轮次规则。
+- `scope` 可选 `a_share`、`index`、`fund`、`convertible_bond` 或 `hk`。指定 `board=gainers`、`losers` 或 `turnover` 查询榜单，默认榜单范围为 A 股。用 `partial=1` 显式允许部分覆盖榜单。
+- 下一页沿用首屏的 `version`、`scope`、`board` 和 `partial`，以 `next_offset` 作为 `offset`。`limit` 默认 100，最大 500。收到 `version_expired` 时重新读取首屏。
+- 默认快照返回境内轮次，港股用 `scope=hk` 查询独立发布和恢复的轮次。`prior_date=true` 表示轮次来自较早的本地自然日，该轮次仍可查快照，榜单显示准备中。
+- 将独立上市清单导出到执行目录的 `ini/market_reference_cn.txt` 和 `ini/market_reference_hk.txt`。首行写 `YYYYMMDD`，后续每行写一条扫描范围内的 `代码.交易所`，例如 `600519.SSE`。每轮对账，日期和证券集合一致才返回 `directory_verified=true`。清单缺失或不一致时，榜单需用 `partial=1` 显式查看试运行结果。
+- 正式部署可在执行目录下提供 `ini/market_sessions.txt`。每行以空白分隔日期 `YYYYMMDD`、市场 `CN` 或 `HK`、从北京时间午夜起算的开始分钟和结束分钟。一个市场每天可有多行，结束分钟不包含在区间内。节假日省略，半日市只填写实际时段，可在最后一个区间预留收盘补采时间。文件每天首次运行时读取。缺少文件时使用普通工作日时段，适用于试运行。
+
+- 港股参考清单每条证券后填写 `stock` 或 `other`，例如 `00700.HKEX stock`。港股榜单只收录已核验的股票。境内和港股记录都可在末尾追加 `halted` 表示已确认停牌，停牌不计入缺失数并从榜单排除。
+- 参考清单可以附加 `pre_close=123400`，表示经过核验的当日参考昨收为 12.3400。若确认当天需要使用参考昨收、但尚无可靠值，填 `pre_close=unknown`。该标的仍可查询快照，但不参与涨跌幅排名。修正随快照入库，供同一轮分页和榜单使用。
+
 ## 正式程序构建入口
 
 正式程序统一从 Visual Studio 解决方案构建，以 `.vcxproj` 为准。仓库中的 CMake 入口仅用于辅助验证，不作为正式程序构建、发布或验收依据。

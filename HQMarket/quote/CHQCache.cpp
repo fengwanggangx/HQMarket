@@ -3,14 +3,24 @@
 
 std::uint64_t CHQCache::Update(const market::CQuote& quote)
 {
-	std::unique_lock<std::shared_mutex> lck(m_quotes_mutex);
-	m_quotes.insert_or_assign(quote.m_security, std::make_pair(quote, ++m_quote_sequence));
-	return m_quote_sequence;
+	return Update(market::CQuote{ quote });
 }
 
 std::uint64_t CHQCache::Update(market::CQuote&& quote)
 {
 	std::unique_lock<std::shared_mutex> lck(m_quotes_mutex);
+	const auto mIter = m_quotes.find(quote.m_security);
+	if (m_quotes.end() != mIter)
+	{
+		const market::CQuote& current = mIter->second.first;
+		bool comparableExchangeTime = 0 < quote.m_exchange_time && 0 < current.m_exchange_time;
+		bool older = comparableExchangeTime ? quote.m_exchange_time < current.m_exchange_time
+											: 0 < quote.m_receive_time && quote.m_receive_time < current.m_receive_time;
+		if (older || (quote.m_stale && !current.m_stale))
+		{
+			return 0;
+		}
+	}
 	market::CSecurity security = quote.m_security;
 	m_quotes.insert_or_assign(std::move(security), std::make_pair(std::move(quote), ++m_quote_sequence));
 	return m_quote_sequence;

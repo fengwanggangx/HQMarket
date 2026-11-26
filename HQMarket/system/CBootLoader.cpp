@@ -132,6 +132,7 @@ bool CBootLoader::Initialize()
 	m_http_server->RegisterHandler(net::HttpMethod::GET, "/metrics", std::bind_front(&CHQCenter::OnMetricsRequest, m_hq_center.get()));
 	m_http_server->RegisterHandler(net::HttpMethod::GET, "/v1/instruments", std::bind_front(&CHQCenter::OnInstrumentsRequest, m_hq_center.get()));
 	m_http_server->RegisterHandler(net::HttpMethod::GET, "/v1/quotes", std::bind_front(&CHQCenter::OnQuoteRequest, m_hq_center.get()));
+	m_http_server->RegisterHandler(net::HttpMethod::GET, "/v1/market/snapshot", std::bind_front(&CHQCenter::OnMarketSnapshotRequest, m_hq_center.get()));
 	m_http_server->RegisterHandler(net::HttpMethod::GET, "/v1/bars", std::bind_front(&CHQCenter::OnBarsRequest, m_hq_center.get()));
 	m_initialized = true;
 	return true;

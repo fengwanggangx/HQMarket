@@ -36,6 +36,7 @@ public:
 
 	std::unique_ptr<net::CHttpResponseData> OnBarsRequest(const net::CHttpRequest& req);
 	std::unique_ptr<net::CHttpResponseData> OnQuoteRequest(const net::CHttpRequest& req);
+	std::unique_ptr<net::CHttpResponseData> OnMarketSnapshotRequest(const net::CHttpRequest& req);
 	std::unique_ptr<net::CHttpResponseData> OnHealthRequest(const net::CHttpRequest& req);
 	std::unique_ptr<net::CHttpResponseData> OnMetricsRequest(const net::CHttpRequest& req);
 	std::unique_ptr<net::CHttpResponseData> OnInstrumentsRequest(const net::CHttpRequest& req);

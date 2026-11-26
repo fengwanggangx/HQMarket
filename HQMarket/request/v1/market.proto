@@ -21,3 +21,30 @@ message QueryResponse { Security security = 1; Channel channel = 2; QuoteData qu
 message SectorInfo { string code = 1; string name = 2; int64 change_percent = 3; int32 percent_scale = 4; int32 rising_count = 5; int32 falling_count = 6; int32 flat_count = 7; int32 member_count = 8; Security leading_security = 9; string leading_name = 10; int64 snapshot_time_ms = 11; }
 message SectorList { SectorType type = 1; repeated SectorInfo sectors = 2; int64 snapshot_time_ms = 3; string source = 4; }
 message SectorConstituents { SectorType type = 1; SectorInfo sector = 2; repeated SecurityInfo securities = 3; int64 snapshot_time_ms = 4; string source = 5; }
+
+message MarketSnapshotQuery {
+  uint64 version = 1;
+  uint32 offset = 2;
+  optional uint32 limit = 3;
+  string board = 4;
+  string scope = 5;
+  bool allow_partial = 6;
+}
+
+message MarketSnapshotPage {
+  string status = 1;
+  uint64 version = 2;
+  uint64 expected = 3;
+  uint64 received = 4;
+  uint64 missing = 5;
+  uint64 confirmed_halted = 6;
+  uint64 unknown_exchange_time = 7;
+  int64 started_at_ms = 8;
+  int64 finished_at_ms = 9;
+  bool partial = 10;
+  bool directory_verified = 11;
+  bool prior_date = 12;
+  optional uint64 next_offset = 13;
+  repeated QuoteData quotes = 14;
+  int32 turnover_scale = 15;
+}

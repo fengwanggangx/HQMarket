@@ -5,6 +5,12 @@
 #include <vector>
 namespace market
 {
+	// 沪深京和港股市场均使用 UTC+8。返回本地日序号，用于阻止跨日快照混用。
+	inline std::int64_t MarketDateIndex(std::int64_t timestamp)
+	{
+		return (timestamp + 8 * 60 * 60 * 1000) / (24 * 60 * 60 * 1000);
+	}
+
 	// 交易所或市场类型。
 	enum class Exchange
 	{
@@ -51,6 +57,17 @@ namespace market
 		std::string String() const;
 	};
 
+	enum class InstrumentKind
+	{
+		unknown,
+		aShare,
+		index,
+		fund,
+		convertibleBond,
+		hkStock,
+		hkOther
+	};
+
 	struct CInstrument
 	{
 		CSecurity m_security;
@@ -58,6 +75,7 @@ namespace market
 		std::string m_status{ "normal" };
 		std::vector<std::string> m_pinyin_full_aliases;
 		std::vector<std::string> m_pinyin_short_aliases;
+		InstrumentKind m_kind{ InstrumentKind::unknown };
 	};
 
 	enum class SectorType

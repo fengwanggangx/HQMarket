@@ -1430,10 +1430,14 @@ const ::uint32_t
         ::_pbi::kInvalidFieldOffsetTag,
         ::_pbi::kInvalidFieldOffsetTag,
         ::_pbi::kInvalidFieldOffsetTag,
+        ::_pbi::kInvalidFieldOffsetTag,
+        ::_pbi::kInvalidFieldOffsetTag,
         PROTOBUF_FIELD_OFFSET(::request::RequestData, _impl_.payload_),
         ~0u,
         ~0u,
         0,
+        ~0u,
+        ~0u,
         ~0u,
         ~0u,
         ~0u,
@@ -1507,8 +1511,8 @@ static const ::_pbi::MigrationSchema
         {344, -1, -1, sizeof(::request::TradeCounterReply)},
         {367, -1, -1, sizeof(::request::ExecutionRules)},
         {397, 407, -1, sizeof(::request::RequestData_ExtraEntry_DoNotUse)},
-        {409, 448, -1, sizeof(::request::RequestData)},
-        {478, -1, -1, sizeof(::request::ZhongTaiJournal)},
+        {409, 450, -1, sizeof(::request::RequestData)},
+        {482, -1, -1, sizeof(::request::ZhongTaiJournal)},
 };
 static const ::_pb::Message* const file_default_instances[] = {
     &::request::_StrategySubscription_default_instance_._instance,
@@ -1658,7 +1662,7 @@ const char descriptor_table_protodef_request_2eproto[] ABSL_ATTRIBUTE_SECTION_VA
     "\n\014open_time_ms\030\021 \001(\003\022\025\n\rbreak_time_ms\030\022 "
     "\001(\003\022\026\n\016resume_time_ms\030\023 \001(\003\022\025\n\rclose_tim"
     "e_ms\030\024 \001(\003\022\026\n\016reliable_query\030\025 \001(\010\022\034\n\024id"
-    "empotent_client_id\030\026 \001(\010\"\252\016\n\013RequestData"
+    "empotent_client_id\030\026 \001(\010\"\274\017\n\013RequestData"
     "\022\"\n\004type\030\001 \001(\0162\024.request.RequestType\022.\n\005"
     "extra\030\003 \003(\0132\037.request.RequestData.ExtraE"
     "ntry\0220\n\revent_account\030+ \001(\0132\031.request.Tr"
@@ -1674,73 +1678,76 @@ const char descriptor_table_protodef_request_2eproto[] ABSL_ATTRIBUTE_SECTION_VA
     "ket.v1.MarketStatusDataH\000\022A\n\017provider_st"
     "atus\030\023 \001(\0132&.hqmarket.market.v1.Provider"
     "StatusDataH\000\022;\n\016query_response\030\025 \001(\0132!.h"
-    "qmarket.market.v1.QueryResponseH\000\022)\n\010str"
-    "ategy\030\026 \001(\0132\025.request.StrategyInfoH\000\022.\n\r"
-    "strategy_list\030\027 \001(\0132\025.request.StrategyLi"
-    "stH\000\0229\n\rsecurity_list\030\031 \001(\0132 .hqmarket.m"
-    "arket.v1.SecurityListH\000\0225\n\013sector_list\030\033"
-    " \001(\0132\036.hqmarket.market.v1.SectorListH\000\022E"
-    "\n\023sector_constituents\030\035 \001(\0132&.hqmarket.m"
-    "arket.v1.SectorConstituentsH\000\022.\n\007account"
-    "\030\036 \001(\0132\033.request.TradeAccountRecordH\000\022*\n"
-    "\013broker_list\030* \001(\0132\023.request.BrokerListH"
-    "\000\0221\n\014account_list\030\037 \001(\0132\031.request.TradeA"
-    "ccountListH\000\0224\n\014account_logs\030! \001(\0132\034.req"
-    "uest.TradeAccountLogListH\000\0221\n\014account_in"
-    "fo\030( \001(\0132\031.request.TradeAccountInfoH\000\0223\n"
-    "\rcounter_reply\030) \001(\0132\032.request.TradeCoun"
-    "terReplyH\000\022=\n\025strategy_runtime_list\030# \001("
-    "\0132\034.request.StrategyRuntimeListH\000\0222\n\017exe"
-    "cution_rules\030, \001(\0132\027.request.ExecutionRu"
-    "lesH\000\022/\n\014trade_orders\030$ \001(\0132\027.request.Tr"
-    "adeOrderListH\000\022$\n\006trades\030% \001(\0132\022.request"
-    ".TradeListH\000\0225\n\017trade_positions\030& \001(\0132\032."
-    "request.TradePositionListH\000\032,\n\nExtraEntr"
-    "y\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001B\t\n\007pay"
-    "loadJ\004\010\030\020\031J\004\010\032\020\033J\004\010\034\020\035J\004\010\"\020#J\004\010\'\020(J\004\010\002\020\003"
-    "J\004\010\004\020\005J\004\010\n\020\013J\004\010\013\020\014J\004\010\014\020\rJ\004\010\024\020\025J\004\010 \020!R\021ac"
-    "count_info_listR\ntrade_syncR\025security_li"
-    "st_requestR\026security_list_responseR\023sect"
-    "or_list_requestR\033sector_constituents_req"
-    "uestR\003cmdR\003retR\014auth_requestR\021subscribe_"
-    "requestR\023unsubscribe_requestR\rquery_requ"
-    "estR\020account_snapshot\"\356\001\n\017ZhongTaiJourna"
-    "l\022\020\n\010revision\030\001 \001(\004\022\020\n\010sequence\030\002 \001(\004\022\022\n"
-    "\nnext_order\030\003 \001(\004\022\022\n\nnext_trade\030\004 \001(\004\022\023\n"
-    "\013trading_day\030\005 \001(\005\022)\n\006orders\030\006 \003(\0132\031.req"
-    "uest.TradeOrderRecord\022$\n\006trades\030\007 \003(\0132\024."
-    "request.TradeRecord\022)\n\006events\030\010 \003(\0132\031.re"
-    "quest.TradeEventRecord*\356\007\n\013RequestType\022\013"
-    "\n\007UNKNOWN\020\000\022\016\n\nAUTH_LOGIN\020\001\022\021\n\rAUTH_REGI"
-    "STER\020\003\022\r\n\tHEARTBEAT\020\006\022\027\n\023TRADE_ACCOUNT_L"
-    "OGIN\020\010\022\034\n\030TRADE_ACCOUNT_LIST_QUERY\020\t\022\034\n\030"
-    "TRADE_ACCOUNT_DISCONNECT\020\r\022\025\n\021TRADE_FUND"
-    "S_QUERY\020\016\022\020\n\014STRATEGY_ADD\020\024\022\023\n\017STRATEGY_"
-    "MODIFY\020\025\022\022\n\016STRATEGY_QUERY\020\026\022\023\n\017STRATEGY"
-    "_DELETE\020\027\022\032\n\026STRATEGY_RUNTIME_QUERY\020\030\022\022\n"
-    "\016STRATEGY_START\020\031\022\022\n\016STRATEGY_PAUSE\020\032\022\021\n"
-    "\rSTRATEGY_STOP\020\033\022\023\n\017STRATEGY_ACTION\020\034\022\037\n"
-    "\033TRADE_EXECUTION_RULES_QUERY\020C\022\024\n\020MARKET"
-    "_SUBSCRIBE\020(\022\026\n\022MARKET_UNSUBSCRIBE\020)\022\026\n\022"
-    "MARKET_QUOTE_QUERY\020*\022\025\n\021MARKET_BARS_QUER"
-    "Y\020+\022\033\n\027MARKET_SECURITIES_QUERY\020,\022\030\n\024MARK"
-    "ET_SECTORS_QUERY\020-\022$\n MARKET_SECTOR_CONS"
-    "TITUENTS_QUERY\020.\022\025\n\021MARKET_QUOTE_PUSH\020/\022"
-    "\025\n\021MARKET_DEPTH_PUSH\0200\022\026\n\022TRADE_ORDER_SU"
-    "BMIT\0201\022\026\n\022TRADE_ORDER_CANCEL\0202\022\030\n\024TRADE_"
-    "POSITION_QUERY\0203\022\025\n\021TRADE_ORDER_QUERY\0204\022"
-    "\024\n\020TRADE_DEAL_QUERY\0205\022\034\n\030TRADE_ACCOUNT_S"
-    "TATE_PUSH\0206\022\024\n\020TRADE_ORDER_PUSH\0207\022\024\n\020TRA"
-    "DE_TRADE_PUSH\0208\022\033\n\027TRADE_ACCOUNT_INFO_PU"
-    "SH\0209\022\027\n\023TRADE_POSITION_PUSH\020:\022\032\n\026SUPPORT"
-    "ED_BROKER_QUERY\020=\"\004\010\002\020\002\"\004\010\004\020\004\"\004\010\005\020\005\"\004\010\007\020"
-    "\007*\nQUERY_AUTH*\013UPDATE_AUTH*\016QUERY_USERIN"
-    "FO*\010STRATEGY*\010HQMARKET*\007ACCOUNT*\244\001\n\021Trad"
-    "eAccountState\022\030\n\024ACCOUNT_DISCONNECTED\020\000\022"
-    "\025\n\021ACCOUNT_CONNECTED\020\001\022\021\n\rACCOUNT_ERROR\020"
-    "\002\022\026\n\022ACCOUNT_CONNECTING\020\003\022\031\n\025ACCOUNT_SYN"
-    "CHRONIZING\020\004\022\030\n\024ACCOUNT_RECONNECTING\020\005b\006"
-    "proto3"
+    "qmarket.market.v1.QueryResponseH\000\022H\n\025mar"
+    "ket_snapshot_query\030- \001(\0132\'.hqmarket.mark"
+    "et.v1.MarketSnapshotQueryH\000\022F\n\024market_sn"
+    "apshot_page\030. \001(\0132&.hqmarket.market.v1.M"
+    "arketSnapshotPageH\000\022)\n\010strategy\030\026 \001(\0132\025."
+    "request.StrategyInfoH\000\022.\n\rstrategy_list\030"
+    "\027 \001(\0132\025.request.StrategyListH\000\0229\n\rsecuri"
+    "ty_list\030\031 \001(\0132 .hqmarket.market.v1.Secur"
+    "ityListH\000\0225\n\013sector_list\030\033 \001(\0132\036.hqmarke"
+    "t.market.v1.SectorListH\000\022E\n\023sector_const"
+    "ituents\030\035 \001(\0132&.hqmarket.market.v1.Secto"
+    "rConstituentsH\000\022.\n\007account\030\036 \001(\0132\033.reque"
+    "st.TradeAccountRecordH\000\022*\n\013broker_list\030*"
+    " \001(\0132\023.request.BrokerListH\000\0221\n\014account_l"
+    "ist\030\037 \001(\0132\031.request.TradeAccountListH\000\0224"
+    "\n\014account_logs\030! \001(\0132\034.request.TradeAcco"
+    "untLogListH\000\0221\n\014account_info\030( \001(\0132\031.req"
+    "uest.TradeAccountInfoH\000\0223\n\rcounter_reply"
+    "\030) \001(\0132\032.request.TradeCounterReplyH\000\022=\n\025"
+    "strategy_runtime_list\030# \001(\0132\034.request.St"
+    "rategyRuntimeListH\000\0222\n\017execution_rules\030,"
+    " \001(\0132\027.request.ExecutionRulesH\000\022/\n\014trade"
+    "_orders\030$ \001(\0132\027.request.TradeOrderListH\000"
+    "\022$\n\006trades\030% \001(\0132\022.request.TradeListH\000\0225"
+    "\n\017trade_positions\030& \001(\0132\032.request.TradeP"
+    "ositionListH\000\032,\n\nExtraEntry\022\013\n\003key\030\001 \001(\t"
+    "\022\r\n\005value\030\002 \001(\t:\0028\001B\t\n\007payloadJ\004\010\030\020\031J\004\010\032"
+    "\020\033J\004\010\034\020\035J\004\010\"\020#J\004\010\'\020(J\004\010\002\020\003J\004\010\004\020\005J\004\010\n\020\013J\004"
+    "\010\013\020\014J\004\010\014\020\rJ\004\010\024\020\025J\004\010 \020!R\021account_info_lis"
+    "tR\ntrade_syncR\025security_list_requestR\026se"
+    "curity_list_responseR\023sector_list_reques"
+    "tR\033sector_constituents_requestR\003cmdR\003ret"
+    "R\014auth_requestR\021subscribe_requestR\023unsub"
+    "scribe_requestR\rquery_requestR\020account_s"
+    "napshot\"\356\001\n\017ZhongTaiJournal\022\020\n\010revision\030"
+    "\001 \001(\004\022\020\n\010sequence\030\002 \001(\004\022\022\n\nnext_order\030\003 "
+    "\001(\004\022\022\n\nnext_trade\030\004 \001(\004\022\023\n\013trading_day\030\005"
+    " \001(\005\022)\n\006orders\030\006 \003(\0132\031.request.TradeOrde"
+    "rRecord\022$\n\006trades\030\007 \003(\0132\024.request.TradeR"
+    "ecord\022)\n\006events\030\010 \003(\0132\031.request.TradeEve"
+    "ntRecord*\356\007\n\013RequestType\022\013\n\007UNKNOWN\020\000\022\016\n"
+    "\nAUTH_LOGIN\020\001\022\021\n\rAUTH_REGISTER\020\003\022\r\n\tHEAR"
+    "TBEAT\020\006\022\027\n\023TRADE_ACCOUNT_LOGIN\020\010\022\034\n\030TRAD"
+    "E_ACCOUNT_LIST_QUERY\020\t\022\034\n\030TRADE_ACCOUNT_"
+    "DISCONNECT\020\r\022\025\n\021TRADE_FUNDS_QUERY\020\016\022\020\n\014S"
+    "TRATEGY_ADD\020\024\022\023\n\017STRATEGY_MODIFY\020\025\022\022\n\016ST"
+    "RATEGY_QUERY\020\026\022\023\n\017STRATEGY_DELETE\020\027\022\032\n\026S"
+    "TRATEGY_RUNTIME_QUERY\020\030\022\022\n\016STRATEGY_STAR"
+    "T\020\031\022\022\n\016STRATEGY_PAUSE\020\032\022\021\n\rSTRATEGY_STOP"
+    "\020\033\022\023\n\017STRATEGY_ACTION\020\034\022\037\n\033TRADE_EXECUTI"
+    "ON_RULES_QUERY\020C\022\024\n\020MARKET_SUBSCRIBE\020(\022\026"
+    "\n\022MARKET_UNSUBSCRIBE\020)\022\026\n\022MARKET_QUOTE_Q"
+    "UERY\020*\022\025\n\021MARKET_BARS_QUERY\020+\022\033\n\027MARKET_"
+    "SECURITIES_QUERY\020,\022\030\n\024MARKET_SECTORS_QUE"
+    "RY\020-\022$\n MARKET_SECTOR_CONSTITUENTS_QUERY"
+    "\020.\022\025\n\021MARKET_QUOTE_PUSH\020/\022\025\n\021MARKET_DEPT"
+    "H_PUSH\0200\022\026\n\022TRADE_ORDER_SUBMIT\0201\022\026\n\022TRAD"
+    "E_ORDER_CANCEL\0202\022\030\n\024TRADE_POSITION_QUERY"
+    "\0203\022\025\n\021TRADE_ORDER_QUERY\0204\022\024\n\020TRADE_DEAL_"
+    "QUERY\0205\022\034\n\030TRADE_ACCOUNT_STATE_PUSH\0206\022\024\n"
+    "\020TRADE_ORDER_PUSH\0207\022\024\n\020TRADE_TRADE_PUSH\020"
+    "8\022\033\n\027TRADE_ACCOUNT_INFO_PUSH\0209\022\027\n\023TRADE_"
+    "POSITION_PUSH\020:\022\032\n\026SUPPORTED_BROKER_QUER"
+    "Y\020=\"\004\010\002\020\002\"\004\010\004\020\004\"\004\010\005\020\005\"\004\010\007\020\007*\nQUERY_AUTH*"
+    "\013UPDATE_AUTH*\016QUERY_USERINFO*\010STRATEGY*\010"
+    "HQMARKET*\007ACCOUNT*\244\001\n\021TradeAccountState\022"
+    "\030\n\024ACCOUNT_DISCONNECTED\020\000\022\025\n\021ACCOUNT_CON"
+    "NECTED\020\001\022\021\n\rACCOUNT_ERROR\020\002\022\026\n\022ACCOUNT_C"
+    "ONNECTING\020\003\022\031\n\025ACCOUNT_SYNCHRONIZING\020\004\022\030"
+    "\n\024ACCOUNT_RECONNECTING\020\005b\006proto3"
 };
 static const ::_pbi::DescriptorTable* const descriptor_table_request_2eproto_deps[1] =
     {
@@ -1750,7 +1757,7 @@ static ::absl::once_flag descriptor_table_request_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_request_2eproto = {
     false,
     false,
-    7926,
+    8072,
     descriptor_table_protodef_request_2eproto,
     "request.proto",
     &descriptor_table_request_2eproto_once,
@@ -11915,6 +11922,54 @@ void RequestData::clear_query_response() {
     clear_has_payload();
   }
 }
+void RequestData::set_allocated_market_snapshot_query(::hqmarket::market::v1::MarketSnapshotQuery* market_snapshot_query) {
+  ::google::protobuf::Arena* message_arena = GetArena();
+  clear_payload();
+  if (market_snapshot_query) {
+    ::google::protobuf::Arena* submessage_arena = reinterpret_cast<::google::protobuf::MessageLite*>(market_snapshot_query)->GetArena();
+    if (message_arena != submessage_arena) {
+      market_snapshot_query = ::google::protobuf::internal::GetOwnedMessage(message_arena, market_snapshot_query, submessage_arena);
+    }
+    set_has_market_snapshot_query();
+    _impl_.payload_.market_snapshot_query_ = market_snapshot_query;
+  }
+  // @@protoc_insertion_point(field_set_allocated:request.RequestData.market_snapshot_query)
+}
+void RequestData::clear_market_snapshot_query() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (payload_case() == kMarketSnapshotQuery) {
+    if (GetArena() == nullptr) {
+      delete _impl_.payload_.market_snapshot_query_;
+    } else if (::google::protobuf::internal::DebugHardenClearOneofMessageOnArena()) {
+      ::google::protobuf::internal::MaybePoisonAfterClear(_impl_.payload_.market_snapshot_query_);
+    }
+    clear_has_payload();
+  }
+}
+void RequestData::set_allocated_market_snapshot_page(::hqmarket::market::v1::MarketSnapshotPage* market_snapshot_page) {
+  ::google::protobuf::Arena* message_arena = GetArena();
+  clear_payload();
+  if (market_snapshot_page) {
+    ::google::protobuf::Arena* submessage_arena = reinterpret_cast<::google::protobuf::MessageLite*>(market_snapshot_page)->GetArena();
+    if (message_arena != submessage_arena) {
+      market_snapshot_page = ::google::protobuf::internal::GetOwnedMessage(message_arena, market_snapshot_page, submessage_arena);
+    }
+    set_has_market_snapshot_page();
+    _impl_.payload_.market_snapshot_page_ = market_snapshot_page;
+  }
+  // @@protoc_insertion_point(field_set_allocated:request.RequestData.market_snapshot_page)
+}
+void RequestData::clear_market_snapshot_page() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (payload_case() == kMarketSnapshotPage) {
+    if (GetArena() == nullptr) {
+      delete _impl_.payload_.market_snapshot_page_;
+    } else if (::google::protobuf::internal::DebugHardenClearOneofMessageOnArena()) {
+      ::google::protobuf::internal::MaybePoisonAfterClear(_impl_.payload_.market_snapshot_page_);
+    }
+    clear_has_payload();
+  }
+}
 void RequestData::set_allocated_strategy(::request::StrategyInfo* strategy) {
   ::google::protobuf::Arena* message_arena = GetArena();
   clear_payload();
@@ -12226,6 +12281,12 @@ RequestData::RequestData(
       case kQueryResponse:
         _impl_.payload_.query_response_ = ::google::protobuf::Message::CopyConstruct<::hqmarket::market::v1::QueryResponse>(arena, *from._impl_.payload_.query_response_);
         break;
+      case kMarketSnapshotQuery:
+        _impl_.payload_.market_snapshot_query_ = ::google::protobuf::Message::CopyConstruct<::hqmarket::market::v1::MarketSnapshotQuery>(arena, *from._impl_.payload_.market_snapshot_query_);
+        break;
+      case kMarketSnapshotPage:
+        _impl_.payload_.market_snapshot_page_ = ::google::protobuf::Message::CopyConstruct<::hqmarket::market::v1::MarketSnapshotPage>(arena, *from._impl_.payload_.market_snapshot_page_);
+        break;
       case kStrategy:
         _impl_.payload_.strategy_ = ::google::protobuf::Message::CopyConstruct<::request::StrategyInfo>(arena, *from._impl_.payload_.strategy_);
         break;
@@ -12377,6 +12438,22 @@ void RequestData::clear_payload() {
         delete _impl_.payload_.query_response_;
       } else if (::google::protobuf::internal::DebugHardenClearOneofMessageOnArena()) {
         ::google::protobuf::internal::MaybePoisonAfterClear(_impl_.payload_.query_response_);
+      }
+      break;
+    }
+    case kMarketSnapshotQuery: {
+      if (GetArena() == nullptr) {
+        delete _impl_.payload_.market_snapshot_query_;
+      } else if (::google::protobuf::internal::DebugHardenClearOneofMessageOnArena()) {
+        ::google::protobuf::internal::MaybePoisonAfterClear(_impl_.payload_.market_snapshot_query_);
+      }
+      break;
+    }
+    case kMarketSnapshotPage: {
+      if (GetArena() == nullptr) {
+        delete _impl_.payload_.market_snapshot_page_;
+      } else if (::google::protobuf::internal::DebugHardenClearOneofMessageOnArena()) {
+        ::google::protobuf::internal::MaybePoisonAfterClear(_impl_.payload_.market_snapshot_page_);
       }
       break;
     }
@@ -12568,16 +12645,16 @@ const ::google::protobuf::internal::ClassData* RequestData::GetClassData() const
   return _class_data_.base();
 }
 PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<3, 30, 26, 70, 7> RequestData::_table_ = {
+const ::_pbi::TcParseTable<3, 32, 28, 78, 7> RequestData::_table_ = {
   {
     PROTOBUF_FIELD_OFFSET(RequestData, _impl_._has_bits_),
     0, // no _extensions_
-    44, 56,  // max_field_number, fast_idx_mask
+    46, 56,  // max_field_number, fast_idx_mask
     offsetof(decltype(_table_), field_lookup_table),
     2324172682,  // skipmap
     offsetof(decltype(_table_), field_entries),
-    30,  // num_field_entries
-    26,  // num_aux_entries
+    32,  // num_field_entries
+    28,  // num_aux_entries
     offsetof(decltype(_table_), aux_entries),
     _class_data_.base(),
     nullptr,  // post_loop_handler
@@ -12606,14 +12683,14 @@ const ::_pbi::TcParseTable<3, 30, 26, 70, 7> RequestData::_table_ = {
      {58, 63, 0, PROTOBUF_FIELD_OFFSET(RequestData, _impl_.error_message_)}},
   }}, {{
     33, 0, 1,
-    61506, 20,
+    49218, 20,
     65535, 65535
   }}, {{
     // .request.RequestType type = 1;
     {PROTOBUF_FIELD_OFFSET(RequestData, _impl_.type_), -1, 0,
     (0 | ::_fl::kFcSingular | ::_fl::kOpenEnum)},
     // map<string, string> extra = 3;
-    {PROTOBUF_FIELD_OFFSET(RequestData, _impl_.extra_), -1, 25,
+    {PROTOBUF_FIELD_OFFSET(RequestData, _impl_.extra_), -1, 27,
     (0 | ::_fl::kFcRepeated | ::_fl::kMap)},
     // uint64 id = 5;
     {PROTOBUF_FIELD_OFFSET(RequestData, _impl_.id_), -1, 0,
@@ -12699,6 +12776,12 @@ const ::_pbi::TcParseTable<3, 30, 26, 70, 7> RequestData::_table_ = {
     // .request.ExecutionRules execution_rules = 44;
     {PROTOBUF_FIELD_OFFSET(RequestData, _impl_.payload_.execution_rules_), _Internal::kOneofCaseOffset + 0, 24,
     (0 | ::_fl::kFcOneof | ::_fl::kMessage | ::_fl::kTvTable)},
+    // .hqmarket.market.v1.MarketSnapshotQuery market_snapshot_query = 45;
+    {PROTOBUF_FIELD_OFFSET(RequestData, _impl_.payload_.market_snapshot_query_), _Internal::kOneofCaseOffset + 0, 25,
+    (0 | ::_fl::kFcOneof | ::_fl::kMessage | ::_fl::kTvTable)},
+    // .hqmarket.market.v1.MarketSnapshotPage market_snapshot_page = 46;
+    {PROTOBUF_FIELD_OFFSET(RequestData, _impl_.payload_.market_snapshot_page_), _Internal::kOneofCaseOffset + 0, 26,
+    (0 | ::_fl::kFcOneof | ::_fl::kMessage | ::_fl::kTvTable)},
   }}, {{
     {::_pbi::TcParser::GetTable<::hqmarket::market::v1::SubscriptionAck>()},
     {::_pbi::TcParser::GetTable<::hqmarket::market::v1::QuoteData>()},
@@ -12725,12 +12808,14 @@ const ::_pbi::TcParseTable<3, 30, 26, 70, 7> RequestData::_table_ = {
     {::_pbi::TcParser::GetTable<::request::BrokerList>()},
     {::_pbi::TcParser::GetTable<::request::TradeAccountInfo>()},
     {::_pbi::TcParser::GetTable<::request::ExecutionRules>()},
+    {::_pbi::TcParser::GetTable<::hqmarket::market::v1::MarketSnapshotQuery>()},
+    {::_pbi::TcParser::GetTable<::hqmarket::market::v1::MarketSnapshotPage>()},
     {::_pbi::TcParser::GetMapAuxInfo<
         decltype(RequestData()._impl_.extra_)>(
         1, 0, 0, 9,
         9)},
   }}, {{
-    "\23\0\5\0\0\15\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+    "\23\0\5\0\0\15\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
     "request.RequestData"
     "extra"
     "error_message"
@@ -12986,13 +13071,28 @@ PROTOBUF_NOINLINE void RequestData::Clear() {
                 stream);
           }
 
-          // .request.ExecutionRules execution_rules = 44;
-          if (this_.payload_case() == kExecutionRules) {
-            target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
-                44, *this_._impl_.payload_.execution_rules_, this_._impl_.payload_.execution_rules_->GetCachedSize(), target,
-                stream);
+          switch (this_.payload_case()) {
+            case kExecutionRules: {
+              target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+                  44, *this_._impl_.payload_.execution_rules_, this_._impl_.payload_.execution_rules_->GetCachedSize(), target,
+                  stream);
+              break;
+            }
+            case kMarketSnapshotQuery: {
+              target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+                  45, *this_._impl_.payload_.market_snapshot_query_, this_._impl_.payload_.market_snapshot_query_->GetCachedSize(), target,
+                  stream);
+              break;
+            }
+            case kMarketSnapshotPage: {
+              target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+                  46, *this_._impl_.payload_.market_snapshot_page_, this_._impl_.payload_.market_snapshot_page_->GetCachedSize(), target,
+                  stream);
+              break;
+            }
+            default:
+              break;
           }
-
           if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
             target =
                 ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
@@ -13108,6 +13208,18 @@ PROTOBUF_NOINLINE void RequestData::Clear() {
             case kQueryResponse: {
               total_size += 2 +
                             ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.payload_.query_response_);
+              break;
+            }
+            // .hqmarket.market.v1.MarketSnapshotQuery market_snapshot_query = 45;
+            case kMarketSnapshotQuery: {
+              total_size += 2 +
+                            ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.payload_.market_snapshot_query_);
+              break;
+            }
+            // .hqmarket.market.v1.MarketSnapshotPage market_snapshot_page = 46;
+            case kMarketSnapshotPage: {
+              total_size += 2 +
+                            ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.payload_.market_snapshot_page_);
               break;
             }
             // .request.StrategyInfo strategy = 22;
@@ -13327,6 +13439,24 @@ void RequestData::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::goo
               ::google::protobuf::Message::CopyConstruct<::hqmarket::market::v1::QueryResponse>(arena, *from._impl_.payload_.query_response_);
         } else {
           _this->_impl_.payload_.query_response_->MergeFrom(from._internal_query_response());
+        }
+        break;
+      }
+      case kMarketSnapshotQuery: {
+        if (oneof_needs_init) {
+          _this->_impl_.payload_.market_snapshot_query_ =
+              ::google::protobuf::Message::CopyConstruct<::hqmarket::market::v1::MarketSnapshotQuery>(arena, *from._impl_.payload_.market_snapshot_query_);
+        } else {
+          _this->_impl_.payload_.market_snapshot_query_->MergeFrom(from._internal_market_snapshot_query());
+        }
+        break;
+      }
+      case kMarketSnapshotPage: {
+        if (oneof_needs_init) {
+          _this->_impl_.payload_.market_snapshot_page_ =
+              ::google::protobuf::Message::CopyConstruct<::hqmarket::market::v1::MarketSnapshotPage>(arena, *from._impl_.payload_.market_snapshot_page_);
+        } else {
+          _this->_impl_.payload_.market_snapshot_page_->MergeFrom(from._internal_market_snapshot_page());
         }
         break;
       }

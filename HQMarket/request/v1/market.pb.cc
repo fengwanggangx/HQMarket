@@ -143,6 +143,40 @@ struct MarketStatusDataDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 MarketStatusDataDefaultTypeInternal _MarketStatusData_default_instance_;
 
+inline constexpr MarketSnapshotQuery::Impl_::Impl_(
+    ::_pbi::ConstantInitialized) noexcept
+      : _cached_size_{0},
+        board_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()),
+        scope_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()),
+        version_{::uint64_t{0u}},
+        offset_{0u},
+        limit_{0u},
+        allow_partial_{false} {}
+
+template <typename>
+PROTOBUF_CONSTEXPR MarketSnapshotQuery::MarketSnapshotQuery(::_pbi::ConstantInitialized)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(_class_data_.base()),
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(),
+#endif  // PROTOBUF_CUSTOM_VTABLE
+      _impl_(::_pbi::ConstantInitialized()) {
+}
+struct MarketSnapshotQueryDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR MarketSnapshotQueryDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~MarketSnapshotQueryDefaultTypeInternal() {}
+  union {
+    MarketSnapshotQuery _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 MarketSnapshotQueryDefaultTypeInternal _MarketSnapshotQuery_default_instance_;
+
 inline constexpr TradeData::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
       : _cached_size_{0},
@@ -540,6 +574,47 @@ struct QueryResponseDefaultTypeInternal {
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 QueryResponseDefaultTypeInternal _QueryResponse_default_instance_;
+
+inline constexpr MarketSnapshotPage::Impl_::Impl_(
+    ::_pbi::ConstantInitialized) noexcept
+      : _cached_size_{0},
+        quotes_{},
+        status_(
+            &::google::protobuf::internal::fixed_address_empty_string,
+            ::_pbi::ConstantInitialized()),
+        version_{::uint64_t{0u}},
+        expected_{::uint64_t{0u}},
+        received_{::uint64_t{0u}},
+        missing_{::uint64_t{0u}},
+        confirmed_halted_{::uint64_t{0u}},
+        unknown_exchange_time_{::uint64_t{0u}},
+        started_at_ms_{::int64_t{0}},
+        finished_at_ms_{::int64_t{0}},
+        partial_{false},
+        directory_verified_{false},
+        prior_date_{false},
+        turnover_scale_{0},
+        next_offset_{::uint64_t{0u}} {}
+
+template <typename>
+PROTOBUF_CONSTEXPR MarketSnapshotPage::MarketSnapshotPage(::_pbi::ConstantInitialized)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(_class_data_.base()),
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(),
+#endif  // PROTOBUF_CUSTOM_VTABLE
+      _impl_(::_pbi::ConstantInitialized()) {
+}
+struct MarketSnapshotPageDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR MarketSnapshotPageDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~MarketSnapshotPageDefaultTypeInternal() {}
+  union {
+    MarketSnapshotPage _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 MarketSnapshotPageDefaultTypeInternal _MarketSnapshotPage_default_instance_;
 }  // namespace v1
 }  // namespace market
 }  // namespace hqmarket
@@ -841,6 +916,64 @@ const ::uint32_t
         ~0u,
         ~0u,
         ~0u,
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotQuery, _impl_._has_bits_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotQuery, _internal_metadata_),
+        ~0u,  // no _extensions_
+        ~0u,  // no _oneof_case_
+        ~0u,  // no _weak_field_map_
+        ~0u,  // no _inlined_string_donated_
+        ~0u,  // no _split_
+        ~0u,  // no sizeof(Split)
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotQuery, _impl_.version_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotQuery, _impl_.offset_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotQuery, _impl_.limit_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotQuery, _impl_.board_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotQuery, _impl_.scope_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotQuery, _impl_.allow_partial_),
+        ~0u,
+        ~0u,
+        0,
+        ~0u,
+        ~0u,
+        ~0u,
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotPage, _impl_._has_bits_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotPage, _internal_metadata_),
+        ~0u,  // no _extensions_
+        ~0u,  // no _oneof_case_
+        ~0u,  // no _weak_field_map_
+        ~0u,  // no _inlined_string_donated_
+        ~0u,  // no _split_
+        ~0u,  // no sizeof(Split)
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotPage, _impl_.status_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotPage, _impl_.version_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotPage, _impl_.expected_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotPage, _impl_.received_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotPage, _impl_.missing_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotPage, _impl_.confirmed_halted_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotPage, _impl_.unknown_exchange_time_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotPage, _impl_.started_at_ms_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotPage, _impl_.finished_at_ms_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotPage, _impl_.partial_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotPage, _impl_.directory_verified_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotPage, _impl_.prior_date_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotPage, _impl_.next_offset_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotPage, _impl_.quotes_),
+        PROTOBUF_FIELD_OFFSET(::hqmarket::market::v1::MarketSnapshotPage, _impl_.turnover_scale_),
+        ~0u,
+        ~0u,
+        ~0u,
+        ~0u,
+        ~0u,
+        ~0u,
+        ~0u,
+        ~0u,
+        ~0u,
+        ~0u,
+        ~0u,
+        ~0u,
+        0,
+        ~0u,
+        ~0u,
 };
 
 static const ::_pbi::MigrationSchema
@@ -861,6 +994,8 @@ static const ::_pbi::MigrationSchema
         {232, 251, -1, sizeof(::hqmarket::market::v1::SectorInfo)},
         {262, -1, -1, sizeof(::hqmarket::market::v1::SectorList)},
         {274, 287, -1, sizeof(::hqmarket::market::v1::SectorConstituents)},
+        {292, 306, -1, sizeof(::hqmarket::market::v1::MarketSnapshotQuery)},
+        {312, 335, -1, sizeof(::hqmarket::market::v1::MarketSnapshotPage)},
 };
 static const ::_pb::Message* const file_default_instances[] = {
     &::hqmarket::market::v1::_Security_default_instance_._instance,
@@ -879,6 +1014,8 @@ static const ::_pb::Message* const file_default_instances[] = {
     &::hqmarket::market::v1::_SectorInfo_default_instance_._instance,
     &::hqmarket::market::v1::_SectorList_default_instance_._instance,
     &::hqmarket::market::v1::_SectorConstituents_default_instance_._instance,
+    &::hqmarket::market::v1::_MarketSnapshotQuery_default_instance_._instance,
+    &::hqmarket::market::v1::_MarketSnapshotPage_default_instance_._instance,
 };
 const char descriptor_table_protodef_v1_2fmarket_2eproto[] ABSL_ATTRIBUTE_SECTION_VARIABLE(
     protodesc_cold) = {
@@ -951,31 +1088,44 @@ const char descriptor_table_protodef_v1_2fmarket_2eproto[] ABSL_ATTRIBUTE_SECTIO
     "\022.\n\006sector\030\002 \001(\0132\036.hqmarket.market.v1.Se"
     "ctorInfo\0224\n\nsecurities\030\003 \003(\0132 .hqmarket."
     "market.v1.SecurityInfo\022\030\n\020snapshot_time_"
-    "ms\030\004 \001(\003\022\016\n\006source\030\005 \001(\t*\247\001\n\010Exchange\022\030\n"
-    "\024EXCHANGE_UNSPECIFIED\020\000\022\007\n\003SSE\020\001\022\010\n\004SZSE"
-    "\020\002\022\007\n\003BSE\020\003\022\010\n\004HKEX\020\004\022\t\n\005CFFEX\020\005\022\010\n\004SHFE"
-    "\020\006\022\007\n\003DCE\020\007\022\010\n\004CZCE\020\010\022\007\n\003INE\020\t\022\010\n\004GFEX\020\n"
-    "\022\n\n\006NASDAQ\020\013\022\010\n\004NYSE\020\014\022\n\n\006CRYPTO\020\r*\236\001\n\007C"
-    "hannel\022\027\n\023CHANNEL_UNSPECIFIED\020\000\022\021\n\rCHANN"
-    "EL_QUOTE\020\001\022\021\n\rCHANNEL_DEPTH\020\002\022\021\n\rCHANNEL"
-    "_TRADE\020\003\022\022\n\016CHANNEL_BAR_1M\020\004\022\022\n\016CHANNEL_"
-    "BAR_1D\020\005\022\031\n\025CHANNEL_MARKET_STATUS\020\006*t\n\nS"
-    "ectorType\022\033\n\027SECTOR_TYPE_UNSPECIFIED\020\000\022\030"
-    "\n\024SECTOR_TYPE_INDUSTRY\020\001\022\027\n\023SECTOR_TYPE_"
-    "CONCEPT\020\002\022\026\n\022SECTOR_TYPE_REGION\020\003b\006proto"
-    "3"
+    "ms\030\004 \001(\003\022\016\n\006source\030\005 \001(\t\"\211\001\n\023MarketSnaps"
+    "hotQuery\022\017\n\007version\030\001 \001(\004\022\016\n\006offset\030\002 \001("
+    "\r\022\022\n\005limit\030\003 \001(\rH\000\210\001\001\022\r\n\005board\030\004 \001(\t\022\r\n\005"
+    "scope\030\005 \001(\t\022\025\n\rallow_partial\030\006 \001(\010B\010\n\006_l"
+    "imit\"\204\003\n\022MarketSnapshotPage\022\016\n\006status\030\001 "
+    "\001(\t\022\017\n\007version\030\002 \001(\004\022\020\n\010expected\030\003 \001(\004\022\020"
+    "\n\010received\030\004 \001(\004\022\017\n\007missing\030\005 \001(\004\022\030\n\020con"
+    "firmed_halted\030\006 \001(\004\022\035\n\025unknown_exchange_"
+    "time\030\007 \001(\004\022\025\n\rstarted_at_ms\030\010 \001(\003\022\026\n\016fin"
+    "ished_at_ms\030\t \001(\003\022\017\n\007partial\030\n \001(\010\022\032\n\022di"
+    "rectory_verified\030\013 \001(\010\022\022\n\nprior_date\030\014 \001"
+    "(\010\022\030\n\013next_offset\030\r \001(\004H\000\210\001\001\022-\n\006quotes\030\016"
+    " \003(\0132\035.hqmarket.market.v1.QuoteData\022\026\n\016t"
+    "urnover_scale\030\017 \001(\005B\016\n\014_next_offset*\247\001\n\010"
+    "Exchange\022\030\n\024EXCHANGE_UNSPECIFIED\020\000\022\007\n\003SS"
+    "E\020\001\022\010\n\004SZSE\020\002\022\007\n\003BSE\020\003\022\010\n\004HKEX\020\004\022\t\n\005CFFE"
+    "X\020\005\022\010\n\004SHFE\020\006\022\007\n\003DCE\020\007\022\010\n\004CZCE\020\010\022\007\n\003INE\020"
+    "\t\022\010\n\004GFEX\020\n\022\n\n\006NASDAQ\020\013\022\010\n\004NYSE\020\014\022\n\n\006CRY"
+    "PTO\020\r*\236\001\n\007Channel\022\027\n\023CHANNEL_UNSPECIFIED"
+    "\020\000\022\021\n\rCHANNEL_QUOTE\020\001\022\021\n\rCHANNEL_DEPTH\020\002"
+    "\022\021\n\rCHANNEL_TRADE\020\003\022\022\n\016CHANNEL_BAR_1M\020\004\022"
+    "\022\n\016CHANNEL_BAR_1D\020\005\022\031\n\025CHANNEL_MARKET_ST"
+    "ATUS\020\006*t\n\nSectorType\022\033\n\027SECTOR_TYPE_UNSP"
+    "ECIFIED\020\000\022\030\n\024SECTOR_TYPE_INDUSTRY\020\001\022\027\n\023S"
+    "ECTOR_TYPE_CONCEPT\020\002\022\026\n\022SECTOR_TYPE_REGI"
+    "ON\020\003b\006proto3"
 };
 static ::absl::once_flag descriptor_table_v1_2fmarket_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_v1_2fmarket_2eproto = {
     false,
     false,
-    3241,
+    3772,
     descriptor_table_protodef_v1_2fmarket_2eproto,
     "v1/market.proto",
     &descriptor_table_v1_2fmarket_2eproto_once,
     nullptr,
     0,
-    16,
+    18,
     schemas,
     file_default_instances,
     TableStruct_v1_2fmarket_2eproto::offsets,
@@ -7041,6 +7191,973 @@ void SectorConstituents::InternalSwap(SectorConstituents* PROTOBUF_RESTRICT othe
 }
 
 ::google::protobuf::Metadata SectorConstituents::GetMetadata() const {
+  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
+}
+// ===================================================================
+
+class MarketSnapshotQuery::_Internal {
+ public:
+  using HasBits =
+      decltype(std::declval<MarketSnapshotQuery>()._impl_._has_bits_);
+  static constexpr ::int32_t kHasBitsOffset =
+      8 * PROTOBUF_FIELD_OFFSET(MarketSnapshotQuery, _impl_._has_bits_);
+};
+
+MarketSnapshotQuery::MarketSnapshotQuery(::google::protobuf::Arena* arena)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  SharedCtor(arena);
+  // @@protoc_insertion_point(arena_constructor:hqmarket.market.v1.MarketSnapshotQuery)
+}
+inline PROTOBUF_NDEBUG_INLINE MarketSnapshotQuery::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
+    const Impl_& from, const ::hqmarket::market::v1::MarketSnapshotQuery& from_msg)
+      : _has_bits_{from._has_bits_},
+        _cached_size_{0},
+        board_(arena, from.board_),
+        scope_(arena, from.scope_) {}
+
+MarketSnapshotQuery::MarketSnapshotQuery(
+    ::google::protobuf::Arena* arena,
+    const MarketSnapshotQuery& from)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  MarketSnapshotQuery* const _this = this;
+  (void)_this;
+  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
+  ::memcpy(reinterpret_cast<char *>(&_impl_) +
+               offsetof(Impl_, version_),
+           reinterpret_cast<const char *>(&from._impl_) +
+               offsetof(Impl_, version_),
+           offsetof(Impl_, allow_partial_) -
+               offsetof(Impl_, version_) +
+               sizeof(Impl_::allow_partial_));
+
+  // @@protoc_insertion_point(copy_constructor:hqmarket.market.v1.MarketSnapshotQuery)
+}
+inline PROTOBUF_NDEBUG_INLINE MarketSnapshotQuery::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility,
+    ::google::protobuf::Arena* arena)
+      : _cached_size_{0},
+        board_(arena),
+        scope_(arena) {}
+
+inline void MarketSnapshotQuery::SharedCtor(::_pb::Arena* arena) {
+  new (&_impl_) Impl_(internal_visibility(), arena);
+  ::memset(reinterpret_cast<char *>(&_impl_) +
+               offsetof(Impl_, version_),
+           0,
+           offsetof(Impl_, allow_partial_) -
+               offsetof(Impl_, version_) +
+               sizeof(Impl_::allow_partial_));
+}
+MarketSnapshotQuery::~MarketSnapshotQuery() {
+  // @@protoc_insertion_point(destructor:hqmarket.market.v1.MarketSnapshotQuery)
+  SharedDtor(*this);
+}
+inline void MarketSnapshotQuery::SharedDtor(MessageLite& self) {
+  MarketSnapshotQuery& this_ = static_cast<MarketSnapshotQuery&>(self);
+  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
+  ABSL_DCHECK(this_.GetArena() == nullptr);
+  this_._impl_.board_.Destroy();
+  this_._impl_.scope_.Destroy();
+  this_._impl_.~Impl_();
+}
+
+inline void* MarketSnapshotQuery::PlacementNew_(const void*, void* mem,
+                                        ::google::protobuf::Arena* arena) {
+  return ::new (mem) MarketSnapshotQuery(arena);
+}
+constexpr auto MarketSnapshotQuery::InternalNewImpl_() {
+  return ::google::protobuf::internal::MessageCreator::CopyInit(sizeof(MarketSnapshotQuery),
+                                            alignof(MarketSnapshotQuery));
+}
+PROTOBUF_CONSTINIT
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::google::protobuf::internal::ClassDataFull MarketSnapshotQuery::_class_data_ = {
+    ::google::protobuf::internal::ClassData{
+        &_MarketSnapshotQuery_default_instance_._instance,
+        &_table_.header,
+        nullptr,  // OnDemandRegisterArenaDtor
+        nullptr,  // IsInitialized
+        &MarketSnapshotQuery::MergeImpl,
+        ::google::protobuf::Message::GetNewImpl<MarketSnapshotQuery>(),
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        &MarketSnapshotQuery::SharedDtor,
+        ::google::protobuf::Message::GetClearImpl<MarketSnapshotQuery>(), &MarketSnapshotQuery::ByteSizeLong,
+            &MarketSnapshotQuery::_InternalSerialize,
+#endif  // PROTOBUF_CUSTOM_VTABLE
+        PROTOBUF_FIELD_OFFSET(MarketSnapshotQuery, _impl_._cached_size_),
+        false,
+    },
+    &MarketSnapshotQuery::kDescriptorMethods,
+    &descriptor_table_v1_2fmarket_2eproto,
+    nullptr,  // tracker
+};
+const ::google::protobuf::internal::ClassData* MarketSnapshotQuery::GetClassData() const {
+  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
+  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
+  return _class_data_.base();
+}
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<3, 6, 0, 57, 2> MarketSnapshotQuery::_table_ = {
+  {
+    PROTOBUF_FIELD_OFFSET(MarketSnapshotQuery, _impl_._has_bits_),
+    0, // no _extensions_
+    6, 56,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967232,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    6,  // num_field_entries
+    0,  // num_aux_entries
+    offsetof(decltype(_table_), field_names),  // no aux_entries
+    _class_data_.base(),
+    nullptr,  // post_loop_handler
+    ::_pbi::TcParser::GenericFallback,  // fallback
+    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+    ::_pbi::TcParser::GetTable<::hqmarket::market::v1::MarketSnapshotQuery>(),  // to_prefetch
+    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  }, {{
+    {::_pbi::TcParser::MiniParse, {}},
+    // uint64 version = 1;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(MarketSnapshotQuery, _impl_.version_), 63>(),
+     {8, 63, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotQuery, _impl_.version_)}},
+    // uint32 offset = 2;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(MarketSnapshotQuery, _impl_.offset_), 63>(),
+     {16, 63, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotQuery, _impl_.offset_)}},
+    // optional uint32 limit = 3;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(MarketSnapshotQuery, _impl_.limit_), 0>(),
+     {24, 0, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotQuery, _impl_.limit_)}},
+    // string board = 4;
+    {::_pbi::TcParser::FastUS1,
+     {34, 63, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotQuery, _impl_.board_)}},
+    // string scope = 5;
+    {::_pbi::TcParser::FastUS1,
+     {42, 63, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotQuery, _impl_.scope_)}},
+    // bool allow_partial = 6;
+    {::_pbi::TcParser::SingularVarintNoZag1<bool, offsetof(MarketSnapshotQuery, _impl_.allow_partial_), 63>(),
+     {48, 63, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotQuery, _impl_.allow_partial_)}},
+    {::_pbi::TcParser::MiniParse, {}},
+  }}, {{
+    65535, 65535
+  }}, {{
+    // uint64 version = 1;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotQuery, _impl_.version_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUInt64)},
+    // uint32 offset = 2;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotQuery, _impl_.offset_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUInt32)},
+    // optional uint32 limit = 3;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotQuery, _impl_.limit_), _Internal::kHasBitsOffset + 0, 0,
+    (0 | ::_fl::kFcOptional | ::_fl::kUInt32)},
+    // string board = 4;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotQuery, _impl_.board_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUtf8String | ::_fl::kRepAString)},
+    // string scope = 5;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotQuery, _impl_.scope_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUtf8String | ::_fl::kRepAString)},
+    // bool allow_partial = 6;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotQuery, _impl_.allow_partial_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kBool)},
+  }},
+  // no aux_entries
+  {{
+    "\46\0\0\0\5\5\0\0"
+    "hqmarket.market.v1.MarketSnapshotQuery"
+    "board"
+    "scope"
+  }},
+};
+
+PROTOBUF_NOINLINE void MarketSnapshotQuery::Clear() {
+// @@protoc_insertion_point(message_clear_start:hqmarket.market.v1.MarketSnapshotQuery)
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.board_.ClearToEmpty();
+  _impl_.scope_.ClearToEmpty();
+  ::memset(&_impl_.version_, 0, static_cast<::size_t>(
+      reinterpret_cast<char*>(&_impl_.offset_) -
+      reinterpret_cast<char*>(&_impl_.version_)) + sizeof(_impl_.offset_));
+  _impl_.limit_ = 0u;
+  _impl_.allow_partial_ = false;
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
+}
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::uint8_t* MarketSnapshotQuery::_InternalSerialize(
+            const MessageLite& base, ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) {
+          const MarketSnapshotQuery& this_ = static_cast<const MarketSnapshotQuery&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::uint8_t* MarketSnapshotQuery::_InternalSerialize(
+            ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+          const MarketSnapshotQuery& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(serialize_to_array_start:hqmarket.market.v1.MarketSnapshotQuery)
+          ::uint32_t cached_has_bits = 0;
+          (void)cached_has_bits;
+
+          // uint64 version = 1;
+          if (this_._internal_version() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteUInt64ToArray(
+                1, this_._internal_version(), target);
+          }
+
+          // uint32 offset = 2;
+          if (this_._internal_offset() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
+                2, this_._internal_offset(), target);
+          }
+
+          cached_has_bits = this_._impl_._has_bits_[0];
+          // optional uint32 limit = 3;
+          if (cached_has_bits & 0x00000001u) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteUInt32ToArray(
+                3, this_._internal_limit(), target);
+          }
+
+          // string board = 4;
+          if (!this_._internal_board().empty()) {
+            const std::string& _s = this_._internal_board();
+            ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+                _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "hqmarket.market.v1.MarketSnapshotQuery.board");
+            target = stream->WriteStringMaybeAliased(4, _s, target);
+          }
+
+          // string scope = 5;
+          if (!this_._internal_scope().empty()) {
+            const std::string& _s = this_._internal_scope();
+            ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+                _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "hqmarket.market.v1.MarketSnapshotQuery.scope");
+            target = stream->WriteStringMaybeAliased(5, _s, target);
+          }
+
+          // bool allow_partial = 6;
+          if (this_._internal_allow_partial() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteBoolToArray(
+                6, this_._internal_allow_partial(), target);
+          }
+
+          if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
+            target =
+                ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+                    this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
+          }
+          // @@protoc_insertion_point(serialize_to_array_end:hqmarket.market.v1.MarketSnapshotQuery)
+          return target;
+        }
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::size_t MarketSnapshotQuery::ByteSizeLong(const MessageLite& base) {
+          const MarketSnapshotQuery& this_ = static_cast<const MarketSnapshotQuery&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::size_t MarketSnapshotQuery::ByteSizeLong() const {
+          const MarketSnapshotQuery& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(message_byte_size_start:hqmarket.market.v1.MarketSnapshotQuery)
+          ::size_t total_size = 0;
+
+          ::uint32_t cached_has_bits = 0;
+          // Prevent compiler warnings about cached_has_bits being unused
+          (void)cached_has_bits;
+
+          ::_pbi::Prefetch5LinesFrom7Lines(&this_);
+           {
+            // string board = 4;
+            if (!this_._internal_board().empty()) {
+              total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
+                                              this_._internal_board());
+            }
+            // string scope = 5;
+            if (!this_._internal_scope().empty()) {
+              total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
+                                              this_._internal_scope());
+            }
+            // uint64 version = 1;
+            if (this_._internal_version() != 0) {
+              total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(
+                  this_._internal_version());
+            }
+            // uint32 offset = 2;
+            if (this_._internal_offset() != 0) {
+              total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
+                  this_._internal_offset());
+            }
+          }
+           {
+            // optional uint32 limit = 3;
+            cached_has_bits = this_._impl_._has_bits_[0];
+            if (cached_has_bits & 0x00000001u) {
+              total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(
+                  this_._internal_limit());
+            }
+          }
+           {
+            // bool allow_partial = 6;
+            if (this_._internal_allow_partial() != 0) {
+              total_size += 2;
+            }
+          }
+          return this_.MaybeComputeUnknownFieldsSize(total_size,
+                                                     &this_._impl_._cached_size_);
+        }
+
+void MarketSnapshotQuery::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
+  auto* const _this = static_cast<MarketSnapshotQuery*>(&to_msg);
+  auto& from = static_cast<const MarketSnapshotQuery&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:hqmarket.market.v1.MarketSnapshotQuery)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (!from._internal_board().empty()) {
+    _this->_internal_set_board(from._internal_board());
+  }
+  if (!from._internal_scope().empty()) {
+    _this->_internal_set_scope(from._internal_scope());
+  }
+  if (from._internal_version() != 0) {
+    _this->_impl_.version_ = from._impl_.version_;
+  }
+  if (from._internal_offset() != 0) {
+    _this->_impl_.offset_ = from._impl_.offset_;
+  }
+  cached_has_bits = from._impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
+    _this->_impl_.limit_ = from._impl_.limit_;
+  }
+  if (from._internal_allow_partial() != 0) {
+    _this->_impl_.allow_partial_ = from._impl_.allow_partial_;
+  }
+  _this->_impl_._has_bits_[0] |= cached_has_bits;
+  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void MarketSnapshotQuery::CopyFrom(const MarketSnapshotQuery& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:hqmarket.market.v1.MarketSnapshotQuery)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+
+void MarketSnapshotQuery::InternalSwap(MarketSnapshotQuery* PROTOBUF_RESTRICT other) {
+  using std::swap;
+  auto* arena = GetArena();
+  ABSL_DCHECK_EQ(arena, other->GetArena());
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.board_, &other->_impl_.board_, arena);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.scope_, &other->_impl_.scope_, arena);
+  ::google::protobuf::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(MarketSnapshotQuery, _impl_.allow_partial_)
+      + sizeof(MarketSnapshotQuery::_impl_.allow_partial_)
+      - PROTOBUF_FIELD_OFFSET(MarketSnapshotQuery, _impl_.version_)>(
+          reinterpret_cast<char*>(&_impl_.version_),
+          reinterpret_cast<char*>(&other->_impl_.version_));
+}
+
+::google::protobuf::Metadata MarketSnapshotQuery::GetMetadata() const {
+  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
+}
+// ===================================================================
+
+class MarketSnapshotPage::_Internal {
+ public:
+  using HasBits =
+      decltype(std::declval<MarketSnapshotPage>()._impl_._has_bits_);
+  static constexpr ::int32_t kHasBitsOffset =
+      8 * PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_._has_bits_);
+};
+
+MarketSnapshotPage::MarketSnapshotPage(::google::protobuf::Arena* arena)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  SharedCtor(arena);
+  // @@protoc_insertion_point(arena_constructor:hqmarket.market.v1.MarketSnapshotPage)
+}
+inline PROTOBUF_NDEBUG_INLINE MarketSnapshotPage::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
+    const Impl_& from, const ::hqmarket::market::v1::MarketSnapshotPage& from_msg)
+      : _has_bits_{from._has_bits_},
+        _cached_size_{0},
+        quotes_{visibility, arena, from.quotes_},
+        status_(arena, from.status_) {}
+
+MarketSnapshotPage::MarketSnapshotPage(
+    ::google::protobuf::Arena* arena,
+    const MarketSnapshotPage& from)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  MarketSnapshotPage* const _this = this;
+  (void)_this;
+  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
+  ::memcpy(reinterpret_cast<char *>(&_impl_) +
+               offsetof(Impl_, version_),
+           reinterpret_cast<const char *>(&from._impl_) +
+               offsetof(Impl_, version_),
+           offsetof(Impl_, next_offset_) -
+               offsetof(Impl_, version_) +
+               sizeof(Impl_::next_offset_));
+
+  // @@protoc_insertion_point(copy_constructor:hqmarket.market.v1.MarketSnapshotPage)
+}
+inline PROTOBUF_NDEBUG_INLINE MarketSnapshotPage::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility,
+    ::google::protobuf::Arena* arena)
+      : _cached_size_{0},
+        quotes_{visibility, arena},
+        status_(arena) {}
+
+inline void MarketSnapshotPage::SharedCtor(::_pb::Arena* arena) {
+  new (&_impl_) Impl_(internal_visibility(), arena);
+  ::memset(reinterpret_cast<char *>(&_impl_) +
+               offsetof(Impl_, version_),
+           0,
+           offsetof(Impl_, next_offset_) -
+               offsetof(Impl_, version_) +
+               sizeof(Impl_::next_offset_));
+}
+MarketSnapshotPage::~MarketSnapshotPage() {
+  // @@protoc_insertion_point(destructor:hqmarket.market.v1.MarketSnapshotPage)
+  SharedDtor(*this);
+}
+inline void MarketSnapshotPage::SharedDtor(MessageLite& self) {
+  MarketSnapshotPage& this_ = static_cast<MarketSnapshotPage&>(self);
+  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
+  ABSL_DCHECK(this_.GetArena() == nullptr);
+  this_._impl_.status_.Destroy();
+  this_._impl_.~Impl_();
+}
+
+inline void* MarketSnapshotPage::PlacementNew_(const void*, void* mem,
+                                        ::google::protobuf::Arena* arena) {
+  return ::new (mem) MarketSnapshotPage(arena);
+}
+constexpr auto MarketSnapshotPage::InternalNewImpl_() {
+  constexpr auto arena_bits = ::google::protobuf::internal::EncodePlacementArenaOffsets({
+      PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.quotes_) +
+          decltype(MarketSnapshotPage::_impl_.quotes_)::
+              InternalGetArenaOffset(
+                  ::google::protobuf::Message::internal_visibility()),
+  });
+  if (arena_bits.has_value()) {
+    return ::google::protobuf::internal::MessageCreator::CopyInit(
+        sizeof(MarketSnapshotPage), alignof(MarketSnapshotPage), *arena_bits);
+  } else {
+    return ::google::protobuf::internal::MessageCreator(&MarketSnapshotPage::PlacementNew_,
+                                 sizeof(MarketSnapshotPage),
+                                 alignof(MarketSnapshotPage));
+  }
+}
+PROTOBUF_CONSTINIT
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::google::protobuf::internal::ClassDataFull MarketSnapshotPage::_class_data_ = {
+    ::google::protobuf::internal::ClassData{
+        &_MarketSnapshotPage_default_instance_._instance,
+        &_table_.header,
+        nullptr,  // OnDemandRegisterArenaDtor
+        nullptr,  // IsInitialized
+        &MarketSnapshotPage::MergeImpl,
+        ::google::protobuf::Message::GetNewImpl<MarketSnapshotPage>(),
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        &MarketSnapshotPage::SharedDtor,
+        ::google::protobuf::Message::GetClearImpl<MarketSnapshotPage>(), &MarketSnapshotPage::ByteSizeLong,
+            &MarketSnapshotPage::_InternalSerialize,
+#endif  // PROTOBUF_CUSTOM_VTABLE
+        PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_._cached_size_),
+        false,
+    },
+    &MarketSnapshotPage::kDescriptorMethods,
+    &descriptor_table_v1_2fmarket_2eproto,
+    nullptr,  // tracker
+};
+const ::google::protobuf::internal::ClassData* MarketSnapshotPage::GetClassData() const {
+  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
+  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
+  return _class_data_.base();
+}
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<4, 15, 1, 60, 2> MarketSnapshotPage::_table_ = {
+  {
+    PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_._has_bits_),
+    0, // no _extensions_
+    15, 120,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294934528,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    15,  // num_field_entries
+    1,  // num_aux_entries
+    offsetof(decltype(_table_), aux_entries),
+    _class_data_.base(),
+    nullptr,  // post_loop_handler
+    ::_pbi::TcParser::GenericFallback,  // fallback
+    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+    ::_pbi::TcParser::GetTable<::hqmarket::market::v1::MarketSnapshotPage>(),  // to_prefetch
+    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  }, {{
+    {::_pbi::TcParser::MiniParse, {}},
+    // string status = 1;
+    {::_pbi::TcParser::FastUS1,
+     {10, 63, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.status_)}},
+    // uint64 version = 2;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(MarketSnapshotPage, _impl_.version_), 63>(),
+     {16, 63, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.version_)}},
+    // uint64 expected = 3;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(MarketSnapshotPage, _impl_.expected_), 63>(),
+     {24, 63, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.expected_)}},
+    // uint64 received = 4;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(MarketSnapshotPage, _impl_.received_), 63>(),
+     {32, 63, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.received_)}},
+    // uint64 missing = 5;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(MarketSnapshotPage, _impl_.missing_), 63>(),
+     {40, 63, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.missing_)}},
+    // uint64 confirmed_halted = 6;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(MarketSnapshotPage, _impl_.confirmed_halted_), 63>(),
+     {48, 63, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.confirmed_halted_)}},
+    // uint64 unknown_exchange_time = 7;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(MarketSnapshotPage, _impl_.unknown_exchange_time_), 63>(),
+     {56, 63, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.unknown_exchange_time_)}},
+    // int64 started_at_ms = 8;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(MarketSnapshotPage, _impl_.started_at_ms_), 63>(),
+     {64, 63, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.started_at_ms_)}},
+    // int64 finished_at_ms = 9;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(MarketSnapshotPage, _impl_.finished_at_ms_), 63>(),
+     {72, 63, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.finished_at_ms_)}},
+    // bool partial = 10;
+    {::_pbi::TcParser::SingularVarintNoZag1<bool, offsetof(MarketSnapshotPage, _impl_.partial_), 63>(),
+     {80, 63, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.partial_)}},
+    // bool directory_verified = 11;
+    {::_pbi::TcParser::SingularVarintNoZag1<bool, offsetof(MarketSnapshotPage, _impl_.directory_verified_), 63>(),
+     {88, 63, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.directory_verified_)}},
+    // bool prior_date = 12;
+    {::_pbi::TcParser::SingularVarintNoZag1<bool, offsetof(MarketSnapshotPage, _impl_.prior_date_), 63>(),
+     {96, 63, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.prior_date_)}},
+    // optional uint64 next_offset = 13;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint64_t, offsetof(MarketSnapshotPage, _impl_.next_offset_), 0>(),
+     {104, 0, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.next_offset_)}},
+    // repeated .hqmarket.market.v1.QuoteData quotes = 14;
+    {::_pbi::TcParser::FastMtR1,
+     {114, 63, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.quotes_)}},
+    // int32 turnover_scale = 15;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(MarketSnapshotPage, _impl_.turnover_scale_), 63>(),
+     {120, 63, 0, PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.turnover_scale_)}},
+  }}, {{
+    65535, 65535
+  }}, {{
+    // string status = 1;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.status_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUtf8String | ::_fl::kRepAString)},
+    // uint64 version = 2;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.version_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUInt64)},
+    // uint64 expected = 3;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.expected_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUInt64)},
+    // uint64 received = 4;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.received_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUInt64)},
+    // uint64 missing = 5;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.missing_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUInt64)},
+    // uint64 confirmed_halted = 6;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.confirmed_halted_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUInt64)},
+    // uint64 unknown_exchange_time = 7;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.unknown_exchange_time_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kUInt64)},
+    // int64 started_at_ms = 8;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.started_at_ms_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kInt64)},
+    // int64 finished_at_ms = 9;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.finished_at_ms_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kInt64)},
+    // bool partial = 10;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.partial_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kBool)},
+    // bool directory_verified = 11;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.directory_verified_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kBool)},
+    // bool prior_date = 12;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.prior_date_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kBool)},
+    // optional uint64 next_offset = 13;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.next_offset_), _Internal::kHasBitsOffset + 0, 0,
+    (0 | ::_fl::kFcOptional | ::_fl::kUInt64)},
+    // repeated .hqmarket.market.v1.QuoteData quotes = 14;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.quotes_), -1, 0,
+    (0 | ::_fl::kFcRepeated | ::_fl::kMessage | ::_fl::kTvTable)},
+    // int32 turnover_scale = 15;
+    {PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.turnover_scale_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kInt32)},
+  }}, {{
+    {::_pbi::TcParser::GetTable<::hqmarket::market::v1::QuoteData>()},
+  }}, {{
+    "\45\6\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+    "hqmarket.market.v1.MarketSnapshotPage"
+    "status"
+  }},
+};
+
+PROTOBUF_NOINLINE void MarketSnapshotPage::Clear() {
+// @@protoc_insertion_point(message_clear_start:hqmarket.market.v1.MarketSnapshotPage)
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.quotes_.Clear();
+  _impl_.status_.ClearToEmpty();
+  ::memset(&_impl_.version_, 0, static_cast<::size_t>(
+      reinterpret_cast<char*>(&_impl_.turnover_scale_) -
+      reinterpret_cast<char*>(&_impl_.version_)) + sizeof(_impl_.turnover_scale_));
+  _impl_.next_offset_ = ::uint64_t{0u};
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
+}
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::uint8_t* MarketSnapshotPage::_InternalSerialize(
+            const MessageLite& base, ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) {
+          const MarketSnapshotPage& this_ = static_cast<const MarketSnapshotPage&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::uint8_t* MarketSnapshotPage::_InternalSerialize(
+            ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+          const MarketSnapshotPage& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(serialize_to_array_start:hqmarket.market.v1.MarketSnapshotPage)
+          ::uint32_t cached_has_bits = 0;
+          (void)cached_has_bits;
+
+          // string status = 1;
+          if (!this_._internal_status().empty()) {
+            const std::string& _s = this_._internal_status();
+            ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+                _s.data(), static_cast<int>(_s.length()), ::google::protobuf::internal::WireFormatLite::SERIALIZE, "hqmarket.market.v1.MarketSnapshotPage.status");
+            target = stream->WriteStringMaybeAliased(1, _s, target);
+          }
+
+          // uint64 version = 2;
+          if (this_._internal_version() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteUInt64ToArray(
+                2, this_._internal_version(), target);
+          }
+
+          // uint64 expected = 3;
+          if (this_._internal_expected() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteUInt64ToArray(
+                3, this_._internal_expected(), target);
+          }
+
+          // uint64 received = 4;
+          if (this_._internal_received() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteUInt64ToArray(
+                4, this_._internal_received(), target);
+          }
+
+          // uint64 missing = 5;
+          if (this_._internal_missing() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteUInt64ToArray(
+                5, this_._internal_missing(), target);
+          }
+
+          // uint64 confirmed_halted = 6;
+          if (this_._internal_confirmed_halted() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteUInt64ToArray(
+                6, this_._internal_confirmed_halted(), target);
+          }
+
+          // uint64 unknown_exchange_time = 7;
+          if (this_._internal_unknown_exchange_time() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteUInt64ToArray(
+                7, this_._internal_unknown_exchange_time(), target);
+          }
+
+          // int64 started_at_ms = 8;
+          if (this_._internal_started_at_ms() != 0) {
+            target = ::google::protobuf::internal::WireFormatLite::
+                WriteInt64ToArrayWithField<8>(
+                    stream, this_._internal_started_at_ms(), target);
+          }
+
+          // int64 finished_at_ms = 9;
+          if (this_._internal_finished_at_ms() != 0) {
+            target = ::google::protobuf::internal::WireFormatLite::
+                WriteInt64ToArrayWithField<9>(
+                    stream, this_._internal_finished_at_ms(), target);
+          }
+
+          // bool partial = 10;
+          if (this_._internal_partial() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteBoolToArray(
+                10, this_._internal_partial(), target);
+          }
+
+          // bool directory_verified = 11;
+          if (this_._internal_directory_verified() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteBoolToArray(
+                11, this_._internal_directory_verified(), target);
+          }
+
+          // bool prior_date = 12;
+          if (this_._internal_prior_date() != 0) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteBoolToArray(
+                12, this_._internal_prior_date(), target);
+          }
+
+          cached_has_bits = this_._impl_._has_bits_[0];
+          // optional uint64 next_offset = 13;
+          if (cached_has_bits & 0x00000001u) {
+            target = stream->EnsureSpace(target);
+            target = ::_pbi::WireFormatLite::WriteUInt64ToArray(
+                13, this_._internal_next_offset(), target);
+          }
+
+          // repeated .hqmarket.market.v1.QuoteData quotes = 14;
+          for (unsigned i = 0, n = static_cast<unsigned>(
+                                   this_._internal_quotes_size());
+               i < n; i++) {
+            const auto& repfield = this_._internal_quotes().Get(i);
+            target =
+                ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+                    14, repfield, repfield.GetCachedSize(),
+                    target, stream);
+          }
+
+          // int32 turnover_scale = 15;
+          if (this_._internal_turnover_scale() != 0) {
+            target = ::google::protobuf::internal::WireFormatLite::
+                WriteInt32ToArrayWithField<15>(
+                    stream, this_._internal_turnover_scale(), target);
+          }
+
+          if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
+            target =
+                ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+                    this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
+          }
+          // @@protoc_insertion_point(serialize_to_array_end:hqmarket.market.v1.MarketSnapshotPage)
+          return target;
+        }
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::size_t MarketSnapshotPage::ByteSizeLong(const MessageLite& base) {
+          const MarketSnapshotPage& this_ = static_cast<const MarketSnapshotPage&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::size_t MarketSnapshotPage::ByteSizeLong() const {
+          const MarketSnapshotPage& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(message_byte_size_start:hqmarket.market.v1.MarketSnapshotPage)
+          ::size_t total_size = 0;
+
+          ::uint32_t cached_has_bits = 0;
+          // Prevent compiler warnings about cached_has_bits being unused
+          (void)cached_has_bits;
+
+          ::_pbi::Prefetch5LinesFrom7Lines(&this_);
+           {
+            // repeated .hqmarket.market.v1.QuoteData quotes = 14;
+            {
+              total_size += 1UL * this_._internal_quotes_size();
+              for (const auto& msg : this_._internal_quotes()) {
+                total_size += ::google::protobuf::internal::WireFormatLite::MessageSize(msg);
+              }
+            }
+          }
+           {
+            // string status = 1;
+            if (!this_._internal_status().empty()) {
+              total_size += 1 + ::google::protobuf::internal::WireFormatLite::StringSize(
+                                              this_._internal_status());
+            }
+            // uint64 version = 2;
+            if (this_._internal_version() != 0) {
+              total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(
+                  this_._internal_version());
+            }
+            // uint64 expected = 3;
+            if (this_._internal_expected() != 0) {
+              total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(
+                  this_._internal_expected());
+            }
+            // uint64 received = 4;
+            if (this_._internal_received() != 0) {
+              total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(
+                  this_._internal_received());
+            }
+            // uint64 missing = 5;
+            if (this_._internal_missing() != 0) {
+              total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(
+                  this_._internal_missing());
+            }
+            // uint64 confirmed_halted = 6;
+            if (this_._internal_confirmed_halted() != 0) {
+              total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(
+                  this_._internal_confirmed_halted());
+            }
+            // uint64 unknown_exchange_time = 7;
+            if (this_._internal_unknown_exchange_time() != 0) {
+              total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(
+                  this_._internal_unknown_exchange_time());
+            }
+            // int64 started_at_ms = 8;
+            if (this_._internal_started_at_ms() != 0) {
+              total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(
+                  this_._internal_started_at_ms());
+            }
+            // int64 finished_at_ms = 9;
+            if (this_._internal_finished_at_ms() != 0) {
+              total_size += ::_pbi::WireFormatLite::Int64SizePlusOne(
+                  this_._internal_finished_at_ms());
+            }
+            // bool partial = 10;
+            if (this_._internal_partial() != 0) {
+              total_size += 2;
+            }
+            // bool directory_verified = 11;
+            if (this_._internal_directory_verified() != 0) {
+              total_size += 2;
+            }
+            // bool prior_date = 12;
+            if (this_._internal_prior_date() != 0) {
+              total_size += 2;
+            }
+            // int32 turnover_scale = 15;
+            if (this_._internal_turnover_scale() != 0) {
+              total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
+                  this_._internal_turnover_scale());
+            }
+          }
+           {
+            // optional uint64 next_offset = 13;
+            cached_has_bits = this_._impl_._has_bits_[0];
+            if (cached_has_bits & 0x00000001u) {
+              total_size += ::_pbi::WireFormatLite::UInt64SizePlusOne(
+                  this_._internal_next_offset());
+            }
+          }
+          return this_.MaybeComputeUnknownFieldsSize(total_size,
+                                                     &this_._impl_._cached_size_);
+        }
+
+void MarketSnapshotPage::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
+  auto* const _this = static_cast<MarketSnapshotPage*>(&to_msg);
+  auto& from = static_cast<const MarketSnapshotPage&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:hqmarket.market.v1.MarketSnapshotPage)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  _this->_internal_mutable_quotes()->MergeFrom(
+      from._internal_quotes());
+  if (!from._internal_status().empty()) {
+    _this->_internal_set_status(from._internal_status());
+  }
+  if (from._internal_version() != 0) {
+    _this->_impl_.version_ = from._impl_.version_;
+  }
+  if (from._internal_expected() != 0) {
+    _this->_impl_.expected_ = from._impl_.expected_;
+  }
+  if (from._internal_received() != 0) {
+    _this->_impl_.received_ = from._impl_.received_;
+  }
+  if (from._internal_missing() != 0) {
+    _this->_impl_.missing_ = from._impl_.missing_;
+  }
+  if (from._internal_confirmed_halted() != 0) {
+    _this->_impl_.confirmed_halted_ = from._impl_.confirmed_halted_;
+  }
+  if (from._internal_unknown_exchange_time() != 0) {
+    _this->_impl_.unknown_exchange_time_ = from._impl_.unknown_exchange_time_;
+  }
+  if (from._internal_started_at_ms() != 0) {
+    _this->_impl_.started_at_ms_ = from._impl_.started_at_ms_;
+  }
+  if (from._internal_finished_at_ms() != 0) {
+    _this->_impl_.finished_at_ms_ = from._impl_.finished_at_ms_;
+  }
+  if (from._internal_partial() != 0) {
+    _this->_impl_.partial_ = from._impl_.partial_;
+  }
+  if (from._internal_directory_verified() != 0) {
+    _this->_impl_.directory_verified_ = from._impl_.directory_verified_;
+  }
+  if (from._internal_prior_date() != 0) {
+    _this->_impl_.prior_date_ = from._impl_.prior_date_;
+  }
+  if (from._internal_turnover_scale() != 0) {
+    _this->_impl_.turnover_scale_ = from._impl_.turnover_scale_;
+  }
+  cached_has_bits = from._impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
+    _this->_impl_.next_offset_ = from._impl_.next_offset_;
+  }
+  _this->_impl_._has_bits_[0] |= cached_has_bits;
+  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void MarketSnapshotPage::CopyFrom(const MarketSnapshotPage& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:hqmarket.market.v1.MarketSnapshotPage)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+
+void MarketSnapshotPage::InternalSwap(MarketSnapshotPage* PROTOBUF_RESTRICT other) {
+  using std::swap;
+  auto* arena = GetArena();
+  ABSL_DCHECK_EQ(arena, other->GetArena());
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  _impl_.quotes_.InternalSwap(&other->_impl_.quotes_);
+  ::_pbi::ArenaStringPtr::InternalSwap(&_impl_.status_, &other->_impl_.status_, arena);
+  ::google::protobuf::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.next_offset_)
+      + sizeof(MarketSnapshotPage::_impl_.next_offset_)
+      - PROTOBUF_FIELD_OFFSET(MarketSnapshotPage, _impl_.version_)>(
+          reinterpret_cast<char*>(&_impl_.version_),
+          reinterpret_cast<char*>(&other->_impl_.version_));
+}
+
+::google::protobuf::Metadata MarketSnapshotPage::GetMetadata() const {
   return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
 }
 // @@protoc_insertion_point(namespace_scope)

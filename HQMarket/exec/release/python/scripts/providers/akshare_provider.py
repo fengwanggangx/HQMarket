@@ -1,10 +1,13 @@
 """Thin AKShare adapter for instruments and historical bars."""
 from __future__ import annotations
 
+import csv
 import re
 import json
+import os
 import sys
 from datetime import datetime, timedelta
+from pathlib import Path
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 from time import sleep
@@ -110,18 +113,69 @@ def make_pinyin_aliases(name: str) -> tuple[list[str], list[str]]:
     return full_aliases, short_aliases
 
 
+def _szse_fund_directory(path: Path) -> list[dict]:
+    records = {}
+    with path.open(encoding="utf-8-sig", newline="") as source:
+        for row in csv.reader(source, strict=True):
+            if len(row) != 2:
+                raise ValueError(f"Expected fund code and name in {path}")
+            code, name = (value.strip() for value in row)
+            if not re.fullmatch(r"[0-9]{6}", code) or not name or code in records:
+                raise ValueError(f"Invalid or duplicate SZSE fund: {code}")
+            records[code] = {"symbol": code, "name": name, "exchange": "SZSE", "kind": "fund"}
+    if not records:
+        raise ValueError(f"Empty SZSE fund directory: {path}")
+    return list(records.values())
+
+
+def _sse_fund_directory(fund_type: str) -> list[dict]:
+    parameters = {"sqlId": "FUND_LIST", "isPagination": "true", "fundType": fund_type,
+                  "pageHelp.pageSize": "100", "pageHelp.cacheSize": "1", "pagecache": "false"}
+    records = {}
+    page_number = 1
+    expected_total = None
+    while True:
+        for key in ("pageNo", "beginPage", "endPage"):
+            parameters["pageHelp." + key] = str(page_number)
+        request = Request(
+            "https://query.sse.com.cn/commonSoaQuery.do?" + urlencode(parameters),
+            headers={"Referer": "https://www.sse.com.cn/assortment/fund/list/", "User-Agent": "Mozilla/5.0"},
+        )
+        with urlopen(request, timeout=10) as response:
+            page = json.load(response)["pageHelp"]
+        total = int(page["total"])
+        if expected_total is not None and total != expected_total:
+            raise ValueError("SSE fund directory total changed during pagination")
+        expected_total = total
+        for row in page["data"]:
+            code = str(row["fundCode"])
+            name = str(row["fundAbbr"]).strip()
+            if not re.fullmatch(r"[0-9]{6}", code) or not name or code in records:
+                raise ValueError(f"Invalid or duplicate SSE fund: {code}")
+            records[code] = {"symbol": code, "name": name, "exchange": "SSE", "kind": "fund"}
+        if page_number >= int(page["pageCount"]):
+            break
+        page_number += 1
+    if len(records) != expected_total or (fund_type in {"00", "10"} and not records):
+        raise ValueError("Incomplete SSE fund directory")
+    return list(records.values())
+
+
 class AkShareProvider:
     def instruments(self) -> list[dict]:
         import akshare as ak
         frame = ak.stock_info_a_code_name()
         records = frame.rename(columns={"code": "symbol", "name": "name"}).to_dict(orient="records")
+        for record in records:
+            record["kind"] = "a_share"
         try:
             indices = ak.stock_zh_index_spot_sina()
             for row in indices.to_dict(orient="records"):
                 code = str(row["代码"]).lower()
                 if (code.startswith("sh000") or code.startswith("sz399")) and len(code) == 8:
                     records.append({"symbol": code[2:], "name": str(row["名称"]),
-                                    "exchange": "SSE" if code.startswith("sh") else "SZSE"})
+                                    "exchange": "SSE" if code.startswith("sh") else "SZSE",
+                                    "kind": "index"})
         except Exception as error:
             print(f"akshare stock_zh_index_spot_sina failed: {type(error).__name__}: {error}", file=sys.stderr)
         try:
@@ -132,6 +186,48 @@ class AkShareProvider:
                     records.append({"symbol": code, "name": str(row["中文名称"]), "exchange": "HKEX"})
         except Exception as error:
             print(f"akshare stock_hk_spot failed: {type(error).__name__}: {error}", file=sys.stderr)
+        if os.environ.get("HQMARKET_ENABLE_MARKET_SCAN") == "1":
+            records.append({"symbol": "899050", "name": "北证50", "exchange": "BSE", "kind": "index"})
+            official_sse_sources = set()
+            for source, fund_type in (("fund_etf_spot_em", "00"), ("fund_lof_spot_em", "10"),
+                                      ("closed_end_fund", "40")):
+                try:
+                    records.extend(_sse_fund_directory(fund_type))
+                    official_sse_sources.add(source)
+                except Exception as error:
+                    print(f"SSE fund directory {fund_type} failed: {type(error).__name__}: {error}", file=sys.stderr)
+            local_szse_sources = set()
+            for source, filename in (("fund_etf_spot_em", "szse_etf.csv"),
+                                     ("fund_lof_spot_em", "szse_lof.csv")):
+                path = Path("ini") / filename
+                try:
+                    records.extend(_szse_fund_directory(path))
+                    local_szse_sources.add(source)
+                except FileNotFoundError:
+                    pass
+                except (OSError, ValueError, csv.Error) as error:
+                    print(f"SZSE fund directory {path} failed: {type(error).__name__}: {error}", file=sys.stderr)
+            for name in ("fund_etf_spot_em", "fund_lof_spot_em", "bond_zh_hs_cov_spot"):
+                if name in official_sse_sources and name in local_szse_sources:
+                    continue
+                try:
+                    frame = getattr(ak, name)()
+                    for row in frame.to_dict(orient="records"):
+                        if name == "bond_zh_hs_cov_spot":
+                            symbol = str(row["symbol"]).lower()
+                            exchange = {"sh": "SSE", "sz": "SZSE"}.get(symbol[:2])
+                            code, label, kind = symbol[2:], str(row["name"]), "convertible_bond"
+                        else:
+                            code, label, kind = str(row["代码"]), str(row["名称"]), "fund"
+                            exchange = {"5": "SSE", "1": "SZSE"}.get(code[:1])
+                        if exchange == "SSE" and name in official_sse_sources:
+                            continue
+                        if exchange == "SZSE" and name in local_szse_sources:
+                            continue
+                        if exchange and len(code) == 6 and code.isascii() and code.isdigit():
+                            records.append({"symbol": code, "name": label, "exchange": exchange, "kind": kind})
+                except Exception as error:
+                    print(f"akshare {name} failed: {type(error).__name__}: {error}", file=sys.stderr)
         for item in records:
             full_aliases, short_aliases = make_pinyin_aliases(str(item.get("name", "")))
             item["pinyin_full_aliases"] = full_aliases

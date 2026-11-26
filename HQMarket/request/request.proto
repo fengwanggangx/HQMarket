@@ -193,6 +193,8 @@ message RequestData {
 		hqmarket.market.v1.MarketStatusData market_status = 18;
 		hqmarket.market.v1.ProviderStatusData provider_status = 19;
 		hqmarket.market.v1.QueryResponse query_response = 21;
+		hqmarket.market.v1.MarketSnapshotQuery market_snapshot_query = 45;
+		hqmarket.market.v1.MarketSnapshotPage market_snapshot_page = 46;
 		StrategyInfo strategy = 22;
 		StrategyList strategy_list = 23;
 		hqmarket.market.v1.SecurityList security_list = 25;

@@ -1,4 +1,5 @@
 #include "CHQCenter.h"
+#include <charconv>
 #include "CHQService.h"
 #include "../common/utility.h"
 #include "../database/CDBEngine.h"
@@ -382,6 +383,33 @@ std::unique_ptr<net::CHttpResponseData> CHQCenter::OnMetricsRequest(const net::C
 std::unique_ptr<net::CHttpResponseData> CHQCenter::OnInstrumentsRequest(const net::CHttpRequest&)
 {
 	return Response(200, m_hq_service->InstrumentsJson(), "application/json; charset=utf-8");
+}
+
+std::unique_ptr<net::CHttpResponseData> CHQCenter::OnMarketSnapshotRequest(const net::CHttpRequest& req)
+{
+	std::uint64_t version = 0;
+	std::uint64_t offset = 0;
+	std::uint64_t limit = 100;
+	bool valid = true;
+	for (const auto& [key, value] : { std::pair{ "version", &version }, std::pair{ "offset", &offset }, std::pair{ "limit", &limit } })
+	{
+		std::string input = req.GetQuery(key);
+		if (!input.empty())
+		{
+			const char* end = input.data() + input.size();
+			std::from_chars_result parsed = std::from_chars(input.data(), end, *value);
+			valid = valid && parsed.ec == std::errc{} && end == parsed.ptr;
+		}
+	}
+	std::string board = req.GetQuery("board");
+	std::string scope = req.GetQuery("scope");
+	bool validBoard = board.empty() || "gainers" == board || "losers" == board || "turnover" == board;
+	bool validScope = scope.empty() || "a_share" == scope || "index" == scope || "fund" == scope || "convertible_bond" == scope || "hk" == scope;
+	if (!valid || !validBoard || !validScope || 0 == limit || 500 < limit || (0 != offset && 0 == version))
+	{
+		return Response(400, "{\"error\":\"invalid snapshot query\"}", "application/json; charset=utf-8");
+	}
+	return Response(200, m_hq_service->MarketSnapshotJson(version, offset, limit, board, req.GetQuery("scope"), "1" == req.GetQuery("partial")), "application/json; charset=utf-8");
 }
 
 std::unique_ptr<net::CHttpResponseData> CHQCenter::OnQuoteRequest(const net::CHttpRequest& req)
