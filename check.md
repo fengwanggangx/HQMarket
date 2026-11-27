@@ -147,3 +147,8 @@
 - 逐项汇总现有参考组件并复查运行目录。沪深北 A 股 5,581 只、场内基金 2,247 只、深市转债 162 只均与相应证券代码集合一致。上交所公开发行转债以 11 月 26 日名录为临时参考，151 只有上市日期的证券均匹配。再合并五只缺价的定向转债及当前 556 只指数，得到与正式证券接口逐项相同的 8,702 只。完整独立指数范围仍未核定，暂未部署完整境内参考文件。服务器证据为 `mainland-reference-reconciliation-progress-20261127.json`。
 - 港交所主板和 GEM 分开发布日表。已在 11 月 26 日官方文件回放，验证解析主板 16,746 条和 GEM 306 条，代码没有重叠，并支持带星号的证券行。修正后，以 11 月 27 日名录回查上一日，扫描范围之外有正收盘价且有成交的证券为 4,560 只，此前只读主板且未识别带星号行的统计为 4,556 只。已安排 11 月 27 日双板文件齐备后合并对账。[港交所主板日行情](https://www.hkex.com.hk/eng/stat/smstat/dayquot/qtn.asp) [港交所 GEM 日行情](https://www.hkex.com.hk/eng/stat/smstat/dayquot/GEM/e_G261126.htm)
 - 17:05 复查时，港交所 11 月 27 日主板与 GEM 文件均返回 HTTP 404，上交所定向可转债成交表最新仍为 11 月 26 日，中证的 13 个代码也仍未返回 11 月 27 日收盘值。正式健康检查为 `ok`，各采集任务及 11 月 30 日开盘和 P95 的等候进程仍在运行。
+
+## 2026-11-27 港股临时交易柜台续验
+
+- 港交所公告确认，11 月 27 日 `01440.HKEX`、`08297.HKEX`、`08401.HKEX` 的交易分别使用临时柜台 `02963.HKEX`、`08561.HKEX`、`08586.HKEX`。正式收盘快照 `1795767279129` 已收到三个临时柜台的正价及正成交量，分别为 4,110,000、102,250 和 5,200 股。原柜台没有报价与交易安排一致，仍需按后续恢复和并行柜台时段复验。服务器证据为 `hk-close-temporary-counters-20261127.json`。[应星控股](https://www.hkex.com.hk/eng/market/sec_tradinfo/tradarng/tradarng_news/currentmonth/e2963g_261119.htm) [海纳星空科技](https://www.hkex.com.hk/eng/market/sec_tradinfo/tradarng/tradarng_news/currentmonth/e8561m_261126.htm) [华夏水务](https://www.hkex.com.hk/eng/market/sec_tradinfo/tradarng/tradarng_news/currentmonth/e8586i_261123.htm)
+- 缺价的配股权 `02960.HKEX` 公开预计最后交易日为 11 月 27 日，仍以收到当日官方日表后核定有无成交。17:26 复查，港交所双板日表仍未取得，上交所定向转债和中证当日数据仍待发布，采集已持续运行，正式服务健康正常。[配股文件](https://www1.hkexnews.hk/listedco/listconews/sehk/2026/1117/2026111700412.pdf)
