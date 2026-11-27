@@ -113,18 +113,19 @@ def make_pinyin_aliases(name: str) -> tuple[list[str], list[str]]:
     return full_aliases, short_aliases
 
 
-def _szse_fund_directory(path: Path) -> list[dict]:
+def _local_directory(path: Path, exchange: str, kind: str) -> list[dict]:
     records = {}
+    code_pattern = r"[0-9]{5}" if exchange == "HKEX" else r"[0-9]{6}"
     with path.open(encoding="utf-8-sig", newline="") as source:
         for row in csv.reader(source, strict=True):
             if len(row) != 2:
-                raise ValueError(f"Expected fund code and name in {path}")
+                raise ValueError(f"Expected security code and name in {path}")
             code, name = (value.strip() for value in row)
-            if not re.fullmatch(r"[0-9]{6}", code) or not name or code in records:
-                raise ValueError(f"Invalid or duplicate SZSE fund: {code}")
-            records[code] = {"symbol": code, "name": name, "exchange": "SZSE", "kind": "fund"}
+            if not re.fullmatch(code_pattern, code) or not name or code in records:
+                raise ValueError(f"Invalid or duplicate {exchange} security: {code}")
+            records[code] = {"symbol": code, "name": name, "exchange": exchange, "kind": kind}
     if not records:
-        raise ValueError(f"Empty SZSE fund directory: {path}")
+        raise ValueError(f"Empty {exchange} directory: {path}")
     return list(records.values())
 
 
@@ -156,7 +157,7 @@ def _sse_fund_directory(fund_type: str) -> list[dict]:
         if page_number >= int(page["pageCount"]):
             break
         page_number += 1
-    if len(records) != expected_total or (fund_type in {"00", "10"} and not records):
+    if len(records) != expected_total or (fund_type in {"00", "10", "50"} and not records):
         raise ValueError("Incomplete SSE fund directory")
     return list(records.values())
 
@@ -164,7 +165,23 @@ def _sse_fund_directory(fund_type: str) -> list[dict]:
 class AkShareProvider:
     def instruments(self) -> list[dict]:
         import akshare as ak
-        frame = ak.stock_info_a_code_name()
+        for fetch in (ak.stock_info_a_code_name, ak.stock_info_sh_name_code,
+                      ak.stock_info_sz_name_code, ak.stock_info_bj_name_code):
+            clear_cache = getattr(fetch, "cache_clear", None)
+            if clear_cache is not None:
+                clear_cache()
+        for attempt in range(3):
+            try:
+                frame = ak.stock_info_a_code_name()
+                if frame.empty:
+                    raise ValueError("empty A-share directory returned by AKShare")
+                break
+            except (OSError, ValueError) as error:
+                if attempt == 2:
+                    raise
+                print(f"AKShare A-share directory attempt {attempt + 1} failed: {type(error).__name__}: {error}",
+                      file=sys.stderr)
+                sleep(2 ** attempt)
         records = frame.rename(columns={"code": "symbol", "name": "name"}).to_dict(orient="records")
         for record in records:
             record["kind"] = "a_share"
@@ -187,10 +204,29 @@ class AkShareProvider:
         except Exception as error:
             print(f"akshare stock_hk_spot failed: {type(error).__name__}: {error}", file=sys.stderr)
         if os.environ.get("HQMARKET_ENABLE_MARKET_SCAN") == "1":
+            try:
+                existing_hk = {item["symbol"] for item in records if item.get("exchange") == "HKEX"}
+                records.extend(item for item in _local_directory(Path("ini") / "hk_supplement.csv", "HKEX", "unknown")
+                               if item["symbol"] not in existing_hk)
+            except FileNotFoundError:
+                pass
+            except (OSError, ValueError, csv.Error) as error:
+                print(f"HKEX supplemental directory failed: {type(error).__name__}: {error}", file=sys.stderr)
             records.append({"symbol": "899050", "name": "北证50", "exchange": "BSE", "kind": "index"})
+            for exchange, filename in (("SSE", "sse_indices.csv"), ("SZSE", "szse_indices.csv"), ("BSE", "bse_indices.csv")):
+                path = Path("ini") / filename
+                try:
+                    existing_indices = {item["symbol"] for item in records
+                                        if item.get("kind") == "index" and item.get("exchange") == exchange}
+                    records.extend(item for item in _local_directory(path, exchange, "index")
+                                   if item["symbol"] not in existing_indices)
+                except FileNotFoundError:
+                    pass
+                except (OSError, ValueError, csv.Error) as error:
+                    print(f"{exchange} index directory {path} failed: {type(error).__name__}: {error}", file=sys.stderr)
             official_sse_sources = set()
             for source, fund_type in (("fund_etf_spot_em", "00"), ("fund_lof_spot_em", "10"),
-                                      ("closed_end_fund", "40")):
+                                      ("closed_end_fund", "40"), ("reits", "50")):
                 try:
                     records.extend(_sse_fund_directory(fund_type))
                     official_sse_sources.add(source)
@@ -198,15 +234,28 @@ class AkShareProvider:
                     print(f"SSE fund directory {fund_type} failed: {type(error).__name__}: {error}", file=sys.stderr)
             local_szse_sources = set()
             for source, filename in (("fund_etf_spot_em", "szse_etf.csv"),
-                                     ("fund_lof_spot_em", "szse_lof.csv")):
+                                     ("fund_lof_spot_em", "szse_lof.csv"), ("reits", "szse_reits.csv")):
                 path = Path("ini") / filename
                 try:
-                    records.extend(_szse_fund_directory(path))
+                    records.extend(_local_directory(path, "SZSE", "fund"))
                     local_szse_sources.add(source)
                 except FileNotFoundError:
                     pass
                 except (OSError, ValueError, csv.Error) as error:
                     print(f"SZSE fund directory {path} failed: {type(error).__name__}: {error}", file=sys.stderr)
+            inactive_bonds_path = Path("ini") / "inactive_convertible_bonds.txt"
+            inactive_bonds = set()
+            try:
+                entries = inactive_bonds_path.read_text(encoding="utf-8-sig").splitlines()
+                codes = {entry.partition("#")[0].strip() for entry in entries}
+                codes.discard("")
+                if any(not re.fullmatch(r"[0-9]{6}\.(SSE|SZSE|BSE)", code) for code in codes):
+                    raise ValueError("expected a six-digit convertible-bond code and exchange")
+                inactive_bonds = codes
+            except FileNotFoundError:
+                pass
+            except (OSError, ValueError) as error:
+                print(f"Inactive convertible bonds {inactive_bonds_path} failed: {type(error).__name__}: {error}", file=sys.stderr)
             for name in ("fund_etf_spot_em", "fund_lof_spot_em", "bond_zh_hs_cov_spot"):
                 if name in official_sse_sources and name in local_szse_sources:
                     continue
@@ -217,6 +266,8 @@ class AkShareProvider:
                             symbol = str(row["symbol"]).lower()
                             exchange = {"sh": "SSE", "sz": "SZSE"}.get(symbol[:2])
                             code, label, kind = symbol[2:], str(row["name"]), "convertible_bond"
+                            if f"{code}.{exchange}" in inactive_bonds:
+                                continue
                         else:
                             code, label, kind = str(row["代码"]), str(row["名称"]), "fund"
                             exchange = {"5": "SSE", "1": "SZSE"}.get(code[:1])

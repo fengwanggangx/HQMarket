@@ -13,6 +13,21 @@
 
 namespace
 {
+	using _TyDirectoryFileTimes = std::array<std::filesystem::file_time_type, 8>;
+
+	_TyDirectoryFileTimes DirectoryFileTimes(const std::filesystem::path& directory)
+	{
+		constexpr std::array filenames{ "szse_etf.csv", "szse_lof.csv", "szse_reits.csv", "sse_indices.csv",
+			"szse_indices.csv", "bse_indices.csv", "hk_supplement.csv", "inactive_convertible_bonds.txt" };
+		_TyDirectoryFileTimes times{};
+		for (std::size_t index = 0; index < times.size(); ++index)
+		{
+			std::error_code error;
+			times[index] = std::filesystem::last_write_time(directory / filenames[index], error);
+		}
+		return times;
+	}
+
 	bool VerifyReferenceDirectory(const std::filesystem::path& path, std::int64_t finished, bool hongKong, CHQRecorder::CMarketSnapshot& snapshot)
 	{
 		std::chrono::sys_days day{ std::chrono::days{ market::MarketDateIndex(finished) } };
@@ -89,23 +104,29 @@ namespace
 		{
 			actual.emplace(instrument.m_security.String());
 		}
-		if (!input.eof() || reference.empty() || reference.size() != actual.size())
+		if (!input.eof() || reference.empty())
 		{
 			return false;
 		}
-		for (const auto& security : actual)
+		bool verified = reference.size() == actual.size() && std::ranges::all_of(actual, [&reference](const std::string& security)
 		{
-			if (!reference.contains(security))
-			{
-				return false;
-			}
+			return reference.contains(security);
+		});
+		if (!verified && !hongKong)
+		{
+			return false;
 		}
 		for (auto& instrument : snapshot.m_instruments)
 		{
 			std::string security = instrument.m_security.String();
 			if (hongKong)
 			{
-				instrument.m_kind = reference.at(security);
+				const auto mIter = reference.find(security);
+				if (reference.end() == mIter)
+				{
+					continue;
+				}
+				instrument.m_kind = mIter->second;
 			}
 			instrument.m_status = halted.contains(security) ? "halted" : "normal";
 		}
@@ -117,7 +138,7 @@ namespace
 				quote.m_pre_close = 4 == quote.m_price_scale ? mIter->second : 0;
 			}
 		}
-		return true;
+		return verified;
 	}
 } // namespace
 
@@ -183,9 +204,14 @@ bool CHQBroker::Initialize(const std::filesystem::path& root)
 	{
 		return false;
 	}
-	m_akshare.Initialize();
 	const char* scanEnabled = std::getenv("HQMARKET_ENABLE_MARKET_SCAN");
-	if (nullptr != scanEnabled && "1" == std::string_view(scanEnabled))
+	bool marketScanEnabled = nullptr != scanEnabled && "1" == std::string_view(scanEnabled);
+	_TyDirectoryFileTimes fileTimes = marketScanEnabled ? DirectoryFileTimes(root / "ini") : _TyDirectoryFileTimes{};
+	std::int64_t initialTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+		std::chrono::system_clock::now().time_since_epoch())
+								   .count();
+	bool directoryLoaded = m_akshare.Initialize();
+	if (marketScanEnabled)
 	{
 		{
 			std::unique_lock<std::shared_mutex> lock(m_snapshot_mutex);
@@ -195,9 +221,11 @@ bool CHQBroker::Initialize(const std::filesystem::path& root)
 			m_complete_snapshots[1] = m_recorder.LoadMarketSnapshot(true, true);
 		}
 		ConfigureMarketScan(root);
-		m_directory_thread = std::jthread([this, root](std::stop_token stop)
+		std::int64_t firstDirectoryDay = directoryLoaded ? market::MarketDateIndex(initialTime) : 0;
+		m_directory_thread = std::jthread([this, root, fileTimes, firstDirectoryDay](std::stop_token stop) mutable
 		{
-			std::int64_t refreshed = 0;
+			std::filesystem::path directory = root / "ini";
+			std::int64_t refreshed = firstDirectoryDay;
 			std::mutex mutex;
 			std::condition_variable_any condition;
 			std::unique_lock<std::mutex> lock(mutex);
@@ -215,10 +243,13 @@ bool CHQBroker::Initialize(const std::filesystem::path& root)
 					std::chrono::system_clock::now().time_since_epoch())
 									   .count();
 				std::int64_t day = market::MarketDateIndex(now);
-				if (refreshed != day && m_akshare.RefreshInstruments())
+				_TyDirectoryFileTimes currentFileTimes = DirectoryFileTimes(directory);
+				if ((refreshed != day || currentFileTimes != fileTimes) && m_akshare.RefreshInstruments())
 				{
 					ConfigureMarketScan(root);
 					refreshed = day;
+					fileTimes = currentFileTimes;
+					CLogger::Write(Level::Info, "market", "Market scan directory refreshed");
 				}
 			}
 		});

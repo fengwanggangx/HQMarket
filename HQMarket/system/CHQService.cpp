@@ -712,7 +712,11 @@ std::string CHQService::MarketSnapshotJson(std::uint64_t version, std::size_t of
 	}
 	bool partial = 0 == snapshot->m_expected || covered < snapshot->m_expected;
 	bool priorDate = market::MarketDateIndex(snapshot->m_finished_at) != market::MarketDateIndex(NowMilliseconds());
-	bool boardPreparing = !board.empty() && (0 == snapshot->m_expected || priorDate || ("hk" == scope && !snapshot->m_directory_verified) || ((partial || !snapshot->m_directory_verified) && !allowPartial));
+	if (!board.empty() && "hk" == scope && !snapshot->m_directory_verified)
+	{
+		partial = true;
+	}
+	bool boardPreparing = !board.empty() && (0 == snapshot->m_expected || priorDate || ((partial || !snapshot->m_directory_verified) && !allowPartial));
 	std::size_t received = snapshot->m_quotes.size();
 	std::vector<market::CQuote>& quotes = snapshot->m_quotes;
 	std::size_t unknownExchangeTime = std::ranges::count_if(quotes, [](const market::CQuote& quote)

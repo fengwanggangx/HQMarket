@@ -38,6 +38,10 @@ namespace provider
 		{
 			return "BSE";
 		}
+		if (market::Exchange::hkex == value)
+		{
+			return "HKEX";
+		}
 		return "UNKNOWN";
 	}
 	static std::int64_t Fixed(PyObject* dictionary, const char* name, int scale = 4)

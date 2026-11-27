@@ -76,6 +76,16 @@ class MooTdxProvider:
         hong_kong = [item for item in values if item["exchange"] == "HKEX"]
         mainland = [item for item in values if item["exchange"] != "HKEX"]
         rows = self._hk_quotes(hong_kong) if hong_kong else []
+        if fill_missing and any(not row.get("stale") for row in rows):
+            usable = {row["symbol"] for row in rows if not row.get("stale") and row["price"] > 0}
+            missing = [item for item in hong_kong if item["symbol"] not in usable]
+            if missing:
+                try:
+                    backup = self._tencent_quotes(missing)
+                    replaced = {row["symbol"] for row in backup}
+                    rows = [row for row in rows if row["symbol"] not in replaced] + backup
+                except (OSError, ValueError, RuntimeError) as error:
+                    print(f"Tencent HK quote fallback failed: {error}", file=sys.stderr)
         if mainland:
             if self._use_tencent and time.monotonic() >= self._retry_mootdx_at:
                 self._retry_mootdx_at = time.monotonic() + 30
@@ -208,7 +218,7 @@ class MooTdxProvider:
 
     @staticmethod
     def _tencent_code(item: dict) -> str:
-        prefixes = {"SSE": "sh", "SZSE": "sz", "BSE": "bj"}
+        prefixes = {"SSE": "sh", "SZSE": "sz", "BSE": "bj", "HKEX": "hk"}
         try:
             return prefixes[item["exchange"]] + item["symbol"]
         except KeyError as error:
@@ -241,6 +251,22 @@ class MooTdxProvider:
         volume = float(fields[6])
         if not math.isfinite(price) or not math.isfinite(volume) or price < 0 or volume < 0:
             raise ValueError("invalid price or volume")
+        if item["exchange"] == "HKEX":
+            if price <= 0 or volume <= 0:
+                raise ValueError("no traded HK quote")
+            tz = timezone(timedelta(hours=8))
+            exchange_time = datetime.strptime(fields[30], "%Y/%m/%d %H:%M:%S").replace(tzinfo=tz)
+            if exchange_time.date() != datetime.now(tz).date():
+                raise ValueError("HK quote is from another trading date")
+            amount = float(fields[37])
+            if not math.isfinite(amount) or amount < 0:
+                raise ValueError("invalid HK turnover")
+            return {
+                "symbol": item["symbol"], "exchange": "HKEX", "source": "tencent",
+                "price": price, "last_close": cls._number(fields, 4), "open": cls._number(fields, 5),
+                "vol": int(volume), "high": cls._number(fields, 33), "low": cls._number(fields, 34),
+                "amount": amount, "exchange_time_ms": int(exchange_time.timestamp() * 1000),
+            }
         amount_parts = fields[35].split("/") if len(fields) > 35 else []
         amount = float(amount_parts[2]) if len(amount_parts) > 2 else 0.0
         if not math.isfinite(amount) or amount < 0:

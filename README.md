@@ -62,9 +62,17 @@ ctest --test-dir build-routing --output-on-failure
 
 在测试实例的进程环境设置 `HQMARKET_ENABLE_MARKET_SCAN=1` 后启动 HQMarket。服务会批量扫描已加载的证券目录，在 SQLite 保存最近一次发布的轮次。快照返回实际采集起止时间、有效报价数和目录标的数，供调用方判断覆盖情况。
 
-启用扫描后，后台每五分钟检查是否需要刷新目录，每个北京时间自然日成功刷新一次。失败时保留原目录并在下一次检查时重试。新目录在扫描轮次边界生效。
+启用扫描后，后台每五分钟检查证券目录。北京时间换日或本地补充名录文件的修改时间变化时触发刷新。刷新失败时保留原目录并在下一次检查时重试，新目录在扫描轮次边界生效。
 
 深圳 ETF 和 LOF 可使用交易所清单导出的 `ini/szse_etf.csv` 和 `ini/szse_lof.csv`。每个文件用 UTF-8 编码，不含表头，每行依次填写六位证券代码和证券简称。有效文件优先用于对应的深圳基金类别；缺失或校验失败时尝试东方财富目录。部署方负责更新这两个文件。
+
+公募 REITs 归入基金扫描范围。上交所使用交易所公募 REITs 分类，深交所使用官方不动产基金清单导出的 `ini/szse_reits.csv`，文件格式与深圳 ETF、LOF 名录相同。
+
+沪深北指数可分别通过 `ini/sse_indices.csv`、`ini/szse_indices.csv` 和 `ini/bse_indices.csv` 补充行情源缺少的目录项。文件按交易所目录导出，每行填写六位代码和指数名称。
+
+港交所官方名录中的活跃证券可通过 `ini/hk_supplement.csv` 补充到港股扫描目录，每行填写五位代码及名称。港股盘中扫描可用备用源补齐缺失或无效报价，备用记录须为同日报价且有成交。
+
+如转债行情源仍列出已确认退出上市范围的证券，可在 `ini/inactive_convertible_bonds.txt` 中按行填写 `代码.交易所`，并用 `#` 添加证据说明。名单在刷新证券目录时读取，适用于有交易所或发行人证据的退出记录。
 
 - HTTP 使用 `GET /v1/market/snapshot`。TCP 使用 `MARKET_QUOTE_QUERY`，请求 `extra.view=market_snapshot`，响应从 `extra.market_snapshot` 读取同结构的 JSON。
 - TCP 客户端也可在 `MARKET_QUOTE_QUERY` 的请求中填入 Protobuf `market_snapshot_query`，并从响应的 `market_snapshot_page` 读取分页和行情。两种 TCP 请求形式使用相同的筛选、分榜和轮次规则。
@@ -74,7 +82,7 @@ ctest --test-dir build-routing --output-on-failure
 - 将独立上市清单导出到执行目录的 `ini/market_reference_cn.txt` 和 `ini/market_reference_hk.txt`。首行写 `YYYYMMDD`，后续每行写一条扫描范围内的 `代码.交易所`，例如 `600519.SSE`。每轮对账，日期和证券集合一致才返回 `directory_verified=true`。清单缺失或不一致时，榜单需用 `partial=1` 显式查看试运行结果。
 - 正式部署可在执行目录下提供 `ini/market_sessions.txt`。每行以空白分隔日期 `YYYYMMDD`、市场 `CN` 或 `HK`、从北京时间午夜起算的开始分钟和结束分钟。一个市场每天可有多行，结束分钟不包含在区间内。节假日省略，半日市只填写实际时段，可在最后一个区间预留收盘补采时间。文件每天首次运行时读取。缺少文件时使用普通工作日时段，适用于试运行。
 
-- 港股参考清单每条证券后填写 `stock` 或 `other`，例如 `00700.HKEX stock`。港股榜单只收录已核验的股票。境内和港股记录都可在末尾追加 `halted` 表示已确认停牌，停牌不计入缺失数并从榜单排除。
+- 港股参考清单每条证券后填写 `stock` 或 `other`，例如 `00700.HKEX stock`。港股榜单只收录已核验的股票。同日参考清单与行情目录有差异时，`partial=1` 可查看其中已核验的股票，常规榜单仍要求完整对账。境内和港股记录都可在末尾追加 `halted` 表示已确认停牌，停牌不计入缺失数并从榜单排除。
 - 参考清单可以附加 `pre_close=123400`，表示经过核验的当日参考昨收为 12.3400。若确认当天需要使用参考昨收、但尚无可靠值，填 `pre_close=unknown`。该标的仍可查询快照，但不参与涨跌幅排名。修正随快照入库，供同一轮分页和榜单使用。
 
 ## 正式程序构建入口
